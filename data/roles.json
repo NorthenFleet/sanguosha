@@ -1,0 +1,22 @@
+{
+    "roles": [
+        {
+            "role_id": 1,
+            "name": "赵云",
+            "health": 4,
+            "skill_ids": [
+                1,
+                2
+            ]
+        },
+        {
+            "role_id": 2,
+            "name": "郭嘉",
+            "health": 3,
+            "skill_ids": [
+                3,
+                4
+            ]
+        }
+    ]
+}

@@ -1,0 +1,32 @@
+{
+    "skills": [
+        {
+            "skill_id": 1,
+            "name": "龙胆",
+            "description": "你可以将【杀】当【闪】使用，或将【闪】当【杀】使用。",
+            "type": "主动技能",
+            "trigger_phase": "play"
+        },
+        {
+            "skill_id": 2,
+            "name": "铁骑",
+            "description": "你使用的【杀】指定目标后，可以令该角色进行一次判定，若结果为红色，该角色不能使用【闪】。",
+            "type": "主动技能",
+            "trigger_phase": "play"
+        },
+        {
+            "skill_id": 3,
+            "name": "天妒",
+            "description": "在你的判定牌生效后，你可以获得此牌。",
+            "type": "被动技能",
+            "trigger_phase": "judgement"
+        },
+        {
+            "skill_id": 4,
+            "name": "遗计",
+            "description": "当你受到伤害后，你可以摸两张牌，然后将任意张手牌交给一名其他角色。",
+            "type": "被动技能",
+            "trigger_phase": "after_damage"
+        }
+    ]
+}
