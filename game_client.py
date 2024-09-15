@@ -77,9 +77,9 @@ if __name__ == "__main__":
 
     # 加载静态数据
     static_data_loader = StaticDataLoader(
-        role_file='roles.json',
-        skill_file='skills.json',
-        card_file='cards.json'
+        role_file='data/roles.json',
+        skill_file='data/skills.json',
+        card_file='data/cards.json'
     )
 
     # 初始化游戏状态
