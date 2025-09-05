@@ -48,7 +48,7 @@ def main():
             continue
         
         # 运行测试脚本
-        returncode, stdout, stderr = run_test_script(script)
+        returncode, stdout, stderr = run_test_script(script_path)
         
         # 输出结果
         if returncode == 0:

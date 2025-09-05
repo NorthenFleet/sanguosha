@@ -85,4 +85,4 @@ def run_test(state_file: str):
     print("测试完成，游戏状态已更新。")
 
 if __name__ == "__main__":
-    run_test("state.json")
+    run_test("app/data/state.json")

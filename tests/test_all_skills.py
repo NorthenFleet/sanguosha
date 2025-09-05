@@ -3,11 +3,11 @@
 """
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'app'))
 
-from game import Game, Card, CardType
-from characters import CharacterFactory
-from skills import SkillManager, PaoXiao, KeJi, YingZi
+from models.game import Game, Card, CardType
+from models.character import CharacterFactory
+from models.skills import SkillManager, PaoXiao, KeJi, YingZi
 
 def test_all_skills():
     """测试所有技能"""
