@@ -3,9 +3,9 @@
 """
 import uuid
 from typing import Dict, Optional
-from app.models.game import Game
-from app.models.player import Player
-from app.models.character import CharacterFactory
+from ..models.game import Game
+from ..models.player import Player
+from ..models.character import CharacterFactory
 
 
 class GameEngine:

@@ -6,6 +6,8 @@ from typing import Optional, List
 # 注意：避免循环导入，不要直接导入Game, Player, Card类
 # 可以使用字符串类型注解或在函数内部导入
 
+# 在文件开头添加导入
+from .action import SkillAction
 
 class Skill(ABC):
     """技能基类"""
@@ -14,14 +16,28 @@ class Skill(ABC):
         self.description = description
     
     @abstractmethod
-    def can_trigger(self, game: 'Game', player: 'Player', target: Optional['Player'] = None) -> bool:
+    def can_trigger(self, game: 'Game', player: 'Player', event_type: str, **kwargs) -> bool:
         """检查技能是否可以触发"""
         pass
     
     @abstractmethod
-    def execute(self, game: 'Game', player: 'Player', target: Optional['Player'] = None) -> bool:
+    def execute(self, game: 'Game', player: 'Player', **kwargs) -> bool:
         """执行技能效果"""
         pass
+    
+    def create_skill_action(self):
+        """创建技能动作实例"""
+        # 默认实现，子类可以重写
+        class DefaultSkillAction(SkillAction):
+            def __init__(self, skill):
+                super().__init__(skill.name, skill.description)
+                self.skill = skill
+            
+            def apply_effect(self, game, player, **kwargs):
+                # 调用原始的execute方法
+                return self.skill.__class__.execute(self.skill, game, player, **kwargs)
+        
+        return DefaultSkillAction(self)
 
 
 class SkillManager:
@@ -37,33 +53,47 @@ class SkillManager:
         """获取技能"""
         return self.skills.get(name)
     
-    def trigger_skill(self, skill_name: str, game: 'Game', player: 'Player', target: Optional['Player'] = None) -> bool:
+    def trigger_skill(self, skill_name: str, game: 'Game', player: 'Player', target: Optional['Player'] = None, **kwargs) -> bool:
         """触发技能"""
         skill = self.get_skill(skill_name)
-        if skill and skill.can_trigger(game, player, target):
+        if skill and skill.can_trigger(game, player, "skill_trigger", target=target, **kwargs):
             print(f"{player.character.name} 发动了技能【{skill_name}】")
-            return skill.execute(game, player, target)
+            # 使用新的技能动作模型
+            skill_action = skill.create_skill_action()
+            return skill_action.apply_effect(game, player, target=target, **kwargs)
         return False
 
 
 # ========== 具体技能实现 ==========
 
 class JianXiong(Skill):
-    """奸雄技能"""
     def __init__(self):
-        super().__init__("奸雄", "当你受到伤害后，你可以获得对你造成伤害的牌。")
+        super().__init__("奸雄", "当曹操受到1点伤害后，可以立即获得造成此伤害的牌")
     
-    def can_trigger(self, game: 'Game', player: 'Player', target: Optional['Player'] = None) -> bool:
-        # 简化实现，实际需要检查是否受到伤害
-        return target is not None and len(target.hand_cards) > 0
+    def can_trigger(self, game, player, event_type, **kwargs):
+        return event_type == "damage" and player.character.name == "曹操"
     
-    def execute(self, game: 'Game', player: 'Player', target: Optional['Player'] = None) -> bool:
-        if target and target.hand_cards:
-            card = target.hand_cards.pop()
-            player.hand_cards.append(card)
-            print(f"{player.character.name} 发动技能【奸雄】，获得了 {card}")
-            return True
-        return False
+    def execute(self, game, player, **kwargs):
+        # 创建技能动作实例并执行
+        skill_action = self.create_skill_action()
+        return skill_action.apply_effect(game, player, **kwargs)
+    
+    def create_skill_action(self):
+        """创建奸雄技能动作实例"""
+        class JianXiongAction(SkillAction):
+            def __init__(self):
+                super().__init__("奸雄", "当曹操受到1点伤害后，可以立即获得造成此伤害的牌")
+            
+            def apply_effect(self, game, player, **kwargs):
+                # 获取造成伤害的牌
+                damage_card = kwargs.get('damage_card')
+                if damage_card:
+                    player.hand_cards.append(damage_card)
+                    print(f"{player.character.name} 触发了 奸雄 技能，获得了 {damage_card}")
+                    return True
+                return False
+        
+        return JianXiongAction()
 
 
 class FanKui(Skill):
@@ -113,18 +143,29 @@ class GangLie(Skill):
 
 
 class PaoXiao(Skill):
-    """咆哮技能"""
     def __init__(self):
-        super().__init__("咆哮", "出牌阶段，你可以使用任意数量的【杀】。")
+        super().__init__("咆哮", "锁定技，出牌阶段，孙权使用【杀】无次数限制")
     
-    def can_trigger(self, game: 'Game', player: 'Player', target: Optional['Player'] = None) -> bool:
-        # 检查是否在出牌阶段
-        return game.current_phase == 'play' and player == game.current_player
+    def can_trigger(self, game, player, event_type, **kwargs):
+        return event_type == "play_card" and player.character.name == "孙权" and kwargs.get('card').name == "杀"
     
-    def execute(self, game: 'Game', player: 'Player', target: Optional['Player'] = None) -> bool:
-        print(f"{player.character.name} 发动技能【咆哮】，本回合可以使用任意数量的【杀】")
-        # 实际实现需要修改游戏逻辑，允许使用任意数量的杀
-        return True
+    def execute(self, game, player, **kwargs):
+        # 创建技能动作实例并执行
+        skill_action = self.create_skill_action()
+        return skill_action.apply_effect(game, player, **kwargs)
+    
+    def create_skill_action(self):
+        """创建咆哮技能动作实例"""
+        class PaoXiaoAction(SkillAction):
+            def __init__(self):
+                super().__init__("咆哮", "锁定技，出牌阶段，孙权使用【杀】无次数限制")
+            
+            def apply_effect(self, game, player, **kwargs):
+                # 咆哮技能不需要额外执行效果，它只是一个标记
+                print(f"{player.character.name} 使用了 咆哮 技能")
+                return True
+        
+        return PaoXiaoAction()
 
 
 class GuanXing(Skill):

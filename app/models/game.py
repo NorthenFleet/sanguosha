@@ -6,6 +6,7 @@ from typing import List, Dict, Optional
 import random
 from app.models.skills import SkillManager, PaoXiao, KeJi, YingZi
 from app.models.deck import Deck
+from .action import CardAction, SkillAction
 
 class CardType(Enum):
     """牌的类型"""
@@ -40,6 +41,18 @@ class Character:
             # 技能效果实现
             return True
         return False
+    
+    def has_skill(self, skill_name: str) -> bool:
+        """检查角色是否拥有指定技能"""
+        return skill_name in self.skills
+    
+    def get_skill(self, skill_name: str):
+        """获取技能实例"""
+        # 在实际实现中，这里应该返回具体的技能实例
+        # 目前我们简化处理，只返回技能名称
+        if self.has_skill(skill_name):
+            return skill_name
+        return None
 
 class Player:
     """玩家类"""
@@ -73,6 +86,12 @@ class Game:
         self.current_player_index = 0
         self.current_phase = "准备阶段"
         self.phase = "准备阶段"
+        self.skill_manager = SkillManager()
+        # 注册技能
+        self.skill_manager.register_skill(JianXiong())
+        self.skill_manager.register_skill(PaoXiao())
+        self.skill_manager.register_skill(KeJi())
+        self.skill_manager.register_skill(YingZi())
 
     def initialize_deck(self):
         """初始化牌堆"""
@@ -144,8 +163,15 @@ class Game:
                         has_used_kill = True
                         player.has_used_sha = True
                 
+                # 触发咆哮技能
+                if has_paoxiao:
+                    paoxiao_skill = player.character.get_skill("咆哮")
+                    if paoxiao_skill:
+                        paoxiao_skill.execute(self, player, card=card)
+                
                 card = player.hand_cards.pop(0)
                 print(f"\n{player.character.name} 使用了手牌: {card}")
+                # 处理响应
                 self.handle_response(player, card, test_mode=True)
         else:
             while True:
@@ -166,18 +192,25 @@ class Game:
                             card = player.hand_cards[choice]
                             
                             # 检查是否可以使用"杀"
-                            if card.name == "杀":
-                                # 检查是否有咆哮技能
-                                has_paoxiao = player.character.has_skill("咆哮")
-                                if has_used_kill and not has_paoxiao:
-                                    print("本回合已使用过\"杀\"，无法再次使用。")
-                                    continue
-                                has_used_kill = True
-                                player.has_used_sha = True
+                        if card.name == "杀":
+                            # 检查是否有咆哮技能
+                            has_paoxiao = player.character.has_skill("咆哮")
+                            if has_used_kill and not has_paoxiao:
+                                print("本回合已使用过\"杀\"，无法再次使用。")
+                                continue
+                            has_used_kill = True
+                            player.has_used_sha = True
+                        
+                        # 触发咆哮技能
+                        if has_paoxiao:
+                            paoxiao_skill = player.character.get_skill("咆哮")
+                            if paoxiao_skill:
+                                paoxiao_skill.execute(self, player, card=card)
                             
                             card = player.hand_cards.pop(choice)
                             print(f"\n{player.character.name} 使用了手牌: {card}")
-                            self.handle_response(player, card)
+                            # 处理响应
+                            self.handle_response(player, card, test_mode=False)
                         else:
                             print("选择无效，请重新选择。")
                     except ValueError:
@@ -191,41 +224,94 @@ class Game:
 
     def handle_response(self, player, card, test_mode=False):
         """处理出牌响应逻辑。"""
-        opponent = self.get_opponent(player)
-        print(f"{opponent.character.name} 需要响应 {card}...")
+        # 创建卡牌动作实例
+        card_action = self.create_card_action(card)
         
-        if card.name == "杀":
-            shan_card_index = -1
-            for i, c in enumerate(opponent.hand_cards):
-                if c.name == "闪":
-                    shan_card_index = i
-                    break
+        # 处理响应
+        result = card_action.handle_response(self, player)
+        
+        # 如果是杀牌且未被闪避，则处理伤害
+        if card.name == "杀" and result:
+            opponent = self.get_opponent(player)
+            self.handle_damage(opponent, 1, card)
+        
+        return result
+    
+    def create_card_action(self, card):
+        """根据卡牌创建对应的动作实例"""
+        class ShaAction(CardAction):
+            def __init__(self):
+                super().__init__("杀", "basic", "对目标造成1点伤害，目标可以使用闪来抵消")
             
-            if shan_card_index != -1:
-                # 在测试模式下自动使用闪
-                use_shan = 'y' if test_mode else input(f"{opponent.character.name} 是否使用闪? (y/n): ")
-                if use_shan.lower() == 'y':
-                    shan_card = opponent.hand_cards.pop(shan_card_index)
-                    print(f"{opponent.character.name} 使用了 {shan_card}，成功闪避攻击。")
-                else:
-                    opponent.character.hp -= 1
-                    print(f"{opponent.character.name} 未能闪避，失去1点血量。")
-                    if opponent.character.hp <= 0:
-                        print(f"{opponent.character.name} 已死亡！")
-            else:
+            def get_response_cards(self, player):
+                return [c.name for c in player.hand_cards if c.name == "闪"]
+            
+            def process_response(self, game, player, opponent, response_card):
+                print(f"{opponent.character.name} 使用了 {response_card}，成功闪避攻击。")
+                # 移除使用的闪
+                for i, c in enumerate(opponent.hand_cards):
+                    if c.name == response_card:
+                        opponent.hand_cards.pop(i)
+                        break
+                return False  # 攻击被抵消
+            
+            def apply_default_effect(self, game, player, target):
+                opponent = game.get_opponent(player)
                 opponent.character.hp -= 1
                 print(f"{opponent.character.name} 未能闪避，失去1点血量。")
                 if opponent.character.hp <= 0:
                     print(f"{opponent.character.name} 已死亡！")
+                return True
+        
+        class TaoAction(CardAction):
+            def __init__(self):
+                super().__init__("桃", "basic", "回复1点体力")
+            
+            def apply_effect(self, game, player, target=None):
+                if player.character.hp < player.character.max_hp:
+                    player.character.hp += 1
+                    print(f"{player.character.name} 使用了 桃，回复1点血量。")
+                    return True
+                else:
+                    print(f"{player.character.name} 体力已满，无法使用 桃。")
+                    return False
+        
+        class ShanAction(CardAction):
+            def __init__(self):
+                super().__init__("闪", "basic", "用于闪避杀")
+            
+            def apply_effect(self, game, player, target=None):
+                print(f"{player.character.name} 使用了 闪 来闪避攻击。")
+                return True
+        
+        class WuXieKeJiAction(CardAction):
+            def __init__(self):
+                super().__init__("无懈可击", "trick", "抵消一张锦囊牌的效果")
+            
+            def apply_effect(self, game, player, target=None):
+                print(f"{player.character.name} 使用了 无懈可击 来抵消锦囊牌效果。")
+                return True
+        
+        # 根据卡牌类型创建对应的动作实例
+        if card.name == "杀":
+            return ShaAction()
         elif card.name == "桃":
-            # 使用桃回复体力
-            if player.character.hp < player.character.max_hp:
-                player.character.hp += 1
-                print(f"{player.character.name} 使用了 {card}，回复1点血量。")
-            else:
-                print(f"{player.character.name} 体力已满，无法使用 {card}。")
+            return TaoAction()
+        elif card.name == "闪":
+            return ShanAction()
+        elif card.name == "无懈可击":
+            return WuXieKeJiAction()
         else:
-            print(f"{card} 无需响应。")
+            # 对于其他卡牌，创建一个默认的动作实例
+            class DefaultAction(CardAction):
+                def __init__(self, card_name):
+                    super().__init__(card_name, "basic", "默认卡牌效果")
+                
+                def apply_effect(self, game, player, target=None):
+                    print(f"{card_name} 无需响应。")
+                    return True
+            
+            return DefaultAction(card.name)
 
     def discard_phase(self, player, test_mode=False):
         """弃牌阶段: 玩家弃置多余手牌。"""
@@ -300,6 +386,22 @@ class Game:
     def get_opponent(self, player):
         """获取对手玩家。"""
         return self.players[1] if self.players[0] == player else self.players[0]
+    
+    def handle_damage(self, player, damage, damage_card=None):
+        """处理玩家受到的伤害。"""
+        player.character.hp -= damage
+        print(f"{player.character.name} 受到 {damage} 点伤害，剩余血量: {player.character.hp}")
+        
+        # 检查是否有奸雄技能
+        if player.character.has_skill("奸雄") and damage_card:
+            # 触发奸雄技能
+            self.skill_manager.trigger_skill("奸雄", self, player, damage_card=damage_card)
+        
+        # 检查角色是否死亡
+        if player.character.hp <= 0:
+            print(f"{player.character.name} 已死亡！")
+            return True
+        return False
 
 # 示例用法
 if __name__ == "__main__":
