@@ -73,12 +73,21 @@ class GameEngine:
         # 构建游戏状态响应
         players_status = []
         for i, player in enumerate(game.players):
+            # 获取手牌详情
+            hand_cards = []
+            for card in player.hand_cards:
+                if hasattr(card, 'name'):
+                    hand_cards.append(card.name)
+                else:
+                    hand_cards.append(str(card))
+            
             players_status.append({
                 "player_id": i+1,
                 "character_name": player.character.name,
                 "hp": player.character.hp,
                 "max_hp": player.character.max_hp,
                 "hand_cards_count": len(player.hand_cards),
+                "hand_cards": hand_cards,
                 "weapon": player.weapon.name if player.weapon else None,
                 "chained": player.chained
             })
@@ -88,5 +97,5 @@ class GameEngine:
             "current_player_id": game.current_player_index + 1,
             "current_phase": game.current_phase,
             "players": players_status,
-            "deck_count": len(game.deck)
+            "deck_count": game.deck.get_total_card_count()
         }

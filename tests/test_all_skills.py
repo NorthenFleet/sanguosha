@@ -7,7 +7,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 
 from app.models.game import Game, Card, CardType
 from app.models.character import CharacterFactory
-from models.skills import SkillManager, PaoXiao, KeJi, YingZi
+from app.models.skills import SkillManager, PaoXiao, KeJi, YingZi
 
 def test_all_skills():
     """测试所有技能"""
