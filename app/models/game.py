@@ -5,6 +5,7 @@ from enum import Enum
 from typing import List, Dict, Optional
 import random
 from app.models.skills import SkillManager, PaoXiao, KeJi, YingZi
+from app.models.deck import Deck
 
 class CardType(Enum):
     """牌的类型"""
@@ -49,11 +50,12 @@ class Player:
         self.chained = False  # 添加铁锁连环状态，默认为 False
         self.has_used_sha = False  # 添加是否使用过杀的标记，默认为 False
 
-    def draw_card(self, deck, num: int = 1):
+    def draw_card(self, deck: Deck, num: int = 1):
         """摸牌"""
         for _ in range(num):
-            if deck:
-                self.hand_cards.append(deck.pop())
+            card = deck.draw_card()
+            if card:
+                self.hand_cards.append(card)
 
     def play_card(self, card_index: int, target=None):
         """出牌"""
@@ -67,29 +69,15 @@ class Game:
     """游戏主逻辑"""
     def __init__(self):
         self.players: List[Player] = []
-        self.deck: List[Card] = []
+        self.deck: Deck = Deck()
         self.current_player_index = 0
         self.current_phase = "准备阶段"
         self.phase = "准备阶段"
 
     def initialize_deck(self):
         """初始化牌堆"""
-        # 基本牌
-        for _ in range(30):
-            self.deck.append(Card("杀", CardType.BASIC, random.choice(["♥", "♦", "♠", "♣"]), random.randint(1, 13)))
-        for _ in range(15):
-            self.deck.append(Card("闪", CardType.BASIC, random.choice(["♥", "♦"]), random.randint(1, 13)))
-        for _ in range(8):
-            self.deck.append(Card("桃", CardType.BASIC, random.choice(["♥", "♦"]), random.randint(1, 13)))
-        
-        # 锦囊牌
-        trick_cards = ["过河拆桥", "顺手牵羊", "无中生有", "决斗", "南蛮入侵", "万箭齐发"]
-        for card_name in trick_cards:
-            for _ in range(4):
-                self.deck.append(Card(card_name, CardType.TRICK, random.choice(["♥", "♦", "♠", "♣"]), random.randint(1, 13)))
-        
-        # 洗牌
-        random.shuffle(self.deck)
+        # 重新初始化牌堆
+        self.deck = Deck()
 
     def add_player(self, character: Character):
         """添加玩家"""
@@ -288,8 +276,8 @@ class Game:
         
         # 正常摸牌逻辑
         for _ in range(2):
-            if self.deck:
-                card = self.deck.pop()
+            card = self.deck.draw_card()
+            if card:
                 player.hand_cards.append(card)
                 print(f"摸到手牌: {card}")
             else:
@@ -307,7 +295,7 @@ class Game:
     def is_game_over(self):
         """检查游戏是否结束。"""
         # 如果任意玩家的角色血量为0或牌堆为空，则游戏结束
-        return any(player.character.hp <= 0 for player in self.players) or not self.deck
+        return any(player.character.hp <= 0 for player in self.players) or self.deck.is_empty()
 
     def get_opponent(self, player):
         """获取对手玩家。"""

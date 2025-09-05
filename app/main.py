@@ -2,7 +2,7 @@
 三国杀1v1 FastAPI应用入口
 """
 from fastapi import FastAPI
-from app.api import game_api
+from api import game_api
 
 app = FastAPI(title="三国杀1v1 API", description="三国杀1v1游戏的REST API接口", version="1.0.0")
 
