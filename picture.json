@@ -1,0 +1,89 @@
+{
+    "image": "image.png",
+    "annotations": [
+        {
+            "type": "hero",
+            "name": "郑艾",
+            "team": "冷方",
+            "role": "主帅",
+            "bounding_box": [850, 550, 950, 650],
+            "hp": 4,
+            "max_hp": 4,
+            "hand_card_count": 5,
+            "equipped": [],
+            "status": []
+        },
+        {
+            "type": "hero",
+            "name": "郑艾",
+            "team": "冷方",
+            "role": "前锋",
+            "bounding_box": [850, 550, 950, 650],
+            "hp": 4,
+            "max_hp": 4,
+            "hand_card_count": 5,
+            "equipped": [],
+            "status": []
+        },
+        {
+            "type": "hero",
+            "name": "郑艾",
+            "team": "冷方",
+            "role": "前锋",
+            "bounding_box": [850, 550, 950, 650],
+            "hp": 4,
+            "max_hp": 4,
+            "hand_card_count": 5,
+            "equipped": [],
+            "status": []
+        },
+        {
+            "type": "hero",
+            "name": "华佗",
+            "team": "暖方",
+            "role": "主帅",
+            "bounding_box": [600, 550, 700, 650],
+            "hp": 6,
+            "max_hp": 4,
+            "hand_card_count": 3,
+            "equipped": [],
+            "status": []
+        },
+        {
+            "type": "hero",
+            "name": "华佗",
+            "team": "暖方",
+            "role": "前锋",
+            "bounding_box": [600, 550, 700, 650],
+            "hp": 6,
+            "max_hp": 4,
+            "hand_card_count": 3,
+            "equipped": [],
+            "status": []
+        },
+        {
+            "type": "hero",
+            "name": "华佗",
+            "team": "暖方",
+            "role": "前锋",
+            "bounding_box": [600, 550, 700, 650],
+            "hp": 6,
+            "max_hp": 4,
+            "hand_card_count": 3,
+            "equipped": [],
+            "status": []
+        },
+        {
+            "type": "game_state",
+            "current_turn": 2,
+            "current_player": "冷方主帅",
+            "draw_pile": 129,
+            "discard_pile": 20
+        },
+        {
+            "type": "log",
+            "text": "华佗使用了【无中生有】",
+            "bounding_box": [1100, 200, 1300, 250]
+        }
+    ]
+}

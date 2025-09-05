@@ -1,0 +1,88 @@
+{
+    "game_round": 1,  // 当前游戏轮次
+    "current_turn": "冷方-主帅",  // 当前出牌玩家
+    "draw_pile": 129,  // 摸牌堆剩余牌数
+
+    "teams": {
+        "冷方": {
+            "leader": {
+                "bounding_box": [850, 550, 950, 650],
+                "name": "华佗",
+                "country":"群",
+                "hp": 4,
+                "max_hp": 4,
+                "hand_card_count":6,
+                "max_hand_card_count":4,
+                "hand_cards": ["闪♥2","无中生有♥J","杀♣4", "酒♣3", "爪黄飞电♥K","桃园结义♥A"],
+                "equipped": [],
+                "status": []
+            },
+            "frontline_1": {
+                "bounding_box": [850, 550, 950, 650],
+                "name": "孙策",
+                "country":"吴",
+                "hp": 4,
+                "max_hp": 4,
+                "hand_card_count":4,
+                "max_hand_card_count":,
+                "hand_cards": [],
+                "equipped": [],
+                "status": []
+            },
+            "frontline_2": {
+                "bounding_box": [850, 550, 950, 650],
+                "name": "邓艾",
+                "country":"魏",
+                "hp": 4,
+                "max_hp": 4,
+                "hand_card_count":4,
+                "max_hand_card_count":4,
+                "hand_cards": [],
+                "equipped": [],
+                "status": []
+            }
+        },
+        "暖方": {
+            "leader": {
+                "bounding_box": [850, 550, 950, 650],
+                "name": "界郭嘉",
+                "country":"魏",
+                "hp": 4,
+                "max_hp": 4,
+                "hand_card_count":5,
+                "max_hand_card_count":,
+                "hand_cards": [],
+                "equipped": [],
+                "status": []
+            },
+            "frontline_1": {
+                "bounding_box": [850, 550, 950, 650],
+                "name": "曹仁",
+                "country":"魏",
+                "hp": 4,
+                "max_hp": 4,
+                "hand_card_count":4,
+                "max_hand_card_count":,
+                "hand_cards": [],
+                "equipped": [],
+                "status": []
+            },
+            "frontline_2": {
+                "bounding_box": [850, 550, 950, 650],
+                "name": "贾诩",
+                "country":"群",
+                "hp": 3,
+                "max_hp": 3,
+                "hand_card_count":4,
+                "max_hand_card_count":,
+                "hand_cards": [],
+                "equipped": [],
+                "status": []
+            }
+        }
+    },
+    "other_bounding_box":{
+        "logs":[],
+        "whose_turn":[]
+    }
+}

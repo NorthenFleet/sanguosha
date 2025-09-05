@@ -1,0 +1,206 @@
+{
+  "game_round": 3,
+  "current_turn": "冷方-前锋1",
+  "draw_pile": 80,
+  "discard_pile": 20,
+  "teams": {
+    "冷方": {
+      "leader": {
+        "name": "吕布",
+        "hp": 5,
+        "max_hp": 5,
+        "hand_cards": [
+          "杀",
+          "酒",
+          "方天画戟"
+        ],
+        "equipped": [
+          "方天画戟"
+        ],
+        "status": [],
+        "history": {
+          "used_cards": [
+            "杀",
+            "桃"
+          ],
+          "used_skills": [
+            "无双"
+          ],
+          "current_turn_used_cards": [
+            "杀"
+          ],
+          "current_turn_used_skills": [
+            "无双"
+          ],
+          "kill_count": {
+            "current_turn": 1,
+            "max_per_turn": 2
+          }
+        }
+      },
+      "frontline_1": {
+        "name": "庞德",
+        "hp": 4,
+        "max_hp": 4,
+        "hand_cards": [
+          "杀",
+          "闪",
+          "无懈可击"
+        ],
+        "equipped": [
+          "赤兔"
+        ],
+        "status": [
+          "锁定技"
+        ],
+        "history": {
+          "used_cards": [
+            "无懈可击"
+          ],
+          "used_skills": [],
+          "current_turn_used_cards": [
+            "杀"
+          ],
+          "current_turn_used_skills": [],
+          "kill_count": {
+            "current_turn": 1,
+            "max_per_turn": 1
+          }
+        }
+      },
+      "frontline_2": {
+        "name": "曹彰",
+        "hp": 3,
+        "max_hp": 4,
+        "hand_cards": [
+          "桃",
+          "顺手牵羊"
+        ],
+        "equipped": [],
+        "status": [],
+        "history": {
+          "used_cards": [
+            "顺手牵羊"
+          ],
+          "used_skills": [],
+          "current_turn_used_cards": [],
+          "current_turn_used_skills": [],
+          "kill_count": {
+            "current_turn": 0,
+            "max_per_turn": 1
+          }
+        }
+      }
+    },
+    "暖方": {
+      "leader": {
+        "name": "刘备",
+        "hp": 4,
+        "max_hp": 5,
+        "hand_cards": [
+          "桃",
+          "仁德"
+        ],
+        "equipped": [
+          "仁王盾"
+        ],
+        "status": [],
+        "history": {
+          "used_cards": [
+            "桃"
+          ],
+          "used_skills": [
+            "仁德"
+          ],
+          "current_turn_used_cards": [],
+          "current_turn_used_skills": [
+            "仁德"
+          ],
+          "kill_count": {
+            "current_turn": 0,
+            "max_per_turn": 1
+          }
+        }
+      },
+      "frontline_1": {
+        "name": "赵云",
+        "hp": 4,
+        "max_hp": 4,
+        "hand_cards": [
+          "杀",
+          "龙胆"
+        ],
+        "equipped": [
+          "青釭剑"
+        ],
+        "status": [],
+        "history": {
+          "used_cards": [
+            "杀"
+          ],
+          "used_skills": [
+            "龙胆"
+          ],
+          "current_turn_used_cards": [
+            "杀"
+          ],
+          "current_turn_used_skills": [],
+          "kill_count": {
+            "current_turn": 1,
+            "max_per_turn": 2
+          }
+        }
+      },
+      "frontline_2": {
+        "name": "黄忠",
+        "hp": 3,
+        "max_hp": 4,
+        "hand_cards": [
+          "杀",
+          "贯石斧"
+        ],
+        "equipped": [
+          "贯石斧"
+        ],
+        "status": [
+          "觉醒技"
+        ],
+        "history": {
+          "used_cards": [],
+          "used_skills": [],
+          "current_turn_used_cards": [],
+          "current_turn_used_skills": [],
+          "kill_count": {
+            "current_turn": 0,
+            "max_per_turn": 1
+          }
+        }
+      }
+    }
+  },
+  "logs": [
+    "冷方前锋1（庞德）使用了【杀】攻击暖方前锋2（黄忠），黄忠未闪避，失去1点体力。",
+    "暖方主帅（刘备）发动【仁德】，为黄忠回复1点体力。",
+    "冷方前锋2（曹彰）使用【顺手牵羊】夺取暖方前锋1（赵云）的【青釭剑】。",
+    "轮到冷方前锋1（庞德）行动，进入出牌阶段。",
+    "执行了动作: 使用杀",
+    "执行了动作: 使用杀",
+    "执行了动作: 使用杀",
+    "执行了动作: 使用杀",
+    "执行了动作: 使用杀",
+    "执行了动作: 使用杀",
+    "执行了动作: 使用杀",
+    "执行了动作: 使用杀",
+    "执行了动作: 使用杀",
+    "执行了动作: 使用杀",
+    "执行了动作: 使用杀",
+    "执行了动作: 使用杀",
+    "执行了动作: 使用杀"
+  ],
+  "actions_available": [
+    "出牌",
+    "弃牌",
+    "使用装备",
+    "发动技能"
+  ]
+}
