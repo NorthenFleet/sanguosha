@@ -3,8 +3,8 @@
 """
 from fastapi import APIRouter, HTTPException
 from typing import List
-from app.schemas.game_schema import GameCreate, GameResponse, PlayerAction
-from app.core.game_engine import GameEngine
+from ..schemas.game_schema import GameCreate, GameResponse, PlayerAction
+from ..core.game_engine import GameEngine
 
 router = APIRouter(prefix="/game", tags=["game"])
 
