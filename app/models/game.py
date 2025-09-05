@@ -4,7 +4,7 @@
 from enum import Enum
 from typing import List, Dict, Optional
 import random
-from app.models.skills import SkillManager, PaoXiao, KeJi, YingZi
+from app.models.skills import SkillManager, PaoXiao, KeJi, YingZi, JianXiong
 from app.models.deck import Deck
 from .action import CardAction, SkillAction
 
@@ -165,9 +165,7 @@ class Game:
                 
                 # 触发咆哮技能
                 if has_paoxiao:
-                    paoxiao_skill = player.character.get_skill("咆哮")
-                    if paoxiao_skill:
-                        paoxiao_skill.execute(self, player, card=card)
+                    player.character.use_skill("咆哮", self, player)
                 
                 card = player.hand_cards.pop(0)
                 print(f"\n{player.character.name} 使用了手牌: {card}")
@@ -203,9 +201,7 @@ class Game:
                         
                         # 触发咆哮技能
                         if has_paoxiao:
-                            paoxiao_skill = player.character.get_skill("咆哮")
-                            if paoxiao_skill:
-                                paoxiao_skill.execute(self, player, card=card)
+                            player.character.use_skill("咆哮", self, player)
                             
                             card = player.hand_cards.pop(choice)
                             print(f"\n{player.character.name} 使用了手牌: {card}")
@@ -261,6 +257,10 @@ class Game:
                 print(f"{opponent.character.name} 未能闪避，失去1点血量。")
                 if opponent.character.hp <= 0:
                     print(f"{opponent.character.name} 已死亡！")
+                return True
+            
+            def apply_effect(self, game, player, target=None):
+                # 杀的效果已经在handle_response中处理
                 return True
         
         class TaoAction(CardAction):
