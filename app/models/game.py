@@ -207,12 +207,16 @@ class Game:
                             card = player.hand_cards.pop(choice)
                             print(f"\n{player.character.name} 使用了手牌: {card}")
                             # 处理响应 - 这会自动切换到对手的回合进行响应
+<<<<<<< HEAD
                             response_result = self.handle_response(player, card, test_mode=False)
                             
                             # 如果是无中生有被无懈可击响应，继续出牌阶段
                             if response_result == "continue_play_phase":
                                 print(f"无中生有被无懈可击取消，{player.character.name} 的出牌阶段继续。")
                                 continue
+=======
+                            self.handle_response(player, card, test_mode=False)
+>>>>>>> 3bb9597267c8166d54fb34e8daf0b079dcccd42e
                         else:
                             print("选择无效，请重新选择。")
                     except ValueError:
