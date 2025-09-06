@@ -9,7 +9,7 @@ import os
 # 将项目根目录添加到Python路径中
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from app.core.game_engine import GameEngine
+from app.models.game import Game, Character
 from app.models.character import CharacterFactory
 
 def main():
@@ -17,8 +17,8 @@ def main():
     print("三国杀1v1游戏")
     print("=" * 30)
     
-    # 创建游戏引擎
-    engine = GameEngine()
+    # 创建游戏实例
+    game = Game()
     
     # 选择武将
     print("请选择武将:")
@@ -30,8 +30,8 @@ def main():
     
     # 获取玩家选择
     try:
-        choice1 = int(input("\n玩家1请选择武将 (输入数字): "))
-        choice2 = int(input("玩家2请选择武将 (输入数字): "))
+        choice1 = int(input("\n玩家1请选择武将 (输入数字): ").strip())
+        choice2 = int(input("玩家2请选择武将 (输入数字): ").strip())
         
         if choice1 < 1 or choice1 > len(available_characters) or choice2 < 1 or choice2 > len(available_characters):
             print("无效的选择")
@@ -50,111 +50,17 @@ def main():
     
     # 创建游戏
     try:
-        game_id = engine.create_game(player1_character, player2_character)
-        print(f"\n游戏创建成功，游戏ID: {game_id}")
+        # 创建武将实例并添加到游戏
+        p1_character = CharacterFactory.create_character(player1_character)
+        p2_character = CharacterFactory.create_character(player2_character)
         
-        # 显示初始游戏状态
-        status = engine.get_game_status(game_id)
-        print("\n初始游戏状态:")
-        print(f"当前玩家: 玩家{status['current_player_id']} ({status['players'][status['current_player_id']-1]['character_name']})")
-        print(f"当前阶段: {status['current_phase']}")
+        game.add_player(p1_character)
+        game.add_player(p2_character)
         
-        for player_status in status['players']:
-            print(f"\n玩家{player_status['player_id']} ({player_status['character_name']}):")
-            print(f"  体力: {player_status['hp']}/{player_status['max_hp']}")
-            print(f"  手牌数: {player_status['hand_cards_count']}")
-            print(f"  武器: {player_status['weapon']}")
-            print(f"  连环: {player_status['chained']}")
+        print("\n游戏创建成功")
         
-        print(f"\n牌堆剩余: {status['deck_count']}张牌")
-        
-        # 游戏循环
-        while True:
-            # 获取当前游戏状态
-            status = engine.get_game_status(game_id)
-            
-            # 检查游戏是否结束
-            game_over = False
-            for player_status in status['players']:
-                if player_status['hp'] <= 0:
-                    print(f"\n游戏结束! 玩家{player_status['player_id']} ({player_status['character_name']}) 被击败!")
-                    game_over = True
-                    break
-            
-            if game_over:
-                break
-            
-            # 显示当前玩家和阶段
-            print(f"\n当前玩家: 玩家{status['current_player_id']} ({status['players'][status['current_player_id']-1]['character_name']})")
-            print(f"当前阶段: {status['current_phase']}")
-            
-            # 显示玩家状态和手牌
-            for player_status in status['players']:
-                print(f"\n玩家{player_status['player_id']} ({player_status['character_name']}):")
-                print(f"  体力: {player_status['hp']}/{player_status['max_hp']}")
-                print(f"  手牌数: {player_status['hand_cards_count']}")
-                print(f"  手牌: {', '.join(player_status['hand_cards'])}")
-                print(f"  技能: {', '.join(player_status['skills'])}")
-                print(f"  武器: {player_status['weapon']}")
-                print(f"  连环: {player_status['chained']}")
-            
-            print(f"\n牌堆剩余: {status['deck_count']}张牌")
-            
-            # 获取当前玩家
-            current_player = status['players'][status['current_player_id']-1]
-            
-            # 显示当前玩家可选动作
-            print(f"\n{current_player['character_name']}的回合:")
-            print("可选手牌:")
-            for i, card in enumerate(current_player['hand_cards']):
-                print(f"  {i+1}. {card}")
-            
-            print("可选技能:")
-            for i, skill in enumerate(current_player['skills']):
-                print(f"  {len(current_player['hand_cards'])+i+1}. {skill}")
-            
-            # 获取玩家动作
-            try:
-                action = input("\n请选择要使用的牌或技能 (输入数字, 输入'quit'退出游戏): ")
-                if action.lower() == 'quit':
-                    print("游戏退出。")
-                    break
-                
-                # 解析玩家选择
-                try:
-                    choice = int(action)
-                    hand_cards_count = len(current_player['hand_cards'])
-                    
-                    if 1 <= choice <= hand_cards_count:
-                        # 使用手牌
-                        card_name = current_player['hand_cards'][choice-1]
-                        print(f"{current_player['character_name']} 使用了手牌: {card_name}")
-                        # 这里应该调用engine.perform_action来执行具体动作
-                        # 暂时跳过实际动作执行，只更新状态
-                    elif hand_cards_count+1 <= choice <= hand_cards_count+len(current_player['skills']):
-                        # 使用技能
-                        skill_name = current_player['skills'][choice-hand_cards_count-1]
-                        print(f"{current_player['character_name']} 使用了技能: {skill_name}")
-                        # 这里应该调用engine.perform_action来执行具体动作
-                        # 暂时跳过实际动作执行，只更新状态
-                    else:
-                        print("无效的选择，请重新输入。")
-                        continue
-                except ValueError:
-                    print("请输入有效的数字。")
-                    continue
-                
-                # 这里应该调用engine.perform_action来执行具体动作
-                # 暂时跳过实际动作执行，只更新状态
-                
-                # 切换到下一个玩家（简化处理）
-                # 实际游戏中应该根据游戏规则和阶段来处理
-                
-            except KeyboardInterrupt:
-                print("\n游戏被中断。")
-                break
-            except Exception as e:
-                print(f"执行动作时出错: {e}")
+        # 开始游戏
+        game.start_game()
         
     except Exception as e:
         print(f"创建游戏时出错: {e}")
