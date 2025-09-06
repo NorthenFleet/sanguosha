@@ -87,9 +87,33 @@ class CardAction(Action):
             return response_cards[0] if response_cards else None
         
         # 实际实现中需要与用户交互
-        print(f"{player.character.name} 可以使用的响应卡牌: {', '.join(response_cards)}")
-        # 这里应该有用户输入逻辑
-        return None
+        print(f"\n{player.character.name} 的回合 - 需要响应 {self.name}")
+        print(f"当前手牌:")
+        for idx, card in enumerate(player.hand_cards, start=1):
+            print(f"{idx}. {card}")
+        
+        print(f"\n可以使用的响应卡牌: {', '.join(response_cards)}")
+        print("0. 结束响应")
+        
+        try:
+            choice = input("选择要使用的响应卡牌编号 (输入0结束响应): ")
+            if choice == "0":
+                return None
+            
+            choice = int(choice) - 1
+            if 0 <= choice < len(player.hand_cards):
+                selected_card = player.hand_cards[choice]
+                if selected_card.name in response_cards:
+                    return selected_card.name
+                else:
+                    print("选择的卡牌不能用于响应，请重新选择。")
+                    return self.ask_for_response(game, player, response_cards)
+            else:
+                print("选择无效，请重新选择。")
+                return self.ask_for_response(game, player, response_cards)
+        except ValueError:
+            print("输入无效，请重新选择。")
+            return self.ask_for_response(game, player, response_cards)
     
     def process_response(self, game: 'Game', player: 'Player', opponent: 'Player', response_card: str) -> bool:
         """处理响应卡牌"""

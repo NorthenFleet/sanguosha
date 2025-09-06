@@ -68,3 +68,7 @@ class Deck:
     def get_total_card_count(self) -> int:
         """获取总牌数"""
         return len(self.draw_pile) + len(self.discard_pile)
+    
+    def is_empty(self) -> bool:
+        """检查牌堆是否为空"""
+        return self.get_total_card_count() == 0

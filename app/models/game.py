@@ -190,22 +190,23 @@ class Game:
                             card = player.hand_cards[choice]
                             
                             # 检查是否可以使用"杀"
-                        if card.name == "杀":
-                            # 检查是否有咆哮技能
-                            has_paoxiao = player.character.has_skill("咆哮")
-                            if has_used_kill and not has_paoxiao:
-                                print("本回合已使用过\"杀\"，无法再次使用。")
-                                continue
-                            has_used_kill = True
-                            player.has_used_sha = True
-                        
-                        # 触发咆哮技能
-                        if has_paoxiao:
-                            player.character.use_skill("咆哮", self, player)
+                            has_paoxiao = False
+                            if card.name == "杀":
+                                # 检查是否有咆哮技能
+                                has_paoxiao = player.character.has_skill("咆哮")
+                                if has_used_kill and not has_paoxiao:
+                                    print("本回合已使用过\"杀\"，无法再次使用。")
+                                    continue
+                                has_used_kill = True
+                                player.has_used_sha = True
+                            
+                            # 触发咆哮技能
+                            if has_paoxiao:
+                                player.character.use_skill("咆哮", self, player)
                             
                             card = player.hand_cards.pop(choice)
                             print(f"\n{player.character.name} 使用了手牌: {card}")
-                            # 处理响应
+                            # 处理响应 - 这会自动切换到对手的回合进行响应
                             self.handle_response(player, card, test_mode=False)
                         else:
                             print("选择无效，请重新选择。")
@@ -372,11 +373,16 @@ class Game:
     def game_loop(self, test_mode=False):
         """游戏主循环: 包括判定、摸牌、出牌、弃牌阶段。"""
         while not self.is_game_over():
-            for player in self.players:
+            for i, player in enumerate(self.players):
+                print(f"\n=== {player.character.name} 的回合 ===")
                 self.judgment_phase()
                 self.draw_phase(player)
                 self.play_phase(player, test_mode=test_mode)
                 self.discard_phase(player, test_mode=test_mode)
+                
+                # 检查游戏是否结束
+                if self.is_game_over():
+                    break
 
     def is_game_over(self):
         """检查游戏是否结束。"""
