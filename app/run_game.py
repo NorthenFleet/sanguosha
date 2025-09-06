@@ -94,21 +94,55 @@ def main():
                 print(f"  体力: {player_status['hp']}/{player_status['max_hp']}")
                 print(f"  手牌数: {player_status['hand_cards_count']}")
                 print(f"  手牌: {', '.join(player_status['hand_cards'])}")
+                print(f"  技能: {', '.join(player_status['skills'])}")
                 print(f"  武器: {player_status['weapon']}")
                 print(f"  连环: {player_status['chained']}")
             
             print(f"\n牌堆剩余: {status['deck_count']}张牌")
             
+            # 获取当前玩家
+            current_player = status['players'][status['current_player_id']-1]
+            
+            # 显示当前玩家可选动作
+            print(f"\n{current_player['character_name']}的回合:")
+            print("可选手牌:")
+            for i, card in enumerate(current_player['hand_cards']):
+                print(f"  {i+1}. {card}")
+            
+            print("可选技能:")
+            for i, skill in enumerate(current_player['skills']):
+                print(f"  {len(current_player['hand_cards'])+i+1}. {skill}")
+            
             # 获取玩家动作
             try:
-                action = input("\n请输入动作 (输入'quit'退出游戏): ")
+                action = input("\n请选择要使用的牌或技能 (输入数字, 输入'quit'退出游戏): ")
                 if action.lower() == 'quit':
                     print("游戏退出。")
                     break
                 
-                # 执行动作（这里只是一个示例，实际需要根据游戏规则实现）
-                # 目前只是简单地更新状态
-                print(f"执行动作: {action}")
+                # 解析玩家选择
+                try:
+                    choice = int(action)
+                    hand_cards_count = len(current_player['hand_cards'])
+                    
+                    if 1 <= choice <= hand_cards_count:
+                        # 使用手牌
+                        card_name = current_player['hand_cards'][choice-1]
+                        print(f"{current_player['character_name']} 使用了手牌: {card_name}")
+                        # 这里应该调用engine.perform_action来执行具体动作
+                        # 暂时跳过实际动作执行，只更新状态
+                    elif hand_cards_count+1 <= choice <= hand_cards_count+len(current_player['skills']):
+                        # 使用技能
+                        skill_name = current_player['skills'][choice-hand_cards_count-1]
+                        print(f"{current_player['character_name']} 使用了技能: {skill_name}")
+                        # 这里应该调用engine.perform_action来执行具体动作
+                        # 暂时跳过实际动作执行，只更新状态
+                    else:
+                        print("无效的选择，请重新输入。")
+                        continue
+                except ValueError:
+                    print("请输入有效的数字。")
+                    continue
                 
                 # 这里应该调用engine.perform_action来执行具体动作
                 # 暂时跳过实际动作执行，只更新状态

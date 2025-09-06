@@ -88,6 +88,7 @@ class GameEngine:
                 "max_hp": player.character.max_hp,
                 "hand_cards_count": len(player.hand_cards),
                 "hand_cards": hand_cards,
+                "skills": player.character.skills,
                 "weapon": player.weapon.name if player.weapon else None,
                 "chained": player.chained
             })
