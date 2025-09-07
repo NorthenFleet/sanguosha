@@ -83,8 +83,11 @@ class CardAction(Action):
         # 在实际实现中，这会与用户界面交互
         # 在测试模式下，可以自动选择
         if hasattr(game, 'test_mode') and game.test_mode:
-            # 测试模式下自动选择第一张响应卡牌
-            return response_cards[0] if response_cards else None
+            # 测试模式下自动选择第一张响应卡牌，但只选择玩家实际拥有的卡牌
+            for card_name in response_cards:
+                if any(c.name == card_name for c in player.hand_cards):
+                    return card_name
+            return None
         
         # 实际实现中需要与用户交互
         print(f"\n{player.character.name} 的回合 - 需要响应 {self.name}")

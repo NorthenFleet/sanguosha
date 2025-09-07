@@ -207,7 +207,16 @@ class Game:
                             card = player.hand_cards.pop(choice)
                             print(f"\n{player.character.name} 使用了手牌: {card}")
                             # 处理响应 - 这会自动切换到对手的回合进行响应
+<<<<<<< HEAD
+                            response_result = self.handle_response(player, card, test_mode=False)
+                            
+                            # 如果是无中生有被无懈可击响应，继续出牌阶段
+                            if response_result == "continue_play_phase":
+                                print(f"无中生有被无懈可击取消，{player.character.name} 的出牌阶段继续。")
+                                continue
+=======
                             self.handle_response(player, card, test_mode=False)
+>>>>>>> 3bb9597267c8166d54fb34e8daf0b079dcccd42e
                         else:
                             print("选择无效，请重新选择。")
                     except ValueError:
@@ -224,13 +233,18 @@ class Game:
         # 创建卡牌动作实例
         card_action = self.create_card_action(card)
         
+        # 如果是桃，直接应用效果，不需要响应
+        if card.name == "桃":
+            return card_action.apply_effect(self, player)
+        
         # 处理响应
         result = card_action.handle_response(self, player)
         
-        # 如果是杀牌且未被闪避，则处理伤害
-        if card.name == "杀" and result:
-            opponent = self.get_opponent(player)
-            self.handle_damage(opponent, 1, card)
+        # 杀牌的伤害已经在apply_default_effect中处理，这里不需要重复处理
+        
+        # 如果是无中生有、过河拆桥或顺手牵羊且被无懈可击响应，返回特殊标志让出牌阶段继续
+        if (card.name == "无中生有" or card.name == "过河拆桥" or card.name == "顺手牵羊") and result == False:
+            return "continue_play_phase"
         
         return result
     
@@ -266,7 +280,11 @@ class Game:
         
         class TaoAction(CardAction):
             def __init__(self):
-                super().__init__("桃", "basic", "回复1点体力")
+                super().__init__("桃", "basic", "回复1点体力，但不能超过血量上限")
+            
+            def get_response_cards(self, player):
+                # 桃不需要对方响应
+                return []
             
             def apply_effect(self, game, player, target=None):
                 if player.character.hp < player.character.max_hp:
@@ -292,6 +310,282 @@ class Game:
             def apply_effect(self, game, player, target=None):
                 print(f"{player.character.name} 使用了 无懈可击 来抵消锦囊牌效果。")
                 return True
+
+        class GuoHeChaiQiaoAction(CardAction):
+            def __init__(self):
+                super().__init__("过河拆桥", "trick", "弃置目标角色区域内的一张牌")
+            
+            def get_response_cards(self, player):
+                return ["无懈可击"]
+            
+            def process_response(self, game, player, opponent, response_card):
+                print(f"{opponent.character.name} 使用了 {response_card} 响应过河拆桥，过河拆桥被取消。")
+                # 移除使用的无懈可击
+                for i, c in enumerate(opponent.hand_cards):
+                    if c.name == response_card:
+                        opponent.hand_cards.pop(i)
+                        break
+                return True  # 响应成功，取消过河拆桥
+            
+            def apply_default_effect(self, game, player, target=None):
+                opponent = game.get_opponent(player)
+                if opponent.hand_cards:
+                    # 随机弃置对手一张手牌
+                    discarded_card = opponent.hand_cards.pop(random.randint(0, len(opponent.hand_cards) - 1))
+                    print(f"{player.character.name} 使用了 过河拆桥，弃置了 {opponent.character.name} 的 {discarded_card.name}")
+                    return True
+                else:
+                    print(f"{opponent.character.name} 没有手牌，过河拆桥无效。")
+                    return False
+            
+            def apply_effect(self, game, player, target=None):
+                # 过河拆桥的效果在handle_response中处理
+                return True
+            
+            def handle_response(self, game, player):
+                print(f"{player.character.name} 使用了 过河拆桥，对方可以响应无懈可击...")
+                opponent = game.get_opponent(player)
+                response_cards = self.get_response_cards(opponent)
+                available_cards = [card for card in opponent.hand_cards if card.name in response_cards]
+                
+                if available_cards:
+                    # 询问是否响应
+                    print(f"{opponent.character.name} 可以响应过河拆桥，使用无懈可击")
+                    response_result = self.ask_for_response(game, opponent, response_cards)
+                    if response_result:
+                        # 响应成功，取消过河拆桥
+                        print(f"过河拆桥被无懈可击取消，{player.character.name} 的出牌阶段继续。")
+                        return False  # 返回False表示响应成功，取消效果
+                    else:
+                        # 对方选择不响应，执行默认效果
+                        print(f"{opponent.character.name} 选择不响应过河拆桥。")
+                        return self.apply_default_effect(game, player)
+                else:
+                    # 对方没有无懈可击，执行默认效果
+                    print(f"{opponent.character.name} 没有无懈可击可以响应。")
+                    return self.apply_default_effect(game, player)
+
+        class ShunShouQianYangAction(CardAction):
+            def __init__(self):
+                super().__init__("顺手牵羊", "trick", "获得目标角色区域内的一张牌")
+            
+            def get_response_cards(self, player):
+                return ["无懈可击"]
+            
+            def process_response(self, game, player, opponent, response_card):
+                print(f"{opponent.character.name} 使用了 {response_card} 响应顺手牵羊，顺手牵羊被取消。")
+                # 移除使用的无懈可击
+                for i, c in enumerate(opponent.hand_cards):
+                    if c.name == response_card:
+                        opponent.hand_cards.pop(i)
+                        break
+                return True  # 响应成功，取消顺手牵羊
+            
+            def apply_default_effect(self, game, player, target=None):
+                opponent = game.get_opponent(player)
+                if opponent.hand_cards:
+                    # 随机获得对手一张手牌
+                    stolen_card = opponent.hand_cards.pop(random.randint(0, len(opponent.hand_cards) - 1))
+                    player.hand_cards.append(stolen_card)
+                    print(f"{player.character.name} 使用了 顺手牵羊，获得了 {opponent.character.name} 的 {stolen_card.name}")
+                    return True
+                else:
+                    print(f"{opponent.character.name} 没有手牌，顺手牵羊无效。")
+                    return False
+            
+            def apply_effect(self, game, player, target=None):
+                # 顺手牵羊的效果在handle_response中处理
+                return True
+            
+            def handle_response(self, game, player):
+                print(f"{player.character.name} 使用了 顺手牵羊，对方可以响应无懈可击...")
+                opponent = game.get_opponent(player)
+                response_cards = self.get_response_cards(opponent)
+                available_cards = [card for card in opponent.hand_cards if card.name in response_cards]
+                
+                if available_cards:
+                    # 询问是否响应
+                    print(f"{opponent.character.name} 可以响应顺手牵羊，使用无懈可击")
+                    response_result = self.ask_for_response(game, opponent, response_cards)
+                    if response_result:
+                        # 响应成功，取消顺手牵羊
+                        print(f"顺手牵羊被无懈可击取消，{player.character.name} 的出牌阶段继续。")
+                        return False  # 返回False表示响应成功，取消效果
+                    else:
+                        # 对方选择不响应，执行默认效果
+                        print(f"{opponent.character.name} 选择不响应顺手牵羊。")
+                        return self.apply_default_effect(game, player)
+                else:
+                    # 对方没有无懈可击，执行默认效果
+                    print(f"{opponent.character.name} 没有无懈可击可以响应。")
+                    return self.apply_default_effect(game, player)
+
+        class WuZhongShengYouAction(CardAction):
+            def __init__(self):
+                super().__init__("无中生有", "trick", "摸两张牌")
+            
+            def get_response_cards(self, player):
+                return ["无懈可击"]
+            
+            def process_response(self, game, player, opponent, response_card):
+                print(f"{opponent.character.name} 使用了 {response_card} 响应无中生有，无中生有被取消。")
+                # 移除使用的无懈可击
+                for i, c in enumerate(opponent.hand_cards):
+                    if c.name == response_card:
+                        opponent.hand_cards.pop(i)
+                        break
+                return True  # 响应成功，取消无中生有
+            
+            def apply_default_effect(self, game, player, target=None):
+                # 默认效果：摸两张牌
+                for _ in range(2):
+                    card = game.deck.draw_card()
+                    if card:
+                        player.hand_cards.append(card)
+                        print(f"{player.character.name} 摸到了 {card.name}")
+                    else:
+                        print("牌堆已空")
+                return True
+            
+            def apply_effect(self, game, player, target=None):
+                # 无中生有的效果在handle_response中处理
+                return True
+            
+            def handle_response(self, game, player):
+                print(f"{player.character.name} 使用了 无中生有，对方可以响应无懈可击...")
+                opponent = game.get_opponent(player)
+                response_cards = self.get_response_cards(opponent)
+                available_cards = [card for card in opponent.hand_cards if card.name in response_cards]
+                
+                if available_cards:
+                    # 询问是否响应
+                    print(f"{opponent.character.name} 可以响应无中生有，使用无懈可击")
+                    response_result = self.ask_for_response(game, opponent, response_cards)
+                    if response_result:
+                        # 响应成功，取消无中生有
+                        print(f"无中生有被无懈可击取消，{player.character.name} 的出牌阶段继续。")
+                        return False  # 返回False表示响应成功，取消效果
+                    else:
+                        # 对方选择不响应，执行默认效果
+                        print(f"{opponent.character.name} 选择不响应无中生有。")
+                        return self.apply_default_effect(game, player)
+                else:
+                    # 对方没有无懈可击，执行默认效果
+                    print(f"{opponent.character.name} 没有无懈可击可以响应。")
+                    return self.apply_default_effect(game, player)
+
+        class JueDouAction(CardAction):
+            def __init__(self):
+                super().__init__("决斗", "trick", "与目标角色进行决斗，双方需要交替打出杀")
+            
+            def get_response_cards(self, player):
+                return ["杀"]
+            
+            def process_response(self, game, player, opponent, response_card):
+                print(f"{opponent.character.name} 使用了 {response_card} 响应决斗。")
+                # 移除使用的杀（response_card是卡牌名称字符串）
+                for i, c in enumerate(opponent.hand_cards):
+                    if c.name == response_card:
+                        opponent.hand_cards.pop(i)
+                        break
+                
+                # 决斗继续，进入交替出杀的循环逻辑
+                return self.handle_further_response(game, player, opponent, response_card)
+            
+            def handle_further_response(self, game, player, opponent, response_card):
+                # 决斗的进一步响应处理 - 使用循环来处理交替出杀
+                # 初始状态：曹操已经出杀响应，现在轮到张辽出杀
+                current_attacker = player  # 当前需要出杀的一方（张辽）
+                current_defender = opponent  # 当前需要响应的一方（曹操）
+                
+                while True:
+                    # 检查当前需要出杀的一方是否有杀
+                    if any(c.name == "杀" for c in current_attacker.hand_cards):
+                        print(f"决斗继续，{current_attacker.character.name} 需要打出杀。")
+                        # 询问是否出杀
+                        response_result = self.ask_for_response(game, current_attacker, ["杀"])
+                        if response_result is not None:
+                            # 出杀
+                            print(f"{current_attacker.character.name} 出杀，继续决斗")
+                            # 移除使用的杀
+                            for i, c in enumerate(current_attacker.hand_cards):
+                                if c.name == response_result:
+                                    current_attacker.hand_cards.pop(i)
+                                    break
+                            # 交换攻防角色
+                            current_attacker, current_defender = current_defender, current_attacker
+                        else:
+                            # 选择不出杀，受到伤害
+                            print(f"{current_attacker.character.name} 选择不出杀，受到1点伤害。")
+                            current_attacker.character.hp -= 1
+                            return False
+                    else:
+                        # 没有杀可以响应，受到伤害
+                        print(f"{current_attacker.character.name} 没有杀可以响应，受到1点伤害。")
+                        current_attacker.character.hp -= 1
+                        return False
+            
+            def apply_default_effect(self, game, player, target=None):
+                opponent = game.get_opponent(player)
+                print(f"{opponent.character.name} 没有响应决斗，受到1点伤害。")
+                opponent.character.hp -= 1
+                return True
+            
+            def apply_effect(self, game, player, target=None):
+                # 决斗的效果已经在handle_response中处理
+                return True
+
+        class NanManRuQinAction(CardAction):
+            def __init__(self):
+                super().__init__("南蛮入侵", "trick", "所有角色需要打出一张杀，否则受到1点伤害")
+            
+            def get_response_cards(self, player):
+                return ["杀"]
+            
+            def process_response(self, game, player, opponent, response_card):
+                print(f"{opponent.character.name} 使用了 {response_card} 响应南蛮入侵。")
+                # 移除使用的杀
+                for i, c in enumerate(opponent.hand_cards):
+                    if c.name == response_card:
+                        opponent.hand_cards.pop(i)
+                        break
+                return False  # 响应成功，不受到伤害
+            
+            def apply_default_effect(self, game, player, target=None):
+                opponent = game.get_opponent(player)
+                print(f"{opponent.character.name} 没有杀可以响应南蛮入侵，受到1点伤害。")
+                opponent.character.hp -= 1
+                return True
+            
+            def apply_effect(self, game, player, target=None):
+                # 南蛮入侵的效果在handle_response中处理
+                return True
+
+        class WanJianQiFaAction(CardAction):
+            def __init__(self):
+                super().__init__("万箭齐发", "trick", "所有角色需要打出一张闪，否则受到1点伤害")
+            
+            def get_response_cards(self, player):
+                return ["闪"]
+            
+            def process_response(self, game, player, opponent, response_card):
+                print(f"{opponent.character.name} 使用了 {response_card} 响应万箭齐发。")
+                # 移除使用的闪
+                for i, c in enumerate(opponent.hand_cards):
+                    if c.name == response_card:
+                        opponent.hand_cards.pop(i)
+                        break
+                return False  # 响应成功，不受到伤害
+            
+            def apply_default_effect(self, game, player, target=None):
+                opponent = game.get_opponent(player)
+                print(f"{opponent.character.name} 没有闪可以响应万箭齐发，受到1点伤害。")
+                opponent.character.hp -= 1
+                return True
+            
+            def apply_effect(self, game, player, target=None):
+                # 万箭齐发的效果在handle_response中处理
+                return True
         
         # 根据卡牌类型创建对应的动作实例
         if card.name == "杀":
@@ -302,6 +596,18 @@ class Game:
             return ShanAction()
         elif card.name == "无懈可击":
             return WuXieKeJiAction()
+        elif card.name == "过河拆桥":
+            return GuoHeChaiQiaoAction()
+        elif card.name == "顺手牵羊":
+            return ShunShouQianYangAction()
+        elif card.name == "无中生有":
+            return WuZhongShengYouAction()
+        elif card.name == "决斗":
+            return JueDouAction()
+        elif card.name == "南蛮入侵":
+            return NanManRuQinAction()
+        elif card.name == "万箭齐发":
+            return WanJianQiFaAction()
         else:
             # 对于其他卡牌，创建一个默认的动作实例
             class DefaultAction(CardAction):
