@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Chinese', 'SimSun', 'STKaiti', 'KaiTi', serif;
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #1d4ed8 100%);
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-lg shadow-lg border-2 border-gold-500 p-4 transition-all duration-300 hover:shadow-xl hover:scale-105;
+  }
+  
+  .btn-primary {
+    @apply bg-sanguo-red hover:bg-red-800 text-white font-bold py-2 px-4 rounded transition-colors duration-200;
+  }
+  
+  .btn-secondary {
+    @apply bg-sanguo-gold hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200;
+  }
+  
+  .character-card {
+    @apply card bg-gradient-to-br from-red-50 to-orange-100 border-red-300;
+  }
+  
+  .hand-card {
+    @apply card bg-gradient-to-br from-blue-50 to-indigo-100 border-blue-300 cursor-pointer;
+  }
+}
