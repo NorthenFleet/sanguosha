@@ -2,6 +2,7 @@ from core.event_system import EventManager
 from models.game import Game
 from models.character import Character
 
+
 def main():
     # 初始化事件管理器和游戏实例
     event_manager = EventManager()
