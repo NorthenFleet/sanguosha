@@ -7,6 +7,7 @@ import random
 from app.models.skills import SkillManager, PaoXiao, KeJi, YingZi, JianXiong
 from app.models.deck import Deck
 from .action import CardAction, SkillAction
+from .player import Player
 
 class CardType(Enum):
     """牌的类型"""
@@ -54,32 +55,43 @@ class Character:
             return skill_name
         return None
 
-class Player:
-    """玩家类"""
-    def __init__(self, character):
-        self.character = character
-        self.hand_cards = []
-        self.weapon = None  # 添加武器属性，默认为 None
-        self.chained = False  # 添加铁锁连环状态，默认为 False
-        self.has_used_sha = False  # 添加是否使用过杀的标记，默认为 False
-
-    def draw_card(self, deck: Deck, num: int = 1):
-        """摸牌"""
-        for _ in range(num):
-            card = deck.draw_card()
-            if card:
-                self.hand_cards.append(card)
-
-    def play_card(self, card_index: int, target=None):
-        """出牌"""
-        if 0 <= card_index < len(self.hand_cards):
-            card = self.hand_cards.pop(card_index)
-            print(f"{self.character.name} 使用了 {card}")
-            return card
-        return None
-
 class Game:
-    """游戏主逻辑"""
+    """三国杀1v1游戏逻辑模块
+    """
+    from typing import List
+    from .player import Player
+    from .deck import Deck
+    
+    class Game:
+        """游戏类"""
+        def __init__(self, players: List[Player], deck: Deck):
+            self.players = players
+            self.deck = deck
+            self.current_player_index = 0
+    
+        def start_game(self):
+            """开始游戏"""
+            self.deck.shuffle()
+            for player in self.players:
+                player.draw_card(self.deck.cards, 4)
+    
+        def next_turn(self):
+            """进入下一回合"""
+            self.current_player_index = (self.current_player_index + 1) % len(self.players)
+    
+        def play_turn(self):
+            """执行当前玩家的回合"""
+            current_player = self.players[self.current_player_index]
+            # 示例逻辑：玩家摸两张牌
+            current_player.draw_card(self.deck.cards, 2)
+    
+        def check_winner(self):
+            """检查游戏是否有胜者"""
+            alive_players = [player for player in self.players if player.character.health > 0]
+            if len(alive_players) == 1:
+                return alive_players[0]
+            return None
+
     def __init__(self):
         self.players: List[Player] = []
         self.deck: Deck = Deck()
