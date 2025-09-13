@@ -56,49 +56,15 @@ class Character:
         return None
 
 class Game:
-    """三国杀1v1游戏逻辑模块
-    """
-    from typing import List
-    from .player import Player
-    from .deck import Deck
-    
-    class Game:
-        """游戏类"""
-        def __init__(self, players: List[Player], deck: Deck):
-            self.players = players
-            self.deck = deck
-            self.current_player_index = 0
-    
-        def start_game(self):
-            """开始游戏"""
-            self.deck.shuffle()
-            for player in self.players:
-                player.draw_card(self.deck.cards, 4)
-    
-        def next_turn(self):
-            """进入下一回合"""
-            self.current_player_index = (self.current_player_index + 1) % len(self.players)
-    
-        def play_turn(self):
-            """执行当前玩家的回合"""
-            current_player = self.players[self.current_player_index]
-            # 示例逻辑：玩家摸两张牌
-            current_player.draw_card(self.deck.cards, 2)
-    
-        def check_winner(self):
-            """检查游戏是否有胜者"""
-            alive_players = [player for player in self.players if player.character.health > 0]
-            if len(alive_players) == 1:
-                return alive_players[0]
-            return None
-
-    def __init__(self):
+    """三国杀1v1游戏逻辑模块"""
+    def __init__(self, event_manager):
         self.players: List[Player] = []
         self.deck: Deck = Deck()
         self.current_player_index = 0
         self.current_phase = "准备阶段"
         self.phase = "准备阶段"
         self.skill_manager = SkillManager()
+        self.event_manager = event_manager
         # 注册技能
         self.skill_manager.register_skill(JianXiong())
         self.skill_manager.register_skill(PaoXiao())
@@ -127,10 +93,14 @@ class Game:
         
         # 初始摸牌
         for player in self.players:
-            player.draw_card(self.deck, 4)
+            player.draw_card(self.deck.draw_pile, 4)
         
         print("游戏开始!")
         self.game_loop()
+
+    def game_loop(self):
+        """游戏主循环"""
+        print("游戏主循环开始...")
 
     def judgment_phase(self):
         """判定阶段: 检查是否有负面效果并处理。"""
