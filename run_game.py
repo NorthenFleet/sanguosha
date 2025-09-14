@@ -5,12 +5,13 @@
 """
 import sys
 import os
+from core.path_utils import setup_paths
 
-# 将项目根目录添加到Python路径中
-sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
+# 设置项目路径
+setup_paths()
 
-from app.models.game import Game, Character
-from app.models.character import CharacterFactory
+from models.game import Game, Character
+from models.character import CharacterFactory
 
 def main():
     """主函数"""

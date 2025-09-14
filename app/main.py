@@ -1,6 +1,9 @@
+from core.path_utils import setup_paths
+setup_paths()
+
 from core.event_system import EventManager
-from models.game import Game
-from models.character import Character
+from app.models.game import Game
+from app.models.character import Character
 
 
 def main():
