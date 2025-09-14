@@ -7,7 +7,7 @@ import sys
 import os
 
 # 将项目根目录添加到Python路径中
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
 
 from app.models.game import Game, Character
 from app.models.character import CharacterFactory

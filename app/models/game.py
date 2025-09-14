@@ -5,7 +5,7 @@ from enum import Enum
 from typing import List, Dict, Optional
 import random
 from .skills import SkillManager, PaoXiao, KeJi, YingZi, JianXiong
-from app.models.deck import Deck
+from models.deck import Deck
 from .action import CardAction, SkillAction
 from .player import Player
 
