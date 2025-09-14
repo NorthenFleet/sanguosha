@@ -15,15 +15,27 @@ class Card:
 class Deck:
     def __init__(self, card_data_file):
         self.cards = self.load_cards(card_data_file)
-        shuffle(self.cards)
 
     def load_cards(self, card_data_file):
-        with open(card_data_file, 'r', encoding='utf-8') as file:
-            card_data = json.load(file)
-        return [Card(**card) for card in card_data]
+        import json
+        with open(card_data_file, "r", encoding="utf-8") as f:
+            card_data = json.load(f)
 
-    def draw_card(self):
-        return self.cards.pop() if self.cards else None
+        cards = []
+        for category, details in card_data.items():
+            for suit, points in details.get("cards", {}).items():
+                for point in points:
+                    cards.append(Card(category=category, suit=suit, point=point))
+        return cards
+
+    def shuffle(self):
+        import random
+        random.shuffle(self.cards)
+
+    def draw(self, num=1):
+        drawn_cards = self.cards[:num]
+        self.cards = self.cards[num:]
+        return drawn_cards
 
 # 示例：加载卡牌数据并摸牌
 deck = Deck("app/data/cards.json")
