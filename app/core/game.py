@@ -4,10 +4,10 @@
 from enum import Enum
 from typing import List, Dict, Optional
 import random
-from .skills import SkillManager, PaoXiao, KeJi, YingZi, JianXiong
+from app.models.skills import SkillManager, PaoXiao, KeJi, YingZi, JianXiong
 from models.deck import Deck
-from .action import CardAction, SkillAction
-from .player import Player
+from app.models.action import CardAction, SkillAction
+from app.models.player import Player
 
 class CardType(Enum):
     """牌的类型"""

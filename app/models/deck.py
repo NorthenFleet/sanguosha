@@ -18,7 +18,7 @@ class Deck:
     def _initialize_draw_pile(self):
         """初始化摸牌堆"""
         # 导入Card和CardType
-        from .game import Card, CardType
+        from app.core.game import Card, CardType
         
         # 基本牌
         for _ in range(30):
