@@ -1,4 +1,4 @@
-from core.path_utils import setup_paths
+from app.core.path_utils import setup_paths
 setup_paths()
 
 from core.event_system import EventManager
