@@ -8,8 +8,10 @@ class Player:
     """玩家类"""
     def __init__(self, character: Character):
         self.character = character
+        self.hp = character.hp
         self.hand_cards: List[str] = []
         self.weapon = None
+        self.equipped = []  # 初始化 equipped 属性为空列表
         self.chained = False
 
     def draw_card(self, deck: List[str], count: int):

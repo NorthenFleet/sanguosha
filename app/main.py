@@ -7,6 +7,7 @@ setup_paths()
 from app.core.event_system import EventManager
 from app.core.game import Game
 from app.models.character import Character
+from app.models.card import Deck, display_deck_info
 
 
 def main():
@@ -49,6 +50,27 @@ def main():
 
     # 启动游戏
     game.start_game()
+
+    # 初始化牌堆
+    deck = Deck("app/data/cards.json")
+    if not deck.cards:
+        print("错误: 卡牌数据加载失败，请检查 cards.json 文件内容。")
+        return
+
+    deck.shuffle()
+
+    # 显示牌堆信息
+    display_deck_info(deck)
+
+    # 测试摸牌功能
+    card = deck.draw_card()
+    print(f"摸到的牌是：{card}")
+
+    # 将摸到的牌放入弃牌堆
+    deck.discard(card)
+
+    # 再次显示牌堆信息
+    display_deck_info(deck)
 
 if __name__ == "__main__":
     main()

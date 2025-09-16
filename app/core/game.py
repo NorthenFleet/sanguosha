@@ -5,9 +5,10 @@ from enum import Enum
 from typing import List, Dict, Optional
 import random
 from app.models.skills import SkillManager, PaoXiao, KeJi, YingZi, JianXiong
-from models.deck import Deck
+from app.models.card import Deck
 from app.models.action import CardAction, SkillAction
 from app.models.player import Player
+from app.models.enums import CardType
 
 class CardType(Enum):
     """牌的类型"""
@@ -24,7 +25,7 @@ class Card:
         self.rank = rank  # 点数
 
     def __str__(self):
-        return f"{self.name}({self.type.value})"
+        return f"{self.name}({self.type.value}) - {self.suit}[{self.rank}]"
 
 class Character:
     """武将基类"""
@@ -74,7 +75,10 @@ class Game:
     def initialize_deck(self):
         """初始化牌堆"""
         # 重新初始化牌堆
-        self.deck = Deck()
+        self.deck = Deck("app/data/cards.json")
+        if not self.deck.cards:
+            print("错误: 卡牌数据加载失败，请检查 cards.json 文件内容。")
+            return
 
     def add_player(self, character: Character):
         """添加玩家"""
@@ -113,8 +117,13 @@ class Game:
             print("无负面效果。")
 
     def show_player_status(self, player):
-        """显示玩家当前状态。"""
-        print(f"  - {player.character.name}: 血量: {player.character.hp}, 手牌数: {len(player.hand_cards)}, 武器: {player.weapon if player.weapon else '无'}, 铁索连环: {'是' if player.chained else '否'}")
+        print(f"  - {player.character.name}: 血量: {player.hp}, 手牌数: {len(player.hand_cards)}, 武器: {player.weapon or '无'}, 铁索连环: {'是' if player.chained else '否'}")
+        if player.equipped:
+            print("    装备:")
+            for equip in player.equipped:
+                print(f"      - {equip}")
+        else:
+            print("    装备: 无")
 
     def play_phase(self, player, test_mode=False):
         """出牌阶段: 玩家选择使用手牌，并处理响应逻辑。"""
@@ -162,7 +171,11 @@ class Game:
                 if player.hand_cards:
                     print("\n你的手牌:")
                     for idx, card in enumerate(player.hand_cards, start=1):
-                        print(f"{idx}. {card}")
+                        print(f"{idx}. {card.name}({card.type.value}) - {card.suit}[{card.rank}]")
+
+                    print("\n当前牌堆信息:")
+                    print(f"摸牌堆卡牌数量: {len(self.deck.cards)}")
+                    print(f"弃牌堆卡牌数量: {len(self.deck.discard_pile)}")
                     try:
                         choice = input("选择要使用的手牌编号 (输入0结束出牌阶段): ")
                         if choice == "0":
