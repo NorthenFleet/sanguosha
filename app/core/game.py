@@ -26,6 +26,9 @@ class Card:
 
     def __str__(self):
         return f"{self.name}({self.type.value}) - {self.suit}[{self.rank}]"
+    
+    def __repr__(self):
+        return f"{self.name}({self.type.value}) - {self.suit}[{self.rank}]"
 
 class Character:
     """武将基类"""
@@ -207,7 +210,7 @@ class Game:
                             card = player.hand_cards.pop(choice)
                             print(f"\n{player.character.name} 使用了手牌: {card}")
                             # 如果是装备牌，更新装备状态
-                            if card.type == "装备牌":
+                            if card.type.value == "装备牌":
                                 player.use_card(card)
                             # 处理响应 - 这会自动切换到对手的回合进行响应
                             response_result = self.handle_response(player, card, test_mode=False)
@@ -644,7 +647,8 @@ class Game:
                     try:
                         choice = int(input("选择要弃置的手牌编号: ")) - 1
                         if 0 <= choice < len(player.hand_cards):
-                            discarded_card = player.hand_cards.pop(choice)
+                            discarded_card = player.hand_cards[choice]
+                            player.discard_card(discarded_card)
                             print(f"{player.character.name} 弃置了 {discarded_card.name}")
                         else:
                             print("无效的选择，请重新选择。")

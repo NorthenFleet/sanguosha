@@ -8,24 +8,37 @@ class Card:
         self.name = name or "unknown"
         self.category = category or "unknown"
         self.suit = suit or "unknown"
-        self.point = point or 0
+        self.rank = point or rank or 0  # 使用 point 或 rank 作为点数
         self.type = type
         self.effect = effect
-        self.rank = rank
+
+    def __str__(self):
+        return f"{self.name}({self.type.value if self.type else 'unknown'}) - {self.suit}[{self.rank}]"
 
     def __repr__(self):
-        return f"{self.suit}[{self.point}] {self.name}"
+        return f"{self.suit}[{self.rank}] {self.name}"
+
+    def __eq__(self, other):
+        if isinstance(other, Card):
+            return (
+                self.name == other.name and
+                self.category == other.category and
+                self.suit == other.suit and
+                self.rank == other.rank and
+                self.type == other.type
+            )
+        return False
 
 def display_deck_info(deck):
     print("当前牌堆数量:", len(deck.cards))
     print("弃牌堆数量:", len(deck.discard_pile))
     print("牌堆中的卡牌:")
     for card in deck.cards:
-        print(f"{card.name} - {card.suit}[{card.point}]")
+        print(f"{card.name} - {card.suit}[{card.rank}]")
 
     print("弃牌堆中的卡牌:")
     for card in deck.discard_pile:
-        print(f"{card.name} - {card.suit}[{card.point}]")
+        print(f"{card.name} - {card.suit}[{card.rank}]")
 
 class Deck:
     def __init__(self, card_data_file=None):
@@ -35,6 +48,9 @@ class Deck:
 
     def load_cards(self, card_data_file):
         try:
+            # 延迟导入避免循环导入
+            from app.core.game import Card as GameCard, CardType as GameCardType
+            
             with open(card_data_file, "r", encoding="utf-8") as f:
                 card_data = json.load(f)
 
@@ -44,13 +60,13 @@ class Deck:
                     for card in details:
                         if isinstance(card.get("rank"), list):
                             for rank in card["rank"]:
-                                cards.append(Card(name=card.get("name", category), category=category, suit=card["suit"], point=rank, type=CardType(card["type"]), effect=card["effect"]))
+                                cards.append(GameCard(name=card.get("name", category), card_type=GameCardType(card["type"]), suit=card["suit"], rank=rank))
                         else:
-                            cards.append(Card(name=card.get("name", category), category=category, suit=card["suit"], point=card["rank"], type=CardType(card["type"]), effect=card["effect"]))
+                            cards.append(GameCard(name=card.get("name", category), card_type=GameCardType(card["type"]), suit=card["suit"], rank=card["rank"]))
                 elif isinstance(details, dict):
                     for suit, ranks in details.get("cards", {}).items():
                         for rank in ranks:
-                            cards.append(Card(name=category, category=category, suit=suit, point=rank, type=CardType(category)))
+                            cards.append(GameCard(name=category, card_type=GameCardType(category), suit=suit, rank=rank))
 
             if not cards:
                 raise ValueError("卡牌数据加载失败，未找到任何卡牌信息！")
@@ -89,5 +105,5 @@ class Deck:
         """检查牌堆是否为空"""
         return not self.draw_pile and not self.discard_pile
 # 示例：加载卡牌数据并摸牌
-deck = Deck("app/data/cards.json")
-print(deck.draw_card())
+# deck = Deck("app/data/cards.json")
+# print(deck.draw_card())
