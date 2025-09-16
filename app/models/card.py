@@ -71,9 +71,19 @@ class Deck:
 
     def discard(self, card):
         self.discard_pile.append(card)
+        display_deck_info(self)  # 实时显示弃牌堆数量
 
     def draw_card(self):
-        return self.cards.pop() if self.cards else None
+        if not self.cards:  # 如果摸牌堆为空
+            if self.discard_pile:  # 如果弃牌堆有牌
+                self.cards = self.discard_pile[:]
+                self.discard_pile.clear()
+                self.shuffle()
+                print("摸牌堆已重新洗牌！")
+            else:
+                print("没有牌可供摸取！")
+                return None
+        return self.cards.pop()
 
     def is_empty(self):
         """检查牌堆是否为空"""

@@ -117,7 +117,12 @@ class Game:
             print("无负面效果。")
 
     def show_player_status(self, player):
-        print(f"  - {player.character.name}: 血量: {player.hp}, 手牌数: {len(player.hand_cards)}, 武器: {player.weapon or '无'}, 铁索连环: {'是' if player.chained else '否'}")
+        print(f"  - {player.character.name}: 血量: {player.hp}, 手牌数: {len(player.hand_cards)}, 武器: {player.weapon if player.weapon else '无'}, 铁索连环: {'是' if player.chained else '否'}")
+        print("    装备:")
+        print(f"      武器牌: {player.weapon if player.weapon else '无'}")
+        print(f"      防御牌: {player.defense if player.defense else '无'}")
+        print(f"      进攻马: {player.attack_horse if player.attack_horse else '无'}")
+        print(f"      防御马: {player.defense_horse if player.defense_horse else '无'}")
         if player.equipped:
             print("    装备:")
             for equip in player.equipped:
@@ -201,6 +206,9 @@ class Game:
                             
                             card = player.hand_cards.pop(choice)
                             print(f"\n{player.character.name} 使用了手牌: {card}")
+                            # 如果是装备牌，更新装备状态
+                            if card.type == "装备牌":
+                                player.use_card(card)
                             # 处理响应 - 这会自动切换到对手的回合进行响应
                             response_result = self.handle_response(player, card, test_mode=False)
                             

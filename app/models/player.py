@@ -10,7 +10,10 @@ class Player:
         self.character = character
         self.hp = character.hp
         self.hand_cards: List[str] = []
-        self.weapon = None
+        self.weapon = None  # 武器牌
+        self.defense = None  # 防御牌
+        self.attack_horse = None  # 进攻马
+        self.defense_horse = None  # 防御马
         self.equipped = []  # 初始化 equipped 属性为空列表
         self.chained = False
 
@@ -29,5 +32,15 @@ class Player:
         """使用牌"""
         if card in self.hand_cards:
             self.hand_cards.remove(card)
+            # 处理装备牌逻辑
+            if card.type == "装备牌":
+                if "武器" in card.name:
+                    self.weapon = card
+                elif "防御" in card.name:
+                    self.defense = card
+                elif "进攻马" in card.name:
+                    self.attack_horse = card
+                elif "防御马" in card.name:
+                    self.defense_horse = card
             return True
         return False
