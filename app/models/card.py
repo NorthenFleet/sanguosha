@@ -104,6 +104,10 @@ class Deck:
     def is_empty(self):
         """检查牌堆是否为空"""
         return not self.draw_pile and not self.discard_pile
+    
+    def __len__(self):
+        """返回牌堆中剩余卡牌数量"""
+        return len(self.cards)
 # 示例：加载卡牌数据并摸牌
 # deck = Deck("app/data/cards.json")
 # print(deck.draw_card())

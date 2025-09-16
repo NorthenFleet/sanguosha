@@ -17,6 +17,7 @@ class Player:
         self.defense_horse = None  # 防御马
         self.equipped = []  # 初始化 equipped 属性为空列表
         self.chained = False
+        self.has_used_sha = False  # 跟踪本回合是否使用过杀
 
     def draw_card(self, deck: List[Card], count: int):
         """从牌堆摸牌"""

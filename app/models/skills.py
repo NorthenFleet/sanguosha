@@ -180,8 +180,9 @@ class GuanXing(Skill):
     def execute(self, game: 'Game', player: 'Player', target: Optional['Player'] = None) -> bool:
         if len(game.deck) >= 2:
             # 简化实现，实际需要让玩家选择如何排列牌
-            cards = [game.deck.pop(), game.deck.pop()]
-            game.deck.extend(cards)
+            cards = game.deck.draw(2)
+            # 将牌放回牌堆顶部（简化实现）
+            game.deck.cards = cards + game.deck.cards
             print(f"{player.character.name} 发动技能【观星】")
             return True
         return False
@@ -233,7 +234,8 @@ class YingZi(Skill):
     def execute(self, game: 'Game', player: 'Player', target: Optional['Player'] = None) -> bool:
         print(f"{player.character.name} 发动技能【英姿】，多摸一张牌")
         # 实际实现需要修改游戏逻辑，多摸一张牌
-        if game.deck:
-            card = game.deck.pop()
-            player.hand_cards.append(card)
+        if len(game.deck) > 0:
+            card = game.deck.draw_card()
+            if card:
+                player.hand_cards.append(card)
         return True
