@@ -8,15 +8,56 @@ class ShaAction(CardAction):
         super().__init__("杀", "basic", "对目标角色造成1点伤害")
     
     def get_response_cards(self, player):
-        return ["闪"]
+        response_cards = ["闪"]
+        # 八卦阵可以提供额外的闪避机会
+        if player.has_defense_equipment("八卦阵"):
+            response_cards.append("八卦阵判定")
+        return response_cards
     
     def process_response(self, game, player, opponent, response_card):
-        print(f"{opponent.character.name} 使用了 {response_card} 闪避了杀。")
-        # 移除使用的闪
-        for i, c in enumerate(opponent.hand_cards):
-            if c.name == response_card:
-                opponent.hand_cards.pop(i)
-                break
+        if response_card == "八卦阵判定":
+            # 八卦阵判定
+            if opponent.can_dodge_with_bagua():
+                print(f"{opponent.character.name} 通过八卦阵判定闪避了杀。")
+            else:
+                print(f"{opponent.character.name} 八卦阵判定失败，无法闪避。")
+                return True  # 判定失败，受到伤害
+        else:
+            print(f"{opponent.character.name} 使用了 {response_card} 闪避了杀。")
+            # 移除使用的闪
+            for i, c in enumerate(opponent.hand_cards):
+                if c.name == response_card:
+                    opponent.hand_cards.pop(i)
+                    break
+        
+        # 青龙偃月刀效果：对方使用闪后，可以继续出杀
+        if player.has_weapon_effect("青龙偃月刀"):
+            print(f"{player.character.name} 装备了青龙偃月刀，可以继续出杀！")
+            # 检查是否还有杀可以使用
+            sha_cards = [c for c in player.hand_cards if c.name == "杀"]
+            if sha_cards:
+                print(f"请选择是否继续出杀：")
+                for i, card in enumerate(sha_cards):
+                    print(f"{i+1}. {card}")
+                print(f"{len(sha_cards)+1}. 不出杀")
+                
+                try:
+                    choice = input("请选择: ")
+                    choice_idx = int(choice) - 1
+                    if 0 <= choice_idx < len(sha_cards):
+                        # 继续出杀
+                        selected_card = sha_cards[choice_idx]
+                        player.hand_cards.remove(selected_card)
+                        print(f"{player.character.name} 继续出杀！")
+                        # 递归处理新的杀
+                        return game.handle_response(player, opponent, self)
+                    else:
+                        print(f"{player.character.name} 选择不继续出杀。")
+                except (ValueError, EOFError):
+                    print(f"{player.character.name} 选择不继续出杀。")
+            else:
+                print(f"{player.character.name} 没有更多的杀可以使用。")
+        
         return False  # 响应成功，不受到伤害
     
     def apply_default_effect(self, game, player, target=None):
@@ -26,6 +67,12 @@ class ShaAction(CardAction):
         return True
     
     def apply_effect(self, game, player, target=None):
+        # 检查攻击范围
+        opponent = game.get_opponent(player)
+        if not player.can_attack(opponent):
+            print(f"{opponent.character.name} 不在攻击范围内！")
+            return False
+        
         # 杀的效果在handle_response中处理
         return True
 
