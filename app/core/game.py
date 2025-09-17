@@ -65,6 +65,7 @@ class Game:
     def __init__(self, event_manager):
         self.players: List[Player] = []
         self.deck: Deck = Deck()
+        self.discard_pile: List = []  # 弃牌堆
         self.current_player_index = 0
         self.current_phase = "准备阶段"
         self.phase = "准备阶段"

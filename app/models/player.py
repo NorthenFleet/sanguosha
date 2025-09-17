@@ -16,6 +16,7 @@ class Player:
         self.attack_horse = None  # 进攻马
         self.defense_horse = None  # 防御马
         self.equipped = []  # 初始化 equipped 属性为空列表
+        self.judgment_area = []  # 判定区
         self.chained = False
         self.has_used_sha = False  # 跟踪本回合是否使用过杀
 
@@ -163,3 +164,34 @@ class Player:
         
         # 添加到装备列表
         self.equipped.append(card)
+    
+    def get_all_cards(self):
+        """获取玩家所有区域的牌（手牌、装备区、判定区）"""
+        all_cards = {
+            'hand': self.hand_cards.copy(),
+            'equipment': self.equipped.copy(),
+            'judgment': self.judgment_area.copy()
+        }
+        return all_cards
+    
+    def remove_card_from_area(self, card, area):
+        """从指定区域移除牌"""
+        if area == 'hand' and card in self.hand_cards:
+            self.hand_cards.remove(card)
+            return True
+        elif area == 'equipment' and card in self.equipped:
+            self.equipped.remove(card)
+            # 同时清除对应的装备引用
+            if card == self.weapon:
+                self.weapon = None
+            elif card == self.defense:
+                self.defense = None
+            elif card == self.attack_horse:
+                self.attack_horse = None
+            elif card == self.defense_horse:
+                self.defense_horse = None
+            return True
+        elif area == 'judgment' and card in self.judgment_area:
+            self.judgment_area.remove(card)
+            return True
+        return False

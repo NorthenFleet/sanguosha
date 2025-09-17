@@ -114,13 +114,42 @@ class GuoHeChaiQiaoAction(CardAction):
     def __init__(self):
         super().__init__("过河拆桥", "trick", "弃置目标角色的一张牌")
     
+    def _select_card_from_opponent(self, opponent):
+        """从对手的手牌、装备区、判定区中选择一张牌"""
+        all_cards = opponent.get_all_cards()
+        available_areas = []
+        
+        # 检查各个区域是否有牌
+        if all_cards['hand']:
+            available_areas.append(('hand', '手牌', all_cards['hand']))
+        if all_cards['equipment']:
+            available_areas.append(('equipment', '装备区', all_cards['equipment']))
+        if all_cards['judgment']:
+            available_areas.append(('judgment', '判定区', all_cards['judgment']))
+        
+        if not available_areas:
+            return None, None
+        
+        # 简化选择逻辑：优先选择手牌，然后装备区，最后判定区
+        area_type, area_name, cards = available_areas[0]
+        selected_card = cards[0]  # 选择第一张牌
+        
+        return selected_card, area_type
+    
     def apply_effect(self, game, player, target=None):
         opponent = game.get_opponent(player)
-        if opponent.hand_cards:
-            discarded_card = opponent.hand_cards.pop(0)
-            print(f"{player.character.name} 使用过河拆桥，弃置了 {opponent.character.name} 的 {discarded_card}")
+        selected_card, area_type = self._select_card_from_opponent(opponent)
+        
+        if selected_card:
+            # 从对手区域移除牌
+            opponent.remove_card_from_area(selected_card, area_type)
+            # 将牌放入弃牌堆
+            game.discard_pile.append(selected_card)
+            
+            area_names = {'hand': '手牌', 'equipment': '装备区', 'judgment': '判定区'}
+            print(f"{player.character.name} 使用过河拆桥，弃置了 {opponent.character.name} {area_names[area_type]}的 {selected_card.name}")
         else:
-            print(f"{opponent.character.name} 没有手牌可以弃置。")
+            print(f"{opponent.character.name} 没有可以弃置的牌。")
         return True
 
 
@@ -128,14 +157,49 @@ class ShunShouQianYangAction(CardAction):
     def __init__(self):
         super().__init__("顺手牵羊", "trick", "获得目标角色的一张牌")
     
+    def _select_card_from_opponent(self, opponent):
+        """从对手的手牌、装备区、判定区中选择一张牌"""
+        all_cards = opponent.get_all_cards()
+        available_areas = []
+        
+        # 检查各个区域是否有牌
+        if all_cards['hand']:
+            available_areas.append(('hand', '手牌', all_cards['hand']))
+        if all_cards['equipment']:
+            available_areas.append(('equipment', '装备区', all_cards['equipment']))
+        if all_cards['judgment']:
+            available_areas.append(('judgment', '判定区', all_cards['judgment']))
+        
+        if not available_areas:
+            return None, None
+        
+        # 简化选择逻辑：优先选择手牌，然后装备区，最后判定区
+        area_type, area_name, cards = available_areas[0]
+        selected_card = cards[0]  # 选择第一张牌
+        
+        return selected_card, area_type
+    
     def apply_effect(self, game, player, target=None):
         opponent = game.get_opponent(player)
-        if opponent.hand_cards:
-            stolen_card = opponent.hand_cards.pop(0)
-            player.hand_cards.append(stolen_card)
-            print(f"{player.character.name} 使用顺手牵羊，获得了 {opponent.character.name} 的 {stolen_card}")
+        
+        # 检查距离限制（顺手牵羊要求距离为1）
+        distance = player.get_distance_to(opponent)
+        if distance > 1:
+            print(f"{player.character.name} 使用顺手牵羊失败，{opponent.character.name} 距离过远（距离：{distance}）")
+            return False
+        
+        selected_card, area_type = self._select_card_from_opponent(opponent)
+        
+        if selected_card:
+            # 从对手区域移除牌
+            opponent.remove_card_from_area(selected_card, area_type)
+            # 将牌加入自己手牌
+            player.hand_cards.append(selected_card)
+            
+            area_names = {'hand': '手牌', 'equipment': '装备区', 'judgment': '判定区'}
+            print(f"{player.character.name} 使用顺手牵羊，从 {opponent.character.name} {area_names[area_type]}获得了 {selected_card.name}")
         else:
-            print(f"{opponent.character.name} 没有手牌可以获得。")
+            print(f"{opponent.character.name} 没有可以获得的牌。")
         return True
 
 

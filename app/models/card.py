@@ -87,13 +87,13 @@ class Card:
 def display_deck_info(deck):
     print("当前牌堆数量:", len(deck.cards))
     print("弃牌堆数量:", len(deck.discard_pile))
-    print("牌堆中的卡牌:")
-    for card in deck.cards:
-        print(f"{card.name} - {card.suit}[{card.rank}]")
+    # print("牌堆中的卡牌:")
+    # for card in deck.cards:
+    #     print(f"{card.name} - {card.suit}[{card.rank}]")
 
-    print("弃牌堆中的卡牌:")
-    for card in deck.discard_pile:
-        print(f"{card.name} - {card.suit}[{card.rank}]")
+    # print("弃牌堆中的卡牌:")
+    # for card in deck.discard_pile:
+    #     print(f"{card.name} - {card.suit}[{card.rank}]")
 
 class Deck:
     def __init__(self, card_data_file=None):
