@@ -174,7 +174,7 @@ class Game:
                 
                 # 卡牌使用完成后，如果不是装备牌且没有停留在场上，则进入弃牌堆
                 if card.type.value != "装备牌":
-                    self.deck.discard_card(card)
+                    self.deck.discard(card)
                     print(f"卡牌 {card.name} 进入弃牌堆")
         else:
             while True:
@@ -226,7 +226,7 @@ class Game:
                             
                             # 卡牌使用完成后，如果不是装备牌且没有停留在场上，则进入弃牌堆
                             if card.type.value != "装备牌":
-                                self.deck.discard_card(card)
+                                self.deck.discard(card)
                                 print(f"卡牌 {card.name} 进入弃牌堆")
                             
                             # 如果是无中生有被无懈可击响应，继续出牌阶段
@@ -283,7 +283,7 @@ class Game:
                 while len(player.hand_cards) > player.character.hp:
                     if player.hand_cards:
                         discarded_card = player.hand_cards.pop()
-                        self.deck.discard_card(discarded_card)
+                        self.deck.discard(discarded_card)
                         print(f"{player.character.name} 弃置了 {discarded_card.name}，进入弃牌堆")
             else:
                 # 弃牌直到手牌数等于血量
@@ -295,7 +295,7 @@ class Game:
                         choice = int(input("选择要弃置的手牌编号: ")) - 1
                         if 0 <= choice < len(player.hand_cards):
                             discarded_card = player.hand_cards.pop(choice)
-                            self.deck.discard_card(discarded_card)
+                            self.deck.discard(discarded_card)
                             print(f"{player.character.name} 弃置了 {discarded_card.name}，进入弃牌堆")
                         else:
                             print("无效的选择，请重新选择。")

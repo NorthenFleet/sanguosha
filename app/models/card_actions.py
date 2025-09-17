@@ -28,7 +28,7 @@ class ShaAction(CardAction):
             for i, c in enumerate(opponent.hand_cards):
                 if c.name == response_card:
                     used_card = opponent.hand_cards.pop(i)
-                    game.deck.discard_card(used_card)
+                    game.deck.discard(used_card)
                     print(f"响应卡牌 {response_card} 进入弃牌堆")
                     break
         
@@ -161,18 +161,22 @@ class JueDouAction(CardAction):
     
     def process_response(self, game, player, opponent, response_card):
         print(f"{opponent.character.name} 使用了 {response_card} 响应决斗。")
-        # 移除使用的杀
+        # 移除使用的杀并放入弃牌堆
         for i, c in enumerate(opponent.hand_cards):
             if c.name == response_card:
-                opponent.hand_cards.pop(i)
+                used_card = opponent.hand_cards.pop(i)
+                game.deck.discard(used_card)
+                print(f"响应卡牌 {response_card} 进入弃牌堆")
                 break
         
         # 现在轮到发起决斗的玩家响应
         sha_cards = [c for c in player.hand_cards if c.name == "杀"]
         if sha_cards:
             # 自动使用第一张杀
-            player.hand_cards.remove(sha_cards[0])
-            print(f"{player.character.name} 使用了杀继续决斗。")
+            used_sha = sha_cards[0]
+            player.hand_cards.remove(used_sha)
+            game.deck.discard(used_sha)
+            print(f"{player.character.name} 使用了杀继续决斗，进入弃牌堆")
             # 继续决斗循环...
             return self.process_response(game, opponent, player, "杀")
         else:
@@ -200,10 +204,12 @@ class NanManRuQinAction(CardAction):
     
     def process_response(self, game, player, opponent, response_card):
         print(f"{opponent.character.name} 使用了 {response_card} 响应南蛮入侵。")
-        # 移除使用的杀
+        # 移除使用的杀并放入弃牌堆
         for i, c in enumerate(opponent.hand_cards):
             if c.name == response_card:
-                opponent.hand_cards.pop(i)
+                used_card = opponent.hand_cards.pop(i)
+                game.deck.discard(used_card)
+                print(f"响应卡牌 {response_card} 进入弃牌堆")
                 break
         return False  # 响应成功，不受到伤害
     
@@ -227,10 +233,12 @@ class WanJianQiFaAction(CardAction):
     
     def process_response(self, game, player, opponent, response_card):
         print(f"{opponent.character.name} 使用了 {response_card} 响应万箭齐发。")
-        # 移除使用的闪
+        # 移除使用的闪并放入弃牌堆
         for i, c in enumerate(opponent.hand_cards):
             if c.name == response_card:
-                opponent.hand_cards.pop(i)
+                used_card = opponent.hand_cards.pop(i)
+                game.deck.discard(used_card)
+                print(f"响应卡牌 {response_card} 进入弃牌堆")
                 break
         return False  # 响应成功，不受到伤害
     
