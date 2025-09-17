@@ -171,6 +171,11 @@ class Game:
                 print(f"\n{player.character.name} 使用了手牌: {card}")
                 # 处理响应
                 self.handle_response(player, card, test_mode=True)
+                
+                # 卡牌使用完成后，如果不是装备牌且没有停留在场上，则进入弃牌堆
+                if card.type.value != "装备牌":
+                    self.deck.discard_card(card)
+                    print(f"卡牌 {card.name} 进入弃牌堆")
         else:
             while True:
                 print("\n当前场上状态:")
@@ -218,6 +223,11 @@ class Game:
                                 player.hand_cards.pop(choice)
                             # 处理响应 - 这会自动切换到对手的回合进行响应
                             response_result = self.handle_response(player, card, test_mode=False)
+                            
+                            # 卡牌使用完成后，如果不是装备牌且没有停留在场上，则进入弃牌堆
+                            if card.type.value != "装备牌":
+                                self.deck.discard_card(card)
+                                print(f"卡牌 {card.name} 进入弃牌堆")
                             
                             # 如果是无中生有被无懈可击响应，继续出牌阶段
                             if response_result == "continue_play_phase":
@@ -273,7 +283,8 @@ class Game:
                 while len(player.hand_cards) > player.character.hp:
                     if player.hand_cards:
                         discarded_card = player.hand_cards.pop()
-                        print(f"{player.character.name} 弃置了 {discarded_card.name}")
+                        self.deck.discard_card(discarded_card)
+                        print(f"{player.character.name} 弃置了 {discarded_card.name}，进入弃牌堆")
             else:
                 # 弃牌直到手牌数等于血量
                 while len(player.hand_cards) > player.character.hp:
@@ -283,9 +294,9 @@ class Game:
                     try:
                         choice = int(input("选择要弃置的手牌编号: ")) - 1
                         if 0 <= choice < len(player.hand_cards):
-                            discarded_card = player.hand_cards[choice]
-                            player.discard_card(discarded_card)
-                            print(f"{player.character.name} 弃置了 {discarded_card.name}")
+                            discarded_card = player.hand_cards.pop(choice)
+                            self.deck.discard_card(discarded_card)
+                            print(f"{player.character.name} 弃置了 {discarded_card.name}，进入弃牌堆")
                         else:
                             print("无效的选择，请重新选择。")
                     except ValueError:

@@ -4,16 +4,22 @@ from random import shuffle
 from app.models.enums import CardType
 
 class Card:
-    def __init__(self, name=None, category=None, suit=None, point=None, type=None, effect=None, rank=None):
+    """增强的卡牌类"""
+    
+    def __init__(self, name=None, category=None, suit=None, point=None, type=None, effect=None, rank=None, 
+                 card_type=None, subtype=None):
         self.name = name or "unknown"
-        self.category = category or "unknown"
+        self.category = category or "basic"
         self.suit = suit or "unknown"
         self.rank = point or rank or 0  # 使用 point 或 rank 作为点数
         self.type = type
-        self.effect = effect
+        self.card_type = card_type or (type.value if type else "unknown")
+        self.effect = effect or ""
+        self.subtype = subtype    # weapon, armor, horse (for equipment)
 
     def __str__(self):
-        return f"{self.name}({self.type.value if self.type else 'unknown'}) - {self.suit}[{self.rank}]"
+        category_display = self.category if hasattr(self, 'category') and self.category else 'unknown'
+        return f"{self.name}({category_display}) - {self.suit}[{self.rank}]"
 
     def __repr__(self):
         return f"{self.suit}[{self.rank}] {self.name}"
@@ -28,6 +34,55 @@ class Card:
                 self.type == other.type
             )
         return False
+    
+    def is_red(self) -> bool:
+        """判断是否为红色牌"""
+        return self.suit in ["红桃", "方块"]
+    
+    def is_black(self) -> bool:
+        """判断是否为黑色牌"""
+        return self.suit in ["黑桃", "梅花"]
+    
+    def is_basic_card(self) -> bool:
+        """判断是否为基本牌"""
+        return self.category == "basic"
+    
+    def is_trick_card(self) -> bool:
+        """判断是否为锦囊牌"""
+        return self.category == "trick"
+    
+    def is_equipment_card(self) -> bool:
+        """判断是否为装备牌"""
+        return self.category == "equipment"
+    
+    def is_weapon(self) -> bool:
+        """判断是否为武器"""
+        return self.category == "equipment" and self.subtype == "weapon"
+    
+    def is_armor(self) -> bool:
+        """判断是否为防具"""
+        return self.category == "equipment" and self.subtype == "armor"
+    
+    def is_horse(self) -> bool:
+        """判断是否为坐骑"""
+        return self.category == "equipment" and self.subtype == "horse"
+    
+    def get_color_symbol(self) -> str:
+        """获取颜色符号"""
+        color_map = {
+            "红桃": "♥",
+            "方块": "♦", 
+            "黑桃": "♠",
+            "梅花": "♣"
+        }
+        return color_map.get(self.suit, "?")
+    
+    def get_full_display(self) -> str:
+        """获取完整显示信息"""
+        color_symbol = self.get_color_symbol()
+        rank_display = self.rank if self.rank <= 10 else {11: "J", 12: "Q", 13: "K"}.get(self.rank, str(self.rank))
+        category_display = self.category if hasattr(self, 'category') and self.category else 'unknown'
+        return f"{color_symbol}{rank_display} {self.name} ({category_display})"
 
 def display_deck_info(deck):
     print("当前牌堆数量:", len(deck.cards))

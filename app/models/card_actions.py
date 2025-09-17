@@ -24,10 +24,12 @@ class ShaAction(CardAction):
                 return True  # 判定失败，受到伤害
         else:
             print(f"{opponent.character.name} 使用了 {response_card} 闪避了杀。")
-            # 移除使用的闪
+            # 移除使用的闪并放入弃牌堆
             for i, c in enumerate(opponent.hand_cards):
                 if c.name == response_card:
-                    opponent.hand_cards.pop(i)
+                    used_card = opponent.hand_cards.pop(i)
+                    game.deck.discard_card(used_card)
+                    print(f"响应卡牌 {response_card} 进入弃牌堆")
                     break
         
         # 青龙偃月刀效果：对方使用闪后，可以继续出杀
