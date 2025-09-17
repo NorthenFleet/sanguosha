@@ -4,9 +4,15 @@
 from enum import Enum
 
 class EventType(Enum):
-    PLAY_CARD = "play_card"
-    USE_SKILL = "use_skill"
-    TAKE_DAMAGE = "take_damage"
+    PLAY_CARD = "play_card"        # 出牌事件
+    USE_SKILL = "use_skill"        # 使用技能事件
+    TAKE_DAMAGE = "take_damage"    # 受到伤害事件
+    DRAW_CARD = "draw_card"        # 摸牌事件
+    DISCARD_CARD = "discard_card"  # 弃牌事件
+    PHASE_CHANGE = "phase_change"  # 阶段变化事件
+    PLAYER_DEATH = "player_death"  # 角色死亡事件
+    GAME_START = "game_start"      # 游戏开始事件
+    GAME_END = "game_end"          # 游戏结束事件
 
 class EventManager:
     def __init__(self):
@@ -14,15 +20,41 @@ class EventManager:
 
     def register_listener(self, event_type, listener):
         """注册事件监听器"""
+        if isinstance(event_type, EventType):
+            event_type = event_type.value
+        
         if event_type not in self.listeners:
             self.listeners[event_type] = []
         self.listeners[event_type].append(listener)
 
-    def trigger_event(self, event_type, **kwargs):
+    def unregister_listener(self, event_type, listener):
+        """注销事件监听器"""
+        if isinstance(event_type, EventType):
+            event_type = event_type.value
+            
+        if event_type in self.listeners and listener in self.listeners[event_type]:
+            self.listeners[event_type].remove(listener)
+
+    def trigger(self, event_type, event_data=None):
         """触发事件"""
+        if event_data is None:
+            event_data = {}
+            
+        if isinstance(event_type, EventType):
+            event_type = event_type.value
+            
+        print(f"触发事件: {event_type}")
+        
         if event_type in self.listeners:
             for listener in self.listeners[event_type]:
-                listener(**kwargs)
+                listener(event_data)
+                
+        # 触发通用事件监听器
+        if "*" in self.listeners:
+            for listener in self.listeners["*"]:
+                listener({"type": event_type, "data": event_data})
+                
+        return True
 
 class ReactionWindow:
     def __init__(self, event_manager, players):

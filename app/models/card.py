@@ -158,7 +158,7 @@ class Deck:
 
     def is_empty(self):
         """检查牌堆是否为空"""
-        return not self.draw_pile and not self.discard_pile
+        return not self.cards and not self.discard_pile
     
     def __len__(self):
         """返回牌堆中剩余卡牌数量"""

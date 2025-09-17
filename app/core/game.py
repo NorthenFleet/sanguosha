@@ -102,11 +102,16 @@ class Game:
             print("需要2名玩家才能开始游戏")
             return
         
+        # 触发游戏开始事件
+        self.event_manager.trigger("game_start", {"players": self.players})
+        
         self.initialize_deck()
         
         # 初始摸牌
         for player in self.players:
             player.draw_card(self.deck.draw_pile, 4)
+            # 触发摸牌事件
+            self.event_manager.trigger("draw_card", {"player": player, "count": 4})
         
         print("游戏开始!")
         self.game_loop()
@@ -118,6 +123,9 @@ class Game:
     def judgment_phase(self):
         """判定阶段: 检查是否有负面效果并处理。"""
         self.current_phase = "judgment"
+        # 触发阶段变化事件
+        self.event_manager.trigger("phase_change", {"phase": "judgment", "player": self.current_player})
+        
         print("判定阶段: 检查负面效果...")
         # 示例逻辑: 随机决定是否有负面效果
         if random.choice([True, False]):
@@ -143,6 +151,9 @@ class Game:
         """出牌阶段: 玩家选择使用手牌，并处理响应逻辑。"""
         self.current_phase = "play"
         self.current_player = player
+        # 触发阶段变化事件
+        self.event_manager.trigger("phase_change", {"phase": "play", "player": player})
+        
         print(f"\n{player.character.name} 的出牌阶段...")
         has_used_kill = False  # 标记是否已使用过"杀"
         # 检查是否有咆哮技能，允许多次使用杀
@@ -151,6 +162,8 @@ class Game:
             # 触发咆哮技能
             if hasattr(player.character, 'use_skill'):
                 player.character.use_skill("咆哮", self, player)
+                # 触发使用技能事件
+                self.event_manager.trigger("use_skill", {"player": player, "skill": "咆哮"})
         
         # 在测试模式下自动选择手牌
         if test_mode:
@@ -228,6 +241,8 @@ class Game:
                             else:
                                 # 对于非装备牌，直接从手牌中移除
                                 player.hand_cards.pop(choice)
+                            # 触发使用卡牌事件
+                            self.event_manager.trigger("play_card", {"player": player, "card": card, "target": self.get_opponent(player)})
                             # 处理响应 - 这会自动切换到对手的回合进行响应
                             card_action = self.create_card_action(card)
                             response_result = card_action.handle_response(self, player, test_mode=False)
@@ -279,13 +294,20 @@ class Game:
     def discard_phase(self, player, test_mode=False):
         """弃牌阶段: 玩家弃置多余手牌。"""
         self.current_phase = "discard"
+        self.current_player = player
+        # 触发阶段变化事件
+        self.event_manager.trigger("phase_change", {"phase": "discard", "player": player})
+        
         print(f"{player.character.name} 的弃牌阶段...")
         # 检查是否有克己技能
-        if player.character.has_skill("克己"):
-            print(f"{player.character.name} 有技能【克己】，可以跳过弃牌阶段")
+        if player.character.has_skill("克己") and player.has_used_sha:
+            print(f"{player.character.name} 有技能【克己】，且本回合使用过杀，跳过弃牌阶段")
             # 触发克己技能
             if hasattr(player.character, 'use_skill'):
                 player.character.use_skill("克己", self, player)
+                # 触发使用技能事件
+                self.event_manager.trigger("use_skill", {"player": player, "skill": "克己"})
+            return
         else:
             # 在测试模式下自动弃牌
             if test_mode:
@@ -294,6 +316,8 @@ class Game:
                         discarded_card = player.hand_cards.pop()
                         self.deck.discard(discarded_card)
                         print(f"{player.character.name} 弃置了 {discarded_card.name}，进入弃牌堆")
+                        # 触发弃牌事件
+                        self.event_manager.trigger("discard_card", {"player": player, "card": discarded_card})
             else:
                 # 弃牌直到手牌数等于血量
                 while len(player.hand_cards) > player.character.hp:
@@ -306,6 +330,8 @@ class Game:
                             discarded_card = player.hand_cards.pop(choice)
                             self.deck.discard(discarded_card)
                             print(f"{player.character.name} 弃置了 {discarded_card.name}，进入弃牌堆")
+                            # 触发弃牌事件
+                            self.event_manager.trigger("discard_card", {"player": player, "card": discarded_card})
                         else:
                             print("无效的选择，请重新选择。")
                     except ValueError:
@@ -315,6 +341,9 @@ class Game:
         """摸牌阶段: 玩家从牌堆中摸牌。"""
         self.current_phase = "draw"
         self.current_player = player
+        # 触发阶段变化事件
+        self.event_manager.trigger("phase_change", {"phase": "draw", "player": player})
+        
         # 重置玩家使用杀的标记
         player.has_used_sha = False
         print(f"{player.character.name} 的摸牌阶段...")
@@ -324,15 +353,21 @@ class Game:
             # 触发英姿技能
             if hasattr(player.character, 'use_skill'):
                 player.character.use_skill("英姿", self, player)
+                # 触发使用技能事件
+                self.event_manager.trigger("use_skill", {"player": player, "skill": "英姿"})
         
         # 正常摸牌逻辑
-        for _ in range(2):
+        draw_count = 2
+        for _ in range(draw_count):
             card = self.deck.draw_card()
             if card:
                 player.hand_cards.append(card)
                 print(f"摸到手牌: {card}")
             else:
                 print("牌堆已空")
+        
+        # 触发摸牌事件
+        self.event_manager.trigger("draw_card", {"player": player, "count": draw_count})
 
     def game_loop(self, test_mode=False):
         """游戏主循环: 包括判定、摸牌、出牌、弃牌阶段。"""
@@ -346,12 +381,53 @@ class Game:
                 
                 # 检查游戏是否结束
                 if self.is_game_over():
+                    self.end_game()
                     break
+                    
+    def end_game(self):
+        """处理游戏结束逻辑"""
+        print("\n=== 游戏结束 ===")
+        winner = self.get_winner()
+        
+        if winner:
+            print(f"胜利者: {winner.character.name}")
+            print(f"剩余血量: {winner.character.hp}")
+        else:
+            print("游戏平局！")
+            
+        # 显示游戏统计信息
+        print("\n游戏统计:")
+        for player in self.players:
+            print(f"{player.character.name}: 剩余血量 {player.character.hp}, 剩余手牌 {len(player.hand_cards)}")
+            
+        # 触发游戏结束事件
+        self.event_manager.trigger("game_end", {"winner": winner, "players": self.players})
 
     def is_game_over(self):
         """检查游戏是否结束。"""
         # 如果任意玩家的角色血量为0或牌堆为空，则游戏结束
         return any(player.character.hp <= 0 for player in self.players) or self.deck.is_empty()
+        
+    def get_winner(self):
+        """获取游戏胜利者。"""
+        if not self.is_game_over():
+            return None
+            
+        # 如果有玩家血量为0，另一个玩家获胜
+        for i, player in enumerate(self.players):
+            if player.character.hp <= 0:
+                return self.players[1-i]  # 返回另一个玩家
+                
+        # 如果牌堆为空，血量较高的玩家获胜
+        if self.deck.is_empty():
+            if self.players[0].character.hp > self.players[1].character.hp:
+                return self.players[0]
+            elif self.players[1].character.hp > self.players[0].character.hp:
+                return self.players[1]
+            else:
+                return None  # 平局
+                
+        return None  # 未知情况
 
     def get_opponent(self, player):
         """获取对手玩家。"""
@@ -359,6 +435,9 @@ class Game:
     
     def handle_damage(self, player, damage, damage_card=None):
         """处理玩家受到的伤害。"""
+        # 触发伤害事件
+        self.event_manager.trigger("take_damage", {"player": player, "damage": damage, "damage_card": damage_card})
+        
         player.character.hp -= damage
         print(f"{player.character.name} 受到 {damage} 点伤害，剩余血量: {player.character.hp}")
         
@@ -370,6 +449,11 @@ class Game:
         # 检查角色是否死亡
         if player.character.hp <= 0:
             print(f"{player.character.name} 已死亡！")
+            # 触发角色死亡事件
+            self.event_manager.trigger("player_death", {"player": player})
+            # 检查游戏是否结束
+            if self.is_game_over():
+                self.end_game()
             return True
         return False
 

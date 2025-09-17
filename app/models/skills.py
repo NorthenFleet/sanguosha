@@ -44,6 +44,22 @@ class SkillManager:
     """技能管理器"""
     def __init__(self):
         self.skills = {}
+        self._register_default_skills()
+    
+    def _register_default_skills(self):
+        """注册默认技能"""
+        # 注册所有技能
+        self.register_skill(JianXiong())
+        self.register_skill(FanKui())
+        self.register_skill(GangLie())
+        self.register_skill(PaoXiao())
+        self.register_skill(GuanXing())
+        self.register_skill(KongCheng())
+        self.register_skill(QiXi())
+        self.register_skill(KeJi())
+        self.register_skill(YingZi())
+        self.register_skill(WuSheng())
+        self.register_skill(ZhiHeng())
     
     def register_skill(self, skill: Skill):
         """注册技能"""
@@ -53,14 +69,14 @@ class SkillManager:
         """获取技能"""
         return self.skills.get(name)
     
-    def trigger_skill(self, skill_name: str, game: 'Game', player: 'Player', target: Optional['Player'] = None, **kwargs) -> bool:
+    def trigger_skill(self, skill_name: str, game: 'Game', player: 'Player', event_type: str, **kwargs) -> bool:
         """触发技能"""
         skill = self.get_skill(skill_name)
-        if skill and skill.can_trigger(game, player, "skill_trigger", target=target, **kwargs):
+        if skill and skill.can_trigger(game, player, event_type, **kwargs):
             print(f"{player.character.name} 发动了技能【{skill_name}】")
             # 使用新的技能动作模型
             skill_action = skill.create_skill_action()
-            return skill_action.apply_effect(game, player, target=target, **kwargs)
+            return skill_action.apply_effect(game, player, **kwargs)
         return False
 
 
@@ -71,7 +87,7 @@ class JianXiong(Skill):
         super().__init__("奸雄", "当曹操受到1点伤害后，可以立即获得造成此伤害的牌")
     
     def can_trigger(self, game, player, event_type, **kwargs):
-        return event_type == "damage" and player.character.name == "曹操"
+        return event_type == "take_damage" and player.character.name == "曹操"
     
     def execute(self, game, player, **kwargs):
         # 创建技能动作实例并执行
@@ -173,19 +189,49 @@ class GuanXing(Skill):
     def __init__(self):
         super().__init__("观星", "准备阶段，你可以观看牌堆顶的X张牌，然后将之以任意顺序置于牌堆顶或牌堆底。")
     
-    def can_trigger(self, game: 'Game', player: 'Player', target: Optional['Player'] = None) -> bool:
-        # 简化实现，实际需要检查是否在准备阶段
-        return len(game.deck) >= 2
+    def can_trigger(self, game, player, event_type, **kwargs):
+        # 检查是否在准备阶段
+        return event_type == "phase_change" and kwargs.get('phase') == "judgment" and player.character.name == "诸葛亮"
     
-    def execute(self, game: 'Game', player: 'Player', target: Optional['Player'] = None) -> bool:
-        if len(game.deck) >= 2:
-            # 简化实现，实际需要让玩家选择如何排列牌
-            cards = game.deck.draw(2)
-            # 将牌放回牌堆顶部（简化实现）
-            game.deck.cards = cards + game.deck.cards
-            print(f"{player.character.name} 发动技能【观星】")
-            return True
-        return False
+    def execute(self, game, player, **kwargs):
+        # 创建技能动作实例并执行
+        skill_action = self.create_skill_action()
+        return skill_action.apply_effect(game, player, **kwargs)
+    
+    def create_skill_action(self):
+        """创建观星技能动作实例"""
+        class GuanXingAction(SkillAction):
+            def __init__(self):
+                super().__init__("观星", "准备阶段，你可以观看牌堆顶的X张牌，然后将之以任意顺序置于牌堆顶或牌堆底。")
+            
+            def apply_effect(self, game, player, **kwargs):
+                # 获取牌堆顶的牌数量（根据玩家数量确定）
+                num_cards = min(len(game.players), len(game.deck.cards))
+                if num_cards > 0:
+                    print(f"{player.character.name} 发动了【观星】技能，观看了牌堆顶的 {num_cards} 张牌")
+                    
+                    # 从牌堆顶获取牌
+                    cards = []
+                    for _ in range(num_cards):
+                        card = game.deck.draw_card()
+                        if card:
+                            cards.append(card)
+                    
+                    # 显示这些牌
+                    print("观看的牌:")
+                    for i, card in enumerate(cards):
+                        print(f"{i+1}. {card}")
+                    
+                    # 简化实现：将所有牌放回牌堆顶部
+                    # 实际游戏中应该让玩家决定每张牌放在牌堆顶部还是底部
+                    for card in cards:
+                        game.deck.cards.insert(0, card)
+                    
+                    print(f"{player.character.name} 将牌放回了牌堆")
+                    return True
+                return False
+        
+        return GuanXingAction()
 
 
 class QiXi(Skill):
@@ -227,15 +273,176 @@ class YingZi(Skill):
     def __init__(self):
         super().__init__("英姿", "摸牌阶段，你可以多摸一张牌。")
     
-    def can_trigger(self, game: 'Game', player: 'Player', target: Optional['Player'] = None) -> bool:
+    def can_trigger(self, game, player, event_type, **kwargs):
         # 检查是否在摸牌阶段
-        return game.current_phase == 'draw' and player == game.current_player
+        return event_type == "phase_change" and kwargs.get('phase') == "draw" and player.character.has_skill("英姿")
     
-    def execute(self, game: 'Game', player: 'Player', target: Optional['Player'] = None) -> bool:
-        print(f"{player.character.name} 发动技能【英姿】，多摸一张牌")
-        # 实际实现需要修改游戏逻辑，多摸一张牌
-        if len(game.deck) > 0:
-            card = game.deck.draw_card()
-            if card:
-                player.hand_cards.append(card)
-        return True
+    def execute(self, game, player, **kwargs):
+        # 创建技能动作实例并执行
+        skill_action = self.create_skill_action()
+        return skill_action.apply_effect(game, player, **kwargs)
+    
+    def create_skill_action(self):
+        """创建英姿技能动作实例"""
+        class YingZiAction(SkillAction):
+            def __init__(self):
+                super().__init__("英姿", "摸牌阶段，你可以多摸一张牌。")
+            
+            def apply_effect(self, game, player, **kwargs):
+                print(f"{player.character.name} 发动了【英姿】技能，额外摸一张牌")
+                card = game.deck.draw_card()
+                if card:
+                    player.hand_cards.append(card)
+                    print(f"{player.character.name} 摸到了 {card}")
+                    return True
+                return False
+        
+        return YingZiAction()
+
+
+class KongCheng(Skill):
+    """空城技能"""
+    def __init__(self):
+        super().__init__("空城", "锁定技，当你没有手牌时，你不能成为【杀】或【决斗】的目标。")
+    
+    def can_trigger(self, game, player, event_type, **kwargs):
+        # 检查是否是诸葛亮，且没有手牌，且是杀或决斗的目标
+        target = kwargs.get('target')
+        card = kwargs.get('card')
+        return (event_type == "play_card" and 
+                player.character.name == "诸葛亮" and 
+                len(player.hand_cards) == 0 and 
+                target == player and 
+                card and card.name in ["杀", "决斗"])
+    
+    def execute(self, game, player, **kwargs):
+        # 创建技能动作实例并执行
+        skill_action = self.create_skill_action()
+        return skill_action.apply_effect(game, player, **kwargs)
+    
+    def create_skill_action(self):
+        """创建空城技能动作实例"""
+        class KongChengAction(SkillAction):
+            def __init__(self):
+                super().__init__("空城", "锁定技，当你没有手牌时，你不能成为【杀】或【决斗】的目标。")
+            
+            def apply_effect(self, game, player, **kwargs):
+                source = kwargs.get('player')  # 使用卡牌的玩家
+                card = kwargs.get('card')      # 使用的卡牌
+                
+                print(f"{player.character.name} 触发了【空城】技能，不能成为 {card.name} 的目标")
+                # 返回True表示技能生效，阻止了卡牌效果
+                return True
+        
+        return KongChengAction()
+
+
+class WuSheng(Skill):
+    """武圣技能"""
+    def __init__(self):
+        super().__init__("武圣", "你可以将一张红色牌当【杀】使用或打出。")
+    
+    def can_trigger(self, game, player, event_type, **kwargs):
+        # 检查是否是关羽，且有红色牌
+        if event_type == "play_card" and player.character.name == "关羽":
+            # 检查是否有红色牌
+            return any(card.color == "红色" for card in player.hand_cards)
+        return False
+    
+    def execute(self, game, player, **kwargs):
+        # 创建技能动作实例并执行
+        skill_action = self.create_skill_action()
+        return skill_action.apply_effect(game, player, **kwargs)
+    
+    def create_skill_action(self):
+        """创建武圣技能动作实例"""
+        class WuShengAction(SkillAction):
+            def __init__(self):
+                super().__init__("武圣", "你可以将一张红色牌当【杀】使用或打出。")
+            
+            def apply_effect(self, game, player, **kwargs):
+                # 找出所有红色牌
+                red_cards = [card for card in player.hand_cards if card.color == "红色"]
+                if not red_cards:
+                    return False
+                
+                # 简化实现：使用第一张红色牌当杀
+                card = red_cards[0]
+                player.hand_cards.remove(card)
+                
+                # 获取目标
+                target = game.get_opponent(player)
+                
+                print(f"{player.character.name} 发动了【武圣】技能，将 {card} 当【杀】使用，目标是 {target.character.name}")
+                
+                # 处理杀的效果
+                game.handle_damage(target, 1, player)
+                game.deck.discard_pile.append(card)
+                
+                return True
+        
+        return WuShengAction()
+
+
+class ZhiHeng(Skill):
+    """制衡技能"""
+    def __init__(self):
+        super().__init__("制衡", "出牌阶段限一次，你可以弃置任意张牌，然后摸等量的牌。")
+    
+    def can_trigger(self, game, player, event_type, **kwargs):
+        # 检查是否是孙权，且在出牌阶段
+        return (event_type == "phase_change" and 
+                kwargs.get('phase') == "play" and 
+                player.character.name == "孙权" and 
+                not getattr(player, 'used_zhiheng', False))
+    
+    def execute(self, game, player, **kwargs):
+        # 创建技能动作实例并执行
+        skill_action = self.create_skill_action()
+        return skill_action.apply_effect(game, player, **kwargs)
+    
+    def create_skill_action(self):
+        """创建制衡技能动作实例"""
+        class ZhiHengAction(SkillAction):
+            def __init__(self):
+                super().__init__("制衡", "出牌阶段限一次，你可以弃置任意张牌，然后摸等量的牌。")
+            
+            def apply_effect(self, game, player, **kwargs):
+                # 标记已使用制衡
+                setattr(player, 'used_zhiheng', True)
+                
+                # 简化实现：弃置一半手牌
+                discard_count = len(player.hand_cards) // 2
+                if discard_count == 0:
+                    print(f"{player.character.name} 没有手牌可以弃置，无法发动【制衡】")
+                    return False
+                
+                print(f"{player.character.name} 发动了【制衡】技能，弃置 {discard_count} 张牌")
+                
+                # 弃置牌
+                discarded_cards = []
+                for _ in range(discard_count):
+                    if player.hand_cards:
+                        card = player.hand_cards.pop(0)
+                        game.deck.discard_pile.append(card)
+                        discarded_cards.append(card)
+                        # 触发弃牌事件
+                        game.event_manager.trigger("discard_card", {"player": player, "card": card})
+                
+                # 显示弃置的牌
+                for card in discarded_cards:
+                    print(f"弃置了 {card}")
+                
+                # 摸等量的牌
+                for _ in range(len(discarded_cards)):
+                    card = game.deck.draw_card()
+                    if card:
+                        player.hand_cards.append(card)
+                        print(f"摸到了 {card}")
+                
+                # 触发摸牌事件
+                game.event_manager.trigger("draw_card", {"player": player, "count": len(discarded_cards)})
+                
+                return True
+        
+        return ZhiHengAction()
