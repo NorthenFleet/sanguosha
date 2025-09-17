@@ -55,7 +55,7 @@ class CardAction(Action):
         """应用卡牌效果"""
         pass
     
-    def handle_response(self, game: 'Game', player: 'Player', target: Optional['Player'] = None) -> bool:
+    def handle_response(self, game: 'Game', player: 'Player', target: Optional['Player'] = None, test_mode: bool = False) -> bool:
         """处理对手的响应"""
         opponent = game.get_opponent(player)
         print(f"{opponent.character.name} 需要响应 {self.name}...")
@@ -65,7 +65,7 @@ class CardAction(Action):
         
         if response_cards:
             # 让对手选择是否响应
-            use_response = self.ask_for_response(game, opponent, response_cards)
+            use_response = self.ask_for_response(game, opponent, response_cards, test_mode)
             if use_response:
                 # 处理响应卡牌
                 return self.process_response(game, player, opponent, use_response)
@@ -78,11 +78,11 @@ class CardAction(Action):
         # 默认实现，子类可以重写
         return []
     
-    def ask_for_response(self, game: 'Game', player: 'Player', response_cards: List[str]) -> Optional[str]:
+    def ask_for_response(self, game: 'Game', player: 'Player', response_cards: List[str], test_mode: bool = False) -> Optional[str]:
         """询问玩家是否使用响应卡牌"""
         # 在实际实现中，这会与用户界面交互
         # 在测试模式下，可以自动选择
-        if hasattr(game, 'test_mode') and game.test_mode:
+        if test_mode:
             # 测试模式下自动选择第一张响应卡牌，但只选择玩家实际拥有的卡牌
             for card_name in response_cards:
                 if any(c.name == card_name for c in player.hand_cards):
@@ -110,13 +110,13 @@ class CardAction(Action):
                     return selected_card.name
                 else:
                     print("选择的卡牌不能用于响应，请重新选择。")
-                    return self.ask_for_response(game, player, response_cards)
+                    return self.ask_for_response(game, player, response_cards, test_mode)
             else:
                 print("选择无效，请重新选择。")
-                return self.ask_for_response(game, player, response_cards)
+                return self.ask_for_response(game, player, response_cards, test_mode)
         except ValueError:
             print("输入无效，请重新选择。")
-            return self.ask_for_response(game, player, response_cards)
+            return self.ask_for_response(game, player, response_cards, test_mode)
     
     def process_response(self, game: 'Game', player: 'Player', opponent: 'Player', response_card: str) -> bool:
         """处理响应卡牌"""

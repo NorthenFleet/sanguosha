@@ -121,26 +121,44 @@ def test_card_usage_in_game():
                 player1.hand_cards.append(card)
         
         initial_discard_count = len(game.deck.discard_pile)
+        initial_hand_count = len(player1.hand_cards)
         print(f"初始弃牌堆数量: {initial_discard_count}")
+        print(f"初始手牌数量: {initial_hand_count}")
+        
+        # 检查第一张手牌的类型
+        first_card = player1.hand_cards[0] if player1.hand_cards else None
+        if first_card:
+            print(f"将要使用的卡牌: {first_card.name}({first_card.type.value})")
         
         # 模拟出牌阶段（测试模式）
         if player1.hand_cards:
             print(f"\n模拟出牌阶段...")
-            print(f"玩家1手牌数量: {len(player1.hand_cards)}")
             
             # 模拟使用一张牌
             game.play_phase(player1, test_mode=True)
             
             final_discard_count = len(game.deck.discard_pile)
+            final_hand_count = len(player1.hand_cards)
             print(f"出牌后弃牌堆数量: {final_discard_count}")
+            print(f"出牌后手牌数量: {final_hand_count}")
             
-            # 验证弃牌堆数量增加
-            if final_discard_count > initial_discard_count:
-                print(f"✅ 卡牌使用后正确进入弃牌堆，数量增加了 {final_discard_count - initial_discard_count} 张")
-                return True
+            # 验证卡牌使用逻辑
+            if first_card and first_card.type.value == "装备牌":
+                # 装备牌不应该进入弃牌堆，但手牌数量应该减少
+                if final_hand_count == initial_hand_count - 1 and final_discard_count == initial_discard_count:
+                    print(f"✅ 装备牌使用正确：手牌减少1张，弃牌堆数量不变")
+                    return True
+                else:
+                    print(f"❌ 装备牌使用逻辑错误")
+                    return False
             else:
-                print(f"❌ 卡牌使用后没有进入弃牌堆")
-                return False
+                # 非装备牌应该进入弃牌堆
+                if final_discard_count > initial_discard_count:
+                    print(f"✅ 非装备牌使用后正确进入弃牌堆，数量增加了 {final_discard_count - initial_discard_count} 张")
+                    return True
+                else:
+                    print(f"❌ 非装备牌使用后没有进入弃牌堆")
+                    return False
         else:
             print("❌ 玩家没有手牌可以使用")
             return False

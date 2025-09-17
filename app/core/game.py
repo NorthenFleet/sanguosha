@@ -84,10 +84,14 @@ class Game:
             print("错误: 卡牌数据加载失败，请检查 cards.json 文件内容。")
             return
 
-    def add_player(self, character: Character):
+    def add_player(self, player_or_character):
         """添加玩家"""
         if len(self.players) < 2:
-            self.players.append(Player(character))
+            if isinstance(player_or_character, Player):
+                self.players.append(player_or_character)
+            else:
+                # 兼容旧的 Character 参数
+                self.players.append(Player(player_or_character))
             return True
         return False
 
@@ -153,10 +157,11 @@ class Game:
             if player.hand_cards:
                 card = player.hand_cards[0]
                 
+                # 检查是否有咆哮技能
+                has_paoxiao = player.character.has_skill("咆哮")
+                
                 # 检查是否可以使用"杀"
                 if card.name == "杀":
-                    # 检查是否有咆哮技能
-                    has_paoxiao = player.character.has_skill("咆哮")
                     if has_used_kill and not has_paoxiao:
                         print("本回合已使用过\"杀\"，无法再次使用。")
                     else:
@@ -170,7 +175,8 @@ class Game:
                 card = player.hand_cards.pop(0)
                 print(f"\n{player.character.name} 使用了手牌: {card}")
                 # 处理响应
-                self.handle_response(player, card, test_mode=True)
+                card_action = self.create_card_action(card)
+                card_action.handle_response(self, player, test_mode=True)
                 
                 # 卡牌使用完成后，如果不是装备牌且没有停留在场上，则进入弃牌堆
                 if card.type.value != "装备牌":
@@ -222,7 +228,8 @@ class Game:
                                 # 对于非装备牌，直接从手牌中移除
                                 player.hand_cards.pop(choice)
                             # 处理响应 - 这会自动切换到对手的回合进行响应
-                            response_result = self.handle_response(player, card, test_mode=False)
+                            card_action = self.create_card_action(card)
+                            response_result = card_action.handle_response(self, player, test_mode=False)
                             
                             # 卡牌使用完成后，如果不是装备牌且没有停留在场上，则进入弃牌堆
                             if card.type.value != "装备牌":
@@ -231,7 +238,8 @@ class Game:
                             
                             # 如果是无中生有被无懈可击响应，继续出牌阶段
                             if response_result == "continue_play_phase":
-                                self.handle_response(player, card, test_mode=False)
+                                card_action = self.create_card_action(card)
+                                card_action.handle_response(self, player, test_mode=False)
                         else:
                             print("选择无效，请重新选择。")
                     except ValueError:
@@ -253,7 +261,7 @@ class Game:
             return card_action.apply_effect(self, player)
         
         # 处理响应
-        result = card_action.handle_response(self, player)
+        result = card_action.handle_response(self, player, test_mode=test_mode)
         
         # 杀牌的伤害已经在apply_default_effect中处理，这里不需要重复处理
         
