@@ -1,150 +1,498 @@
 {
-  "杀": [
+  "cards": [
     {
+      "name": "杀",
+      "type": "基本牌",
       "suit": "黑桃",
-      "rank": [1, 4, 7, 10, 13],
-      "type": "基本牌",
-      "effect": "对一名角色造成1点伤害。"
+      "rank": 1,
+      "effect": "对一名角色造成1点伤害。",
+      "category": "basic"
     },
     {
-      "suit": "红桃",
-      "rank": [2, 5, 8, 11],
+      "name": "杀",
       "type": "基本牌",
-      "effect": "对一名角色造成1点伤害。"
-    },
-    {
-      "suit": "梅花",
-      "rank": [3, 6, 9, 12],
-      "type": "基本牌",
-      "effect": "对一名角色造成1点伤害。"
-    },
-    {
-      "suit": "方块",
-      "rank": [1, 4, 7, 10],
-      "type": "基本牌",
-      "effect": "对一名角色造成1点伤害。"
-    }
-  ],
-  "闪": [
-    {
       "suit": "黑桃",
-      "rank": [2, 5, 8, 11],
-      "type": "基本牌",
-      "effect": "抵消一张【杀】的效果。"
+      "rank": 4,
+      "effect": "对一名角色造成1点伤害。",
+      "category": "basic"
     },
     {
-      "suit": "红桃",
-      "rank": [3, 6, 9, 12],
+      "name": "杀",
       "type": "基本牌",
-      "effect": "抵消一张【杀】的效果。"
-    },
-    {
-      "suit": "梅花",
-      "rank": [1, 4, 7, 10],
-      "type": "基本牌",
-      "effect": "抵消一张【杀】的效果。"
-    },
-    {
-      "suit": "方块",
-      "rank": [2, 5, 8, 11],
-      "type": "基本牌",
-      "effect": "抵消一张【杀】的效果。"
-    }
-  ],
-  "桃": [
-    {
-      "suit": "红桃",
-      "rank": [3, 6, 9, 12],
-      "type": "基本牌",
-      "effect": "回复1点体力。"
-    }
-  ],
-  "火杀": [
-    {
       "suit": "黑桃",
-      "rank": [3, 6],
-      "type": "基本牌",
-      "effect": "对一名角色造成1点火焰伤害。"
+      "rank": 7,
+      "effect": "对一名角色造成1点伤害。",
+      "category": "basic"
     },
     {
+      "name": "杀",
+      "type": "基本牌",
+      "suit": "黑桃",
+      "rank": 10,
+      "effect": "对一名角色造成1点伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "杀",
+      "type": "基本牌",
+      "suit": "黑桃",
+      "rank": 13,
+      "effect": "对一名角色造成1点伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "杀",
+      "type": "基本牌",
       "suit": "红桃",
-      "rank": [7, 10],
-      "type": "基本牌",
-      "effect": "对一名角色造成1点火焰伤害。"
-    }
-  ],
-  "雷杀": [
-    {
-      "suit": "梅花",
-      "rank": [2, 5],
-      "type": "基本牌",
-      "effect": "对一名角色造成1点雷电伤害。"
+      "rank": 2,
+      "effect": "对一名角色造成1点伤害。",
+      "category": "basic"
     },
     {
-      "suit": "方块",
-      "rank": [8, 11],
+      "name": "杀",
       "type": "基本牌",
-      "effect": "对一名角色造成1点雷电伤害。"
-    }
-  ],
-  "锦囊牌": [
+      "suit": "红桃",
+      "rank": 5,
+      "effect": "对一名角色造成1点伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "杀",
+      "type": "基本牌",
+      "suit": "红桃",
+      "rank": 8,
+      "effect": "对一名角色造成1点伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "杀",
+      "type": "基本牌",
+      "suit": "红桃",
+      "rank": 11,
+      "effect": "对一名角色造成1点伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "杀",
+      "type": "基本牌",
+      "suit": "梅花",
+      "rank": 3,
+      "effect": "对一名角色造成1点伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "杀",
+      "type": "基本牌",
+      "suit": "梅花",
+      "rank": 6,
+      "effect": "对一名角色造成1点伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "杀",
+      "type": "基本牌",
+      "suit": "梅花",
+      "rank": 9,
+      "effect": "对一名角色造成1点伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "杀",
+      "type": "基本牌",
+      "suit": "梅花",
+      "rank": 12,
+      "effect": "对一名角色造成1点伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "杀",
+      "type": "基本牌",
+      "suit": "方块",
+      "rank": 1,
+      "effect": "对一名角色造成1点伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "杀",
+      "type": "基本牌",
+      "suit": "方块",
+      "rank": 4,
+      "effect": "对一名角色造成1点伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "杀",
+      "type": "基本牌",
+      "suit": "方块",
+      "rank": 7,
+      "effect": "对一名角色造成1点伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "杀",
+      "type": "基本牌",
+      "suit": "方块",
+      "rank": 10,
+      "effect": "对一名角色造成1点伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "闪",
+      "type": "基本牌",
+      "suit": "黑桃",
+      "rank": 2,
+      "effect": "抵消一张【杀】的效果。",
+      "category": "basic"
+    },
+    {
+      "name": "闪",
+      "type": "基本牌",
+      "suit": "黑桃",
+      "rank": 5,
+      "effect": "抵消一张【杀】的效果。",
+      "category": "basic"
+    },
+    {
+      "name": "闪",
+      "type": "基本牌",
+      "suit": "黑桃",
+      "rank": 8,
+      "effect": "抵消一张【杀】的效果。",
+      "category": "basic"
+    },
+    {
+      "name": "闪",
+      "type": "基本牌",
+      "suit": "黑桃",
+      "rank": 11,
+      "effect": "抵消一张【杀】的效果。",
+      "category": "basic"
+    },
+    {
+      "name": "闪",
+      "type": "基本牌",
+      "suit": "红桃",
+      "rank": 3,
+      "effect": "抵消一张【杀】的效果。",
+      "category": "basic"
+    },
+    {
+      "name": "闪",
+      "type": "基本牌",
+      "suit": "红桃",
+      "rank": 6,
+      "effect": "抵消一张【杀】的效果。",
+      "category": "basic"
+    },
+    {
+      "name": "闪",
+      "type": "基本牌",
+      "suit": "红桃",
+      "rank": 9,
+      "effect": "抵消一张【杀】的效果。",
+      "category": "basic"
+    },
+    {
+      "name": "闪",
+      "type": "基本牌",
+      "suit": "红桃",
+      "rank": 12,
+      "effect": "抵消一张【杀】的效果。",
+      "category": "basic"
+    },
+    {
+      "name": "闪",
+      "type": "基本牌",
+      "suit": "梅花",
+      "rank": 1,
+      "effect": "抵消一张【杀】的效果。",
+      "category": "basic"
+    },
+    {
+      "name": "闪",
+      "type": "基本牌",
+      "suit": "梅花",
+      "rank": 4,
+      "effect": "抵消一张【杀】的效果。",
+      "category": "basic"
+    },
+    {
+      "name": "闪",
+      "type": "基本牌",
+      "suit": "梅花",
+      "rank": 7,
+      "effect": "抵消一张【杀】的效果。",
+      "category": "basic"
+    },
+    {
+      "name": "闪",
+      "type": "基本牌",
+      "suit": "梅花",
+      "rank": 10,
+      "effect": "抵消一张【杀】的效果。",
+      "category": "basic"
+    },
+    {
+      "name": "闪",
+      "type": "基本牌",
+      "suit": "方块",
+      "rank": 2,
+      "effect": "抵消一张【杀】的效果。",
+      "category": "basic"
+    },
+    {
+      "name": "闪",
+      "type": "基本牌",
+      "suit": "方块",
+      "rank": 5,
+      "effect": "抵消一张【杀】的效果。",
+      "category": "basic"
+    },
+    {
+      "name": "闪",
+      "type": "基本牌",
+      "suit": "方块",
+      "rank": 8,
+      "effect": "抵消一张【杀】的效果。",
+      "category": "basic"
+    },
+    {
+      "name": "闪",
+      "type": "基本牌",
+      "suit": "方块",
+      "rank": 11,
+      "effect": "抵消一张【杀】的效果。",
+      "category": "basic"
+    },
+    {
+      "name": "桃",
+      "type": "基本牌",
+      "suit": "红桃",
+      "rank": 3,
+      "effect": "回复1点体力。",
+      "category": "basic"
+    },
+    {
+      "name": "桃",
+      "type": "基本牌",
+      "suit": "红桃",
+      "rank": 6,
+      "effect": "回复1点体力。",
+      "category": "basic"
+    },
+    {
+      "name": "桃",
+      "type": "基本牌",
+      "suit": "红桃",
+      "rank": 9,
+      "effect": "回复1点体力。",
+      "category": "basic"
+    },
+    {
+      "name": "桃",
+      "type": "基本牌",
+      "suit": "红桃",
+      "rank": 12,
+      "effect": "回复1点体力。",
+      "category": "basic"
+    },
+    {
+      "name": "火杀",
+      "type": "基本牌",
+      "suit": "黑桃",
+      "rank": 3,
+      "effect": "对一名角色造成1点火焰伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "火杀",
+      "type": "基本牌",
+      "suit": "黑桃",
+      "rank": 6,
+      "effect": "对一名角色造成1点火焰伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "火杀",
+      "type": "基本牌",
+      "suit": "红桃",
+      "rank": 7,
+      "effect": "对一名角色造成1点火焰伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "火杀",
+      "type": "基本牌",
+      "suit": "红桃",
+      "rank": 10,
+      "effect": "对一名角色造成1点火焰伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "雷杀",
+      "type": "基本牌",
+      "suit": "梅花",
+      "rank": 2,
+      "effect": "对一名角色造成1点雷电伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "雷杀",
+      "type": "基本牌",
+      "suit": "梅花",
+      "rank": 5,
+      "effect": "对一名角色造成1点雷电伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "雷杀",
+      "type": "基本牌",
+      "suit": "方块",
+      "rank": 8,
+      "effect": "对一名角色造成1点雷电伤害。",
+      "category": "basic"
+    },
+    {
+      "name": "雷杀",
+      "type": "基本牌",
+      "suit": "方块",
+      "rank": 11,
+      "effect": "对一名角色造成1点雷电伤害。",
+      "category": "basic"
+    },
     {
       "name": "无中生有",
-      "suit": "方块",
-      "rank": [12],
       "type": "锦囊牌",
-      "effect": "摸两张牌。"
+      "suit": "红桃",
+      "rank": 7,
+      "effect": "摸两张牌。",
+      "category": "trick"
+    },
+    {
+      "name": "无中生有",
+      "type": "锦囊牌",
+      "suit": "红桃",
+      "rank": 8,
+      "effect": "摸两张牌。",
+      "category": "trick"
     },
     {
       "name": "决斗",
-      "suit": "黑桃",
-      "rank": [1],
       "type": "锦囊牌",
-      "effect": "两名角色轮流打出【杀】，直到一方未打出【杀】并受到1点伤害。"
+      "suit": "黑桃",
+      "rank": 1,
+      "effect": "两名角色轮流打出【杀】，直到一方未打出【杀】并受到1点伤害。",
+      "category": "trick"
+    },
+    {
+      "name": "决斗",
+      "type": "锦囊牌",
+      "suit": "梅花",
+      "rank": 1,
+      "effect": "两名角色轮流打出【杀】，直到一方未打出【杀】并受到1点伤害。",
+      "category": "trick"
     },
     {
       "name": "顺手牵羊",
-      "suit": "红桃",
-      "rank": [3],
       "type": "锦囊牌",
-      "effect": "获得一名其他角色的一张牌。"
+      "suit": "黑桃",
+      "rank": 3,
+      "effect": "获得一名其他角色的一张牌。",
+      "category": "trick"
+    },
+    {
+      "name": "顺手牵羊",
+      "type": "锦囊牌",
+      "suit": "黑桃",
+      "rank": 4,
+      "effect": "获得一名其他角色的一张牌。",
+      "category": "trick"
     },
     {
       "name": "过河拆桥",
-      "suit": "梅花",
-      "rank": [4],
       "type": "锦囊牌",
-      "effect": "弃置一名其他角色的一张牌。"
+      "suit": "黑桃",
+      "rank": 12,
+      "effect": "弃置一名其他角色的一张牌。",
+      "category": "trick"
+    },
+    {
+      "name": "过河拆桥",
+      "type": "锦囊牌",
+      "suit": "梅花",
+      "rank": 12,
+      "effect": "弃置一名其他角色的一张牌。",
+      "category": "trick"
     },
     {
       "name": "借刀杀人",
-      "suit": "方块",
-      "rank": [5],
       "type": "锦囊牌",
-      "effect": "令一名装备武器的角色对其攻击范围内的另一名角色使用一张【杀】。"
-    }
-  ],
-  "装备牌": [
+      "suit": "梅花",
+      "rank": 12,
+      "effect": "令一名装备武器的角色对其攻击范围内的另一名角色使用一张【杀】。",
+      "category": "trick"
+    },
+    {
+      "name": "借刀杀人",
+      "type": "锦囊牌",
+      "suit": "梅花",
+      "rank": 13,
+      "effect": "令一名装备武器的角色对其攻击范围内的另一名角色使用一张【杀】。",
+      "category": "trick"
+    },
     {
       "name": "青龙偃月刀",
-      "suit": "红桃",
-      "rank": [11],
       "type": "装备牌",
-      "effect": "攻击范围为3。每当你使用【杀】指定一个目标后，可以额外指定一个目标。"
+      "suit": "黑桃",
+      "rank": 5,
+      "effect": "攻击范围为3。每当你使用【杀】指定一个目标后，可以额外指定一个目标。",
+      "category": "equipment",
+      "subtype": "weapon"
+    },
+    {
+      "name": "丈八蛇矛",
+      "type": "装备牌",
+      "suit": "黑桃",
+      "rank": 12,
+      "effect": "攻击范围为3。你可以将两张手牌当【杀】使用或打出。",
+      "category": "equipment",
+      "subtype": "weapon"
     },
     {
       "name": "八卦阵",
-      "suit": "梅花",
-      "rank": [12],
       "type": "装备牌",
-      "effect": "每当你需要使用或打出一张【闪】时，可以进行一次判定，若结果为红色，视为你使用或打出了一张【闪】。"
+      "suit": "黑桃",
+      "rank": 2,
+      "effect": "每当你需要使用或打出一张【闪】时，可以进行一次判定，若结果为红色，视为你使用或打出了一张【闪】。",
+      "category": "equipment",
+      "subtype": "armor"
+    },
+    {
+      "name": "仁王盾",
+      "type": "装备牌",
+      "suit": "梅花",
+      "rank": 2,
+      "effect": "锁定技，黑色的【杀】对你无效。",
+      "category": "equipment",
+      "subtype": "armor"
     },
     {
       "name": "赤兔",
-      "suit": "方块",
-      "rank": [13],
       "type": "装备牌",
-      "effect": "你的攻击范围+1。"
+      "suit": "红桃",
+      "rank": 5,
+      "effect": "你的攻击范围+1。",
+      "category": "equipment",
+      "subtype": "horse"
+    },
+    {
+      "name": "的卢",
+      "type": "装备牌",
+      "suit": "梅花",
+      "rank": 5,
+      "effect": "你的攻击范围+1。",
+      "category": "equipment",
+      "subtype": "horse"
     }
   ]
 }
