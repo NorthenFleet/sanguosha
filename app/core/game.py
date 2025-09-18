@@ -5,60 +5,12 @@ from enum import Enum
 from typing import List, Dict, Optional
 import random
 from app.models.skills import SkillManager, PaoXiao, KeJi, YingZi, JianXiong
-from app.models.card import Deck
+from app.models.card import Deck, Card
 from app.models.action import CardAction, SkillAction
 from app.models.player import Player
 from app.models.enums import CardType
 from app.models.card_actions import create_card_action
-
-class CardType(Enum):
-    """牌的类型"""
-    BASIC = "基本牌"
-    TRICK = "锦囊牌"
-    EQUIP = "装备牌"
-
-class Card:
-    """牌的基类"""
-    def __init__(self, name: str, card_type: CardType, suit: str, rank: int):
-        self.name = name
-        self.type = card_type
-        self.suit = suit  # 花色
-        self.rank = rank  # 点数
-
-    def __str__(self):
-        return f"{self.name}({self.type.value}) - {self.suit}[{self.rank}]"
-    
-    def __repr__(self):
-        return f"{self.name}({self.type.value}) - {self.suit}[{self.rank}]"
-
-class Character:
-    """武将基类"""
-    def __init__(self, name: str, kingdom: str, max_hp: int, skills: List[str]):
-        self.name = name
-        self.kingdom = kingdom  # 势力: 魏/蜀/吴
-        self.max_hp = max_hp
-        self.hp = max_hp
-        self.skills = skills
-
-    def use_skill(self, skill_name: str, target=None):
-        """使用技能"""
-        if skill_name in self.skills:
-            print(f"{self.name} 使用了技能 {skill_name}")
-            # 技能效果实现
-            return True
-        return False
-    
-    def has_skill(self, skill_name: str) -> bool:
-        """检查角色是否拥有指定技能"""
-        return skill_name in self.skills
-    
-    def get_skill(self, skill_name: str):
-        """获取技能实例"""
-        # 在实际实现中，这里应该返回具体的技能实例
-        # 目前我们简化处理，只返回技能名称
-        if self.has_skill(skill_name):
-            return skill_name
-        return None
+from app.models.character import Character
 
 class Game:
     """三国杀1v1游戏逻辑模块"""
@@ -110,7 +62,8 @@ class Game:
         
         # 初始摸牌
         for player in self.players:
-            player.draw_card(self.deck.draw_pile, 4)
+            drawn_cards = self.deck.draw(4)
+            player.hand_cards.extend(drawn_cards)
             # 触发摸牌事件
             self.event_manager.trigger("draw_card", {"player": player, "count": 4})
         
@@ -196,7 +149,7 @@ class Game:
                 card_action.handle_response(self, player, test_mode=True)
                 
                 # 卡牌使用完成后，如果不是装备牌且没有停留在场上，则进入弃牌堆
-                if card.type.value != "装备牌":
+                if card.type and card.type.value != "装备牌":
                     self.deck.discard(card)
                     print(f"卡牌 {card.name} 进入弃牌堆")
         else:
@@ -208,13 +161,18 @@ class Game:
                 if player.hand_cards:
                     print("\n你的手牌:")
                     for idx, card in enumerate(player.hand_cards, start=1):
-                        print(f"{idx}. {card.name}({card.type.value}) - {card.suit}[{card.rank}]")
+                        type_display = card.type.value if card.type else "unknown"
+                        print(f"{idx}. {card.name}({type_display}) - {card.suit}[{card.rank}]")
 
                     print("\n当前牌堆信息:")
                     print(f"摸牌堆卡牌数量: {len(self.deck.cards)}")
                     print(f"弃牌堆卡牌数量: {len(self.deck.discard_pile)}")
                     try:
-                        choice = input("选择要使用的手牌编号 (输入0结束出牌阶段): ")
+                        user_input = input("选择要使用的手牌编号 (输入0结束出牌阶段): ")
+                        if not user_input.strip():
+                            print("输入不能为空，请重新选择。")
+                            continue
+                        choice = user_input
                         if choice == "0":
                             break
                         choice = int(choice) - 1
@@ -239,7 +197,7 @@ class Game:
                             card = player.hand_cards[choice]
                             print(f"\n{player.character.name} 使用了手牌: {card}")
                             # 如果是装备牌，更新装备状态
-                            if card.type.value == "装备牌":
+                            if card.type and card.type.value == "装备牌":
                                 player.use_card(card)
                             else:
                                 # 对于非装备牌，直接从手牌中移除
@@ -251,7 +209,7 @@ class Game:
                             response_result = card_action.handle_response(self, player, test_mode=False)
                             
                             # 卡牌使用完成后，如果不是装备牌且没有停留在场上，则进入弃牌堆
-                            if card.type.value != "装备牌":
+                            if card.type and card.type.value != "装备牌":
                                 self.deck.discard(card)
                                 print(f"卡牌 {card.name} 进入弃牌堆")
                             
@@ -263,7 +221,7 @@ class Game:
                             print("选择无效，请重新选择。")
                     except ValueError:
                         print("输入无效，请重新选择。")
-                    except KeyboardInterrupt:
+                    except (EOFError, KeyboardInterrupt):
                         print("\n游戏被中断。")
                         return
                 else:
@@ -324,11 +282,16 @@ class Game:
             else:
                 # 弃牌直到手牌数等于血量
                 while len(player.hand_cards) > player.character.hp:
-                    print(f"你的手牌({len(player.hand_cards)}张):")
+                    print(f"\n{player.character.name} 的手牌:")
                     for i, card in enumerate(player.hand_cards):
-                        print(f"{i+1}. {card.name}({card.type.value})")
+                        type_display = card.type.value if card.type else "unknown"
+                        print(f"{i+1}. {card.name}({type_display})")
                     try:
-                        choice = int(input("选择要弃置的手牌编号: ")) - 1
+                        user_input = input("选择要弃置的手牌编号: ")
+                        if not user_input.strip():
+                            print("输入不能为空，请重新选择。")
+                            continue
+                        choice = int(user_input) - 1
                         if 0 <= choice < len(player.hand_cards):
                             discarded_card = player.hand_cards.pop(choice)
                             self.deck.discard(discarded_card)
@@ -337,7 +300,7 @@ class Game:
                             self.event_manager.trigger("discard_card", {"player": player, "card": discarded_card})
                         else:
                             print("无效的选择，请重新选择。")
-                    except ValueError:
+                    except (ValueError, EOFError, KeyboardInterrupt):
                         print("请输入有效的数字。")
 
     def draw_phase(self, player):
@@ -462,14 +425,18 @@ class Game:
                     print(f"{i+1}. {p.character.name}")
             
             try:
-                choice = int(input("请选择目标玩家编号: ")) - 1
+                user_input = input("请选择目标玩家编号: ")
+                if not user_input.strip():
+                    print("输入不能为空，请重新选择。")
+                    return self.select_target(player, prompt, test_mode)
+                choice = int(user_input) - 1
                 if 0 <= choice < len(self.players) and self.players[choice] != player:
                     return self.players[choice]
                 else:
                     print("无效的选择，请重新选择。")
                     return self.select_target(player, prompt, test_mode)
-            except ValueError:
-                print("请输入有效的数字。")
+            except (ValueError, EOFError, KeyboardInterrupt):
+                print("输入无效或游戏被中断。")
                 return self.select_target(player, prompt, test_mode)
         
         return None

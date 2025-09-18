@@ -29,14 +29,19 @@ def main():
 
     while True:
         try:
-            choice = int(input("输入武将编号: ")) - 1
+            user_input = input("输入武将编号: ")
+            if not user_input.strip():
+                print("输入不能为空，请重新选择。")
+                continue
+            choice = int(user_input) - 1
             if 0 <= choice < len(available_characters):
                 player_character = available_characters.pop(choice)
                 break
             else:
-                print("无效的编号，请重新输入。")
-        except ValueError:
-            print("请输入有效的数字编号。")
+                print("无效的选择，请重新选择。")
+        except (ValueError, EOFError, KeyboardInterrupt):
+            print("游戏被中断或输入无效，请重新选择。")
+            continue
 
     # 为人机选择武将
     ai_character = available_characters[0]

@@ -127,7 +127,7 @@ class GuoHeChaiQiaoAction(CardAction):
     def __init__(self):
         super().__init__("过河拆桥", "trick", "弃置目标角色的一张牌")
     
-    def _select_card_from_opponent(self, opponent):
+    def _select_card_from_opponent(self, opponent, game=None, player=None, test_mode=False):
         """从对手的手牌、装备区、判定区中选择一张牌"""
         all_cards = opponent.get_all_cards()
         available_areas = []
@@ -143,11 +143,63 @@ class GuoHeChaiQiaoAction(CardAction):
         if not available_areas:
             return None, None
         
-        # 简化选择逻辑：优先选择手牌，然后装备区，最后判定区
-        area_type, area_name, cards = available_areas[0]
-        selected_card = cards[0]  # 选择第一张牌
+        # 如果是测试模式，使用简化逻辑
+        if test_mode:
+            area_type, area_name, cards = available_areas[0]
+            selected_card = cards[0]
+            return selected_card, area_type
         
-        return selected_card, area_type
+        # 正常模式：让玩家选择区域
+        print(f"\n{player.character.name} 使用过河拆桥，选择要弃置 {opponent.character.name} 的牌：")
+        print("可选择的区域：")
+        for i, (area_type, area_name, cards) in enumerate(available_areas):
+            print(f"{i + 1}. {area_name} ({len(cards)}张牌)")
+        
+        # 获取玩家选择的区域
+        while True:
+            try:
+                choice = input(f"请选择区域 (1-{len(available_areas)}): ").strip()
+                if not choice:  # 处理空输入
+                    continue
+                area_index = int(choice) - 1
+                if 0 <= area_index < len(available_areas):
+                    break
+                else:
+                    print("无效选择，请重新输入")
+            except (ValueError, EOFError, KeyboardInterrupt):
+                print("输入无效或被中断，请重新输入")
+                continue
+        
+        selected_area_type, selected_area_name, selected_area_cards = available_areas[area_index]
+        
+        # 如果选择的是手牌区域，随机选择一张（因为看不到对手手牌）
+        if selected_area_type == 'hand':
+            import random
+            selected_card = random.choice(selected_area_cards)
+            print(f"从 {opponent.character.name} 的手牌中随机弃置了一张牌")
+        else:
+            # 装备区和判定区的牌是公开的，让玩家选择具体的牌
+            print(f"\n{selected_area_name}中的牌：")
+            for i, card in enumerate(selected_area_cards):
+                print(f"{i + 1}. {card.name}")
+            
+            # 获取玩家选择的具体牌
+            while True:
+                try:
+                    choice = input(f"请选择要弃置的牌 (1-{len(selected_area_cards)}): ").strip()
+                    if not choice:  # 处理空输入
+                        continue
+                    card_index = int(choice) - 1
+                    if 0 <= card_index < len(selected_area_cards):
+                        selected_card = selected_area_cards[card_index]
+                        break
+                    else:
+                        print("无效选择，请重新输入")
+                except (ValueError, EOFError, KeyboardInterrupt):
+                    print("输入无效或被中断，请重新输入")
+                    continue
+        
+        return selected_card, selected_area_type
     
     def apply_effect(self, game, player, target=None):
         # 如果没有指定目标，则选择目标
@@ -159,7 +211,9 @@ class GuoHeChaiQiaoAction(CardAction):
             # 如果被无懈可击抵消，则不生效
             return False
         
-        selected_card, area_type = self._select_card_from_opponent(target)
+        # 判断是否为测试模式
+        test_mode = (game.current_phase == "test")
+        selected_card, area_type = self._select_card_from_opponent(target, game, player, test_mode)
         
         if selected_card:
             # 从对手区域移除牌

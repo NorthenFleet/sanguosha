@@ -147,24 +147,32 @@ class CardAction(Action):
         print("0. 结束响应")
         
         try:
-            choice = input("选择要使用的响应卡牌编号 (输入0结束响应): ")
-            if choice == "0":
-                return None
-            
-            choice = int(choice) - 1
-            if 0 <= choice < len(player.hand_cards):
-                selected_card = player.hand_cards[choice]
-                if selected_card.name in response_cards:
-                    return selected_card.name
-                else:
-                    print("选择的卡牌不能用于响应，请重新选择。")
+            try:
+                user_input = input("选择要使用的响应卡牌编号 (输入0结束响应): ")
+                if not user_input.strip():
+                    print("输入不能为空，请重新选择。")
                     return self.ask_for_response(game, player, response_cards, test_mode)
-            else:
-                print("选择无效，请重新选择。")
+                choice = user_input
+                if choice == "0":
+                    return None
+                
+                choice = int(choice) - 1
+                if 0 <= choice < len(player.hand_cards):
+                    selected_card = player.hand_cards[choice]
+                    if selected_card.name in response_cards:
+                        return selected_card.name
+                    else:
+                        print("选择的卡牌不能用于响应，请重新选择。")
+                        return self.ask_for_response(game, player, response_cards, test_mode)
+                else:
+                    print("选择无效，请重新选择。")
+                    return self.ask_for_response(game, player, response_cards, test_mode)
+            except ValueError:
+                print("输入无效，请重新选择。")
                 return self.ask_for_response(game, player, response_cards, test_mode)
-        except ValueError:
-            print("输入无效，请重新选择。")
-            return self.ask_for_response(game, player, response_cards, test_mode)
+        except (EOFError, KeyboardInterrupt):
+            print("\n响应被中断。")
+            return None
     
     def process_response(self, game: 'Game', player: 'Player', opponent: 'Player', response_card: str) -> bool:
         """处理响应卡牌"""
