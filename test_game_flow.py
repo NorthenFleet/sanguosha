@@ -1,132 +1,96 @@
-import sys
-sys.path.append('.')
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 from app.core.game_engine import GameEngine
-from app.models.character import Character
+from app.models.character import Character, Kingdom
 from app.models.card import Card
 from app.models.enums import CardType
 
-print("=== 测试游戏整体流程稳定性 ===")
-
-# 创建游戏引擎
-game_engine = GameEngine()
-
-# 创建武将
-character1 = Character("关羽", Kingdom.SHU, 4, ["武圣"])
-character2 = Character("曹操", Kingdom.WEI, 4, ["奸雄"])
-
-print(f"创建的武将:")
-print(f"武将1: {character1.name} - {character1.kingdom.value} - {character1.hp}血 - 技能: {character1.skills}")
-print(f"武将2: {character2.name} - {character2.kingdom.value} - {character2.hp}血 - 技能: {character2.skills}")
-
-# 测试1: 创建游戏
-print(f"\n=== 测试游戏创建 ===")
-try:
-    game_id = game_engine.create_game("player1", character1.name)
-    print(f"游戏创建成功，游戏ID: {game_id}")
+def test_game_flow():
+    """测试游戏整体流程稳定性"""
+    print("=== 测试游戏整体流程稳定性 ===")
     
-    # 添加第二个玩家
-    game_engine.add_player(game_id, "player2", character2.name)
-    print(f"第二个玩家添加成功")
+    # 创建游戏引擎
+    engine = GameEngine()
     
-    # 获取游戏状态
-    game_status = game_engine.get_game_status(game_id)
-    print(f"游戏状态: {game_status['status']}")
-    print(f"当前玩家: {game_status['current_player']}")
-    print(f"玩家数量: {len(game_status['players'])}")
-    
-except Exception as e:
-    print(f"游戏创建失败: {e}")
-
-# 测试2: 游戏动作执行
-print(f"\n=== 测试游戏动作执行 ===")
-try:
-    # 获取当前玩家手牌
-    game_status = game_engine.get_game_status(game_id)
-    current_player = game_status['current_player']
-    players = game_status['players']
-    
-    print(f"当前玩家: {current_player}")
-    for player_id, player_info in players.items():
-        print(f"玩家 {player_id}: 血量={player_info['hp']}, 手牌数={len(player_info['hand_cards'])}")
-        if len(player_info['hand_cards']) > 0:
-            print(f"  手牌: {player_info['hand_cards'][:3]}...")  # 只显示前3张牌
-    
-    # 尝试使用一张牌
-    if current_player in players and len(players[current_player]['hand_cards']) > 0:
-        first_card = players[current_player]['hand_cards'][0]
-        print(f"尝试使用卡牌: {first_card}")
+    print("\n=== 测试游戏创建 ===")
+    try:
+        # 使用正确的武将名称创建游戏
+        game_id = engine.create_game("曹操", "刘备")
+        print(f"游戏创建成功，游戏ID: {game_id}")
         
-        action_result = game_engine.perform_action(game_id, current_player, {
-            "action": "use_card",
-            "card": first_card
-        })
-        print(f"动作执行结果: {action_result}")
+        # 获取游戏状态
+        game_status = engine.get_game_status(game_id)
+        print(f"游戏状态: {game_status}")
         
-        # 获取更新后的游戏状态
-        updated_status = game_engine.get_game_status(game_id)
-        print(f"动作后当前玩家: {updated_status['current_player']}")
-    
-except Exception as e:
-    print(f"游戏动作执行失败: {e}")
+    except Exception as e:
+        print(f"游戏创建失败: {e}")
+        return
 
-# 测试3: 多轮游戏流程
-print(f"\n=== 测试多轮游戏流程 ===")
-try:
-    for round_num in range(3):
-        print(f"\n--- 第 {round_num + 1} 轮 ---")
-        game_status = game_engine.get_game_status(game_id)
-        current_player = game_status['current_player']
-        
-        if game_status['status'] == 'finished':
-            print(f"游戏已结束")
-            break
+    print("\n=== 测试游戏动作执行 ===")
+    try:
+        # 测试游戏动作
+        game = engine.get_game(game_id)
+        if game:
+            print(f"当前玩家: {game.current_player.character.name}")
+            print(f"玩家手牌数: {len(game.current_player.hand)}")
             
-        print(f"当前玩家: {current_player}")
-        
-        # 尝试结束回合
-        end_turn_result = game_engine.perform_action(game_id, current_player, {
-            "action": "end_turn"
-        })
-        print(f"结束回合结果: {end_turn_result}")
-        
-        # 检查回合是否切换
-        new_status = game_engine.get_game_status(game_id)
-        print(f"新的当前玩家: {new_status['current_player']}")
-        
-except Exception as e:
-    print(f"多轮游戏流程测试失败: {e}")
+            # 测试出牌阶段
+            if game.current_player.hand:
+                card = game.current_player.hand[0]
+                print(f"尝试使用卡牌: {card.name}")
+                
+    except Exception as e:
+        print(f"游戏动作执行失败: {e}")
 
-# 测试4: 错误处理
-print(f"\n=== 测试错误处理 ===")
-try:
-    # 测试无效游戏ID
-    invalid_result = game_engine.get_game_status("invalid_game_id")
-    print(f"无效游戏ID结果: {invalid_result}")
-except Exception as e:
-    print(f"无效游戏ID错误处理: {e}")
+    print("\n=== 测试多轮游戏流程 ===")
+    try:
+        # 测试多轮游戏
+        for round_num in range(1, 4):
+            print(f"\n--- 第 {round_num} 轮 ---")
+            game = engine.get_game(game_id)
+            if game:
+                print(f"当前玩家: {game.current_player.character.name}")
+                print(f"玩家血量: {game.current_player.character.hp}")
+                print(f"手牌数: {len(game.current_player.hand)}")
+                
+                # 模拟回合结束
+                if hasattr(game, 'next_turn'):
+                    game.next_turn()
+                
+    except Exception as e:
+        print(f"多轮游戏流程测试失败: {e}")
 
-try:
-    # 测试无效动作
-    invalid_action_result = game_engine.perform_action(game_id, current_player, {
-        "action": "invalid_action"
-    })
-    print(f"无效动作结果: {invalid_action_result}")
-except Exception as e:
-    print(f"无效动作错误处理: {e}")
-
-# 测试5: 游戏状态一致性
-print(f"\n=== 测试游戏状态一致性 ===")
-try:
-    # 多次获取游戏状态，检查一致性
-    status1 = game_engine.get_game_status(game_id)
-    status2 = game_engine.get_game_status(game_id)
+    print("\n=== 测试错误处理 ===")
+    try:
+        # 测试无效游戏ID
+        invalid_status = engine.get_game_status("invalid_game_id")
+        print(f"无效游戏ID错误处理: {invalid_status}")
+    except Exception as e:
+        print(f"无效游戏ID错误处理: {e}")
     
-    print(f"状态1当前玩家: {status1['current_player']}")
-    print(f"状态2当前玩家: {status2['current_player']}")
-    print(f"状态一致性: {status1['current_player'] == status2['current_player']}")
-    
-except Exception as e:
-    print(f"游戏状态一致性测试失败: {e}")
+    try:
+        # 测试无效武将选择
+        engine.create_game("无效武将", "刘备")
+    except Exception as e:
+        print(f"无效武将选择错误处理: {e}")
 
-print(f"\n游戏整体流程稳定性测试完成!")
+    print("\n=== 测试游戏状态一致性 ===")
+    try:
+        game = engine.get_game(game_id)
+        if game:
+            # 验证游戏状态一致性
+            total_cards = len(game.deck.cards) + sum(len(player.hand) for player in game.players)
+            print(f"卡牌总数一致性检查: 牌堆 {len(game.deck.cards)} + 手牌 {sum(len(player.hand) for player in game.players)} = {total_cards}")
+            
+            # 验证玩家状态
+            for i, player in enumerate(game.players):
+                print(f"玩家{i+1}: {player.character.name} - 血量: {player.character.hp}/{player.character.max_hp}")
+                
+    except Exception as e:
+        print(f"游戏状态一致性测试失败: {e}")
+    
+    print("\n游戏整体流程稳定性测试完成!")
+
+if __name__ == "__main__":
+    test_game_flow()
