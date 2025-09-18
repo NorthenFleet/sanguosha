@@ -3,6 +3,9 @@
 测试装备系统功能
 """
 
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.models.player import Player
 from app.models.character import Character
 from app.models.card import Card, CardType
