@@ -69,6 +69,7 @@ class Game:
         self.current_player_index = 0
         self.current_phase = "准备阶段"
         self.phase = "准备阶段"
+        self.current_player = None  # 添加当前玩家属性
         self.skill_manager = SkillManager()
         self.event_manager = event_manager
         # 注册技能
@@ -119,6 +120,8 @@ class Game:
     def game_loop(self):
         """游戏主循环"""
         print("游戏主循环开始...")
+        # 设置当前玩家
+        self.current_player = self.players[self.current_player_index]
 
     def judgment_phase(self):
         """判定阶段: 检查是否有负面效果并处理。"""
@@ -371,8 +374,15 @@ class Game:
 
     def game_loop(self, test_mode=False):
         """游戏主循环: 包括判定、摸牌、出牌、弃牌阶段。"""
+        # 设置当前玩家
+        self.current_player = self.players[self.current_player_index]
+        
         while not self.is_game_over():
             for i, player in enumerate(self.players):
+                # 更新当前玩家
+                self.current_player_index = i
+                self.current_player = player
+                
                 print(f"\n=== {player.character.name} 的回合 ===")
                 self.judgment_phase()
                 self.draw_phase(player)
@@ -432,6 +442,37 @@ class Game:
     def get_opponent(self, player):
         """获取对手玩家。"""
         return self.players[1] if self.players[0] == player else self.players[0]
+        
+    def select_target(self, player, prompt="选择目标玩家", test_mode=False):
+        """选择目标玩家"""
+        if len(self.players) <= 2:
+            # 在1v1模式下，直接返回对手
+            return self.get_opponent(player)
+        
+        # 在多人模式下，让玩家选择目标
+        if test_mode:
+            # 测试模式下自动选择第一个不是自己的玩家
+            for p in self.players:
+                if p != player:
+                    return p
+        else:
+            print(prompt)
+            for i, p in enumerate(self.players):
+                if p != player:  # 不能选择自己
+                    print(f"{i+1}. {p.character.name}")
+            
+            try:
+                choice = int(input("请选择目标玩家编号: ")) - 1
+                if 0 <= choice < len(self.players) and self.players[choice] != player:
+                    return self.players[choice]
+                else:
+                    print("无效的选择，请重新选择。")
+                    return self.select_target(player, prompt, test_mode)
+            except ValueError:
+                print("请输入有效的数字。")
+                return self.select_target(player, prompt, test_mode)
+        
+        return None
     
     def handle_damage(self, player, damage, damage_card=None):
         """处理玩家受到的伤害。"""

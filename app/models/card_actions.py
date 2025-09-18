@@ -63,16 +63,20 @@ class ShaAction(CardAction):
         return False  # 响应成功，不受到伤害
     
     def apply_default_effect(self, game, player, target=None):
-        opponent = game.get_opponent(player)
-        print(f"{opponent.character.name} 没有闪可以响应，受到1点伤害。")
-        opponent.character.hp -= 1
+        if target is None:
+            target = game.get_opponent(player)
+        print(f"{target.character.name} 没有闪可以响应，受到1点伤害。")
+        target.character.hp -= 1
         return True
     
     def apply_effect(self, game, player, target=None):
+        # 如果没有指定目标，则选择目标
+        if target is None:
+            target = game.select_target(player, "选择【杀】的目标", test_mode=(game.current_phase == "test"))
+        
         # 检查攻击范围
-        opponent = game.get_opponent(player)
-        if not player.can_attack(opponent):
-            print(f"{opponent.character.name} 不在攻击范围内！")
+        if not player.can_attack(target):
+            print(f"{target.character.name} 不在攻击范围内！")
             return False
         
         # 杀的效果在handle_response中处理
@@ -103,11 +107,20 @@ class ShanAction(CardAction):
 
 class WuXieKeJiAction(CardAction):
     def __init__(self):
-        super().__init__("无懈可击", "trick", "抵消锦囊牌的效果")
+        super().__init__("无懈可击", "trick", "抵消一张锦囊牌的效果")
     
-    def apply_effect(self, game, player, target=None):
-        print(f"{player.character.name} 使用了无懈可击。")
+    def apply_effect(self, game, player, target=None, target_action=None):
+        # target_action是被抵消的锦囊牌动作
+        if target_action:
+            print(f"{player.character.name} 使用了无懈可击，抵消了{target_action.name}的效果。")
+        else:
+            print(f"{player.character.name} 使用了无懈可击，抵消了锦囊牌的效果。")
         return True
+    
+    def can_be_used_against(self, action):
+        # 判断无懈可击是否可以对抗指定的动作
+        # 只能对抗锦囊牌
+        return action.card_type == "trick" and action.name != "无懈可击"
 
 
 class GuoHeChaiQiaoAction(CardAction):
@@ -137,19 +150,27 @@ class GuoHeChaiQiaoAction(CardAction):
         return selected_card, area_type
     
     def apply_effect(self, game, player, target=None):
-        opponent = game.get_opponent(player)
-        selected_card, area_type = self._select_card_from_opponent(opponent)
+        # 如果没有指定目标，则选择目标
+        if target is None:
+            target = game.select_target(player, "选择【过河拆桥】的目标", test_mode=(game.current_phase == "test"))
+        
+        # 先询问所有玩家是否使用无懈可击
+        if not self.handle_response(game, player, target, test_mode=(game.current_phase == "test")):
+            # 如果被无懈可击抵消，则不生效
+            return False
+        
+        selected_card, area_type = self._select_card_from_opponent(target)
         
         if selected_card:
             # 从对手区域移除牌
-            opponent.remove_card_from_area(selected_card, area_type)
+            target.remove_card_from_area(selected_card, area_type)
             # 将牌放入弃牌堆
             game.discard_pile.append(selected_card)
             
             area_names = {'hand': '手牌', 'equipment': '装备区', 'judgment': '判定区'}
-            print(f"{player.character.name} 使用过河拆桥，弃置了 {opponent.character.name} {area_names[area_type]}的 {selected_card.name}")
+            print(f"{player.character.name} 使用过河拆桥，弃置了 {target.character.name} {area_names[area_type]}的 {selected_card.name}")
         else:
-            print(f"{opponent.character.name} 没有可以弃置的牌。")
+            print(f"{target.character.name} 没有可以弃置的牌。")
         return True
 
 
@@ -180,26 +201,33 @@ class ShunShouQianYangAction(CardAction):
         return selected_card, area_type
     
     def apply_effect(self, game, player, target=None):
-        opponent = game.get_opponent(player)
+        # 如果没有指定目标，则选择目标
+        if target is None:
+            target = game.select_target(player, "选择【顺手牵羊】的目标", test_mode=(game.current_phase == "test"))
         
         # 检查距离限制（顺手牵羊要求距离为1）
-        distance = player.get_distance_to(opponent)
+        distance = player.get_distance_to(target)
         if distance > 1:
-            print(f"{player.character.name} 使用顺手牵羊失败，{opponent.character.name} 距离过远（距离：{distance}）")
+            print(f"{player.character.name} 使用顺手牵羊失败，{target.character.name} 距离过远（距离：{distance}）")
             return False
         
-        selected_card, area_type = self._select_card_from_opponent(opponent)
+        # 先询问所有玩家是否使用无懈可击
+        if not self.handle_response(game, player, target, test_mode=(game.current_phase == "test")):
+            # 如果被无懈可击抵消，则不生效
+            return False
+        
+        selected_card, area_type = self._select_card_from_opponent(target)
         
         if selected_card:
             # 从对手区域移除牌
-            opponent.remove_card_from_area(selected_card, area_type)
+            target.remove_card_from_area(selected_card, area_type)
             # 将牌加入自己手牌
             player.hand_cards.append(selected_card)
             
             area_names = {'hand': '手牌', 'equipment': '装备区', 'judgment': '判定区'}
-            print(f"{player.character.name} 使用顺手牵羊，从 {opponent.character.name} {area_names[area_type]}获得了 {selected_card.name}")
+            print(f"{player.character.name} 使用顺手牵羊，从 {target.character.name} {area_names[area_type]}获得了 {selected_card.name}")
         else:
-            print(f"{opponent.character.name} 没有可以获得的牌。")
+            print(f"{target.character.name} 没有可以获得的牌。")
         return True
 
 
@@ -208,6 +236,11 @@ class WuZhongShengYouAction(CardAction):
         super().__init__("无中生有", "trick", "摸两张牌")
     
     def apply_effect(self, game, player, target=None):
+        # 先询问所有玩家是否使用无懈可击
+        if not self.handle_response(game, player, None, test_mode=(game.current_phase == "test")):
+            # 如果被无懈可击抵消，则不生效
+            return False
+            
         for _ in range(2):
             if game.deck.cards:
                 card = game.deck.draw_card()
@@ -249,12 +282,22 @@ class JueDouAction(CardAction):
             return False
     
     def apply_default_effect(self, game, player, target=None):
-        opponent = game.get_opponent(player)
-        print(f"{opponent.character.name} 没有杀可以响应决斗，受到1点伤害。")
-        opponent.character.hp -= 1
+        if target is None:
+            target = game.get_opponent(player)
+        print(f"{target.character.name} 没有杀可以响应决斗，受到1点伤害。")
+        target.character.hp -= 1
         return True
     
     def apply_effect(self, game, player, target=None):
+        # 如果没有指定目标，则选择目标
+        if target is None:
+            target = game.select_target(player, "选择【决斗】的目标", test_mode=(game.current_phase == "test"))
+        
+        # 先询问所有玩家是否使用无懈可击
+        if not self.handle_response(game, player, target, test_mode=(game.current_phase == "test")):
+            # 如果被无懈可击抵消，则不生效
+            return False
+        
         # 决斗的效果在handle_response中处理
         return True
 
@@ -278,13 +321,40 @@ class NanManRuQinAction(CardAction):
         return False  # 响应成功，不受到伤害
     
     def apply_default_effect(self, game, player, target=None):
-        opponent = game.get_opponent(player)
-        print(f"{opponent.character.name} 没有杀可以响应南蛮入侵，受到1点伤害。")
-        opponent.character.hp -= 1
+        if target is None:
+            target = game.get_opponent(player)
+        print(f"{target.character.name} 没有杀可以响应南蛮入侵，受到1点伤害。")
+        target.character.hp -= 1
         return True
     
     def apply_effect(self, game, player, target=None):
-        # 南蛮入侵的效果在handle_response中处理
+        # 南蛮入侵是群体锦囊牌，对除了使用者以外的所有角色生效
+        print(f"{player.character.name} 使用了南蛮入侵，所有其他角色需要打出一张杀，否则受到1点伤害。")
+        
+        # 先询问所有玩家是否使用无懈可击
+        if not self.handle_response(game, player, None, test_mode=(game.current_phase == "test")):
+            # 如果被无懈可击抵消，则不生效
+            return False
+        
+        # 对每个其他玩家进行处理
+        for p in game.players:
+            if p != player:  # 不包括使用者自己
+                print(f"处理 {p.character.name} 对南蛮入侵的响应...")
+                # 检查是否有杀
+                has_sha = any(c.name == "杀" for c in p.hand_cards)
+                if has_sha:
+                    # 让玩家选择是否使用杀
+                    use_sha = self.ask_for_response(game, p, ["杀"], test_mode=(game.current_phase == "test"))
+                    if use_sha:
+                        # 处理响应
+                        self.process_response(game, player, p, use_sha)
+                    else:
+                        # 不使用杀，受到伤害
+                        self.apply_default_effect(game, player, p)
+                else:
+                    # 没有杀，受到伤害
+                    self.apply_default_effect(game, player, p)
+        
         return True
 
 
@@ -307,9 +377,40 @@ class WanJianQiFaAction(CardAction):
         return False  # 响应成功，不受到伤害
     
     def apply_default_effect(self, game, player, target=None):
-        opponent = game.get_opponent(player)
-        print(f"{opponent.character.name} 没有闪可以响应万箭齐发，受到1点伤害。")
-        opponent.character.hp -= 1
+        if target is None:
+            target = game.get_opponent(player)
+        print(f"{target.character.name} 没有闪可以响应万箭齐发，受到1点伤害。")
+        target.character.hp -= 1
+        return True
+    
+    def apply_effect(self, game, player, target=None):
+        # 万箭齐发是群体锦囊牌，对除了使用者以外的所有角色生效
+        print(f"{player.character.name} 使用了万箭齐发，所有其他角色需要打出一张闪，否则受到1点伤害。")
+        
+        # 先询问所有玩家是否使用无懈可击
+        if not self.handle_response(game, player, None, test_mode=(game.current_phase == "test")):
+            # 如果被无懈可击抵消，则不生效
+            return False
+        
+        # 对每个其他玩家进行处理
+        for p in game.players:
+            if p != player:  # 不包括使用者自己
+                print(f"处理 {p.character.name} 对万箭齐发的响应...")
+                # 检查是否有闪
+                has_shan = any(c.name == "闪" for c in p.hand_cards)
+                if has_shan:
+                    # 让玩家选择是否使用闪
+                    use_shan = self.ask_for_response(game, p, ["闪"], test_mode=(game.current_phase == "test"))
+                    if use_shan:
+                        # 处理响应
+                        self.process_response(game, player, p, use_shan)
+                    else:
+                        # 不使用闪，受到伤害
+                        self.apply_default_effect(game, player, p)
+                else:
+                    # 没有闪，受到伤害
+                    self.apply_default_effect(game, player, p)
+        
         return True
     
     def apply_effect(self, game, player, target=None):

@@ -57,18 +57,66 @@ class CardAction(Action):
     
     def handle_response(self, game: 'Game', player: 'Player', target: Optional['Player'] = None, test_mode: bool = False) -> bool:
         """处理对手的响应"""
-        opponent = game.get_opponent(player)
-        print(f"{opponent.character.name} 需要响应 {self.name}...")
+        # 如果是锦囊牌，先询问所有玩家是否使用无懈可击
+        if self.card_type == "trick":
+            # 询问所有玩家是否使用无懈可击
+            for p in game.players:
+                # 跳过使用者自己
+                if p == player:
+                    continue
+                    
+                print(f"询问 {p.character.name} 是否使用无懈可击响应 {self.name}...")
+                # 检查玩家是否有无懈可击
+                has_wuxie = any(c.name == "无懈可击" for c in p.hand_cards)
+                
+                # 无论是否有无懈可击，都询问玩家
+                if has_wuxie:
+                    # 让玩家选择是否使用无懈可击
+                    use_wuxie = self.ask_for_response(game, p, ["无懈可击"], test_mode=(test_mode or game.current_phase == "test"))
+                    if use_wuxie:
+                        print(f"{p.character.name} 使用了无懈可击，抵消了 {self.name} 的效果。")
+                        # 移除使用的无懈可击并放入弃牌堆
+                        for i, c in enumerate(p.hand_cards):
+                            if c.name == "无懈可击":
+                                used_card = p.hand_cards.pop(i)
+                                game.deck.discard(used_card)
+                                print(f"无懈可击进入弃牌堆")
+                                break
+                        # 触发使用卡牌事件
+                        game.event_manager.trigger("play_card", {"player": p, "card": used_card, "target": player})
+                        # 获取无懈可击动作并执行
+                        from .card_actions import WuXieKeJiAction
+                        wuxie_action = WuXieKeJiAction()
+                        wuxie_action.apply_effect(game, p, player, target_action=self)
+                        return False  # 锦囊牌被无懈可击抵消
+                else:
+                    # 即使没有无懈可击，也询问玩家
+                    print(f"{p.character.name} 没有无懈可击可以使用。")
+                    # 在测试模式下，可以跳过询问
+                    if not (test_mode or game.current_phase == "test"):
+                        input(f"{p.character.name} 按任意键继续...")
+                    else:
+                        print(f"测试模式：自动跳过询问。")
         
-        # 检查是否有响应卡牌
-        response_cards = self.get_response_cards(opponent)
-        
-        if response_cards:
-            # 让对手选择是否响应
-            use_response = self.ask_for_response(game, opponent, response_cards, test_mode)
-            if use_response:
-                # 处理响应卡牌
-                return self.process_response(game, player, opponent, use_response)
+        # 对于基本牌或者锦囊牌没有被无懈可击抵消的情况，询问目标玩家是否响应
+        if target is None:
+            # 如果没有指定目标，使用默认的对手
+            target = game.get_opponent(player)
+            
+        # 对于群体锦囊牌，目标可能是多个，这种情况在具体的锦囊牌实现中处理
+        # 这里只处理单一目标的情况
+        if target:
+            print(f"{target.character.name} 需要响应 {self.name}...")
+            
+            # 检查是否有响应卡牌
+            response_cards = self.get_response_cards(target)
+            
+            if response_cards:
+                # 让目标选择是否响应
+                use_response = self.ask_for_response(game, target, response_cards, test_mode=(test_mode or game.current_phase == "test"))
+                if use_response:
+                    # 处理响应卡牌
+                    return self.process_response(game, player, target, use_response)
         
         # 没有响应或不响应，执行默认效果
         return self.apply_default_effect(game, player, target)
@@ -120,9 +168,17 @@ class CardAction(Action):
     
     def process_response(self, game: 'Game', player: 'Player', opponent: 'Player', response_card: str) -> bool:
         """处理响应卡牌"""
-        print(f"{opponent.character.name} 使用了 {response_card}")
-        # 移除响应卡牌
-        # 这里需要具体实现
+        print(f"{opponent.character.name} 使用了 {response_card} 响应 {self.name}")
+        # 移除响应卡牌并放入弃牌堆
+        for i, c in enumerate(opponent.hand_cards):
+            if c.name == response_card:
+                used_card = opponent.hand_cards.pop(i)
+                game.deck.discard(used_card)
+                print(f"响应卡牌 {response_card} 进入弃牌堆")
+                break
+        
+        # 触发使用卡牌事件
+        game.event_manager.trigger("play_card", {"player": opponent, "card": used_card, "target": player})
         
         # 可能需要进一步的响应
         return self.handle_further_response(game, player, opponent, response_card)
