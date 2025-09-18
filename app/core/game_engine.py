@@ -31,7 +31,9 @@ class GameEngine:
         
         # 创建游戏实例
         game_id = str(uuid.uuid4())
-        game = Game()
+        from ..core.event_system import EventManager
+        event_manager = EventManager()
+        game = Game(event_manager)
         
         # 创建玩家
         p1_character = CharacterFactory.create_character(player1_character)
@@ -45,7 +47,10 @@ class GameEngine:
         
         # 初始摸牌
         for player in game.players:
-            player.draw_card(game.deck, 4)
+            for _ in range(4):
+                card = game.deck.draw_card()
+                if card:
+                    player.hand_cards.append(card)
         
         self.games[game_id] = game
         return game_id
@@ -98,5 +103,5 @@ class GameEngine:
             "current_player_id": game.current_player_index + 1,
             "current_phase": game.current_phase,
             "players": players_status,
-            "deck_count": game.deck.get_total_card_count()
+            "deck_count": game.deck.get_total_cards_count()
         }
