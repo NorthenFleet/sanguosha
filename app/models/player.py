@@ -132,38 +132,111 @@ class Player:
             print(f"[DEBUG] 卡牌 {target_card} 已从手牌移除")
             
             # 处理装备牌逻辑
-            if hasattr(target_card, 'type') and target_card.type and hasattr(target_card.type, 'value') and target_card.type.value == "装备牌":
+            if hasattr(target_card, 'type') and target_card.type:
+                # 检查不同的装备牌类型表示方式
+                is_equipment = False
+                if hasattr(target_card.type, 'value') and target_card.type.value == "装备牌":
+                    is_equipment = True
+                elif str(target_card.type) == "CardType.EQUIP":
+                    is_equipment = True
+                elif hasattr(target_card.type, 'name') and target_card.type.name == "EQUIP":
+                    is_equipment = True
+                
+                if is_equipment:
+                    print(f"[DEBUG] 检测到装备牌: {target_card.name}")
+                    self._equip_card(target_card)
+                else:
+                    # 处理基本牌效果
+                    self._handle_basic_card_effect(target_card)
+            elif hasattr(target_card, 'category') and target_card.category == "equipment":
+                print(f"[DEBUG] 检测到装备牌(category): {target_card.name}")
                 self._equip_card(target_card)
+            else:
+                # 处理其他牌的效果
+                self._handle_basic_card_effect(target_card)
             return True
         else:
             print(f"[ERROR] 卡牌 {target_card} 不在手牌中")
             return False
     
+    def _handle_basic_card_effect(self, card):
+        """处理基本牌效果"""
+        print(f"[DEBUG] 处理基本牌效果: {card.name}")
+        
+        if card.name == "桃":
+            # 桃的效果：回复1点体力
+            if self.hp < self.character.max_hp:
+                self.hp += 1
+                print(f"[DEBUG] 使用桃回复体力，当前血量: {self.hp}")
+            else:
+                print(f"[DEBUG] 体力已满，桃无效果")
+        elif card.name == "杀":
+            print(f"[DEBUG] 使用杀，需要指定目标")
+        elif card.name == "闪":
+            print(f"[DEBUG] 使用闪，抵消杀的效果")
+        else:
+            # 检查是否为锦囊牌
+            if hasattr(card, 'type') and str(card.type) == "CardType.TRICK":
+                self._handle_trick_card_effect(card)
+            else:
+                print(f"[DEBUG] 未知基本牌效果: {card.name}")
+
+    def _handle_trick_card_effect(self, card):
+        """处理锦囊牌效果"""
+        print(f"[DEBUG] 处理锦囊牌效果: {card.name}")
+        
+        if card.name == "无中生有":
+            # 无中生有：摸两张牌
+            print(f"[DEBUG] 无中生有效果：摸两张牌")
+            # 这里需要牌堆才能摸牌，暂时模拟
+            print(f"[DEBUG] 模拟摸两张牌")
+        elif card.name == "五谷丰登":
+            print(f"[DEBUG] 五谷丰登效果：所有玩家各摸一张牌")
+        elif card.name == "南蛮入侵":
+            print(f"[DEBUG] 南蛮入侵效果：所有其他玩家需要出杀或受到伤害")
+        elif card.name == "万箭齐发":
+            print(f"[DEBUG] 万箭齐发效果：所有其他玩家需要出闪或受到伤害")
+        elif card.name == "顺手牵羊":
+            print(f"[DEBUG] 顺手牵羊效果：获得目标玩家一张牌")
+        elif card.name == "决斗":
+            print(f"[DEBUG] 决斗效果：与目标玩家轮流出杀")
+        else:
+            print(f"[DEBUG] 未知锦囊牌效果: {card.name}")
+
     def _equip_card(self, card):
         """装备卡牌"""
+        print(f"[DEBUG] 开始装备卡牌: {card.name}")
+        
         if card.name in ["青龙偃月刀", "丈八蛇矛", "方天画戟", "麒麟弓"]:
             # 替换武器
             if self.weapon:
                 self.equipped.remove(self.weapon)
             self.weapon = card
+            print(f"[DEBUG] 装备武器: {card.name}")
         elif card.name in ["八卦阵", "仁王盾"]:
             # 替换防御装备
             if self.defense:
                 self.equipped.remove(self.defense)
             self.defense = card
+            print(f"[DEBUG] 装备防御: {card.name}")
         elif card.name in ["赤兔", "的卢", "爪黄飞电"]:
             # 替换进攻马
             if self.attack_horse:
                 self.equipped.remove(self.attack_horse)
             self.attack_horse = card
+            print(f"[DEBUG] 装备进攻马: {card.name}")
         elif card.name in ["绝影", "紫骍"]:
             # 替换防御马
             if self.defense_horse:
                 self.equipped.remove(self.defense_horse)
             self.defense_horse = card
+            print(f"[DEBUG] 装备防御马: {card.name}")
+        else:
+            print(f"[DEBUG] 未知装备类型: {card.name}")
         
         # 添加到装备列表
         self.equipped.append(card)
+        print(f"[DEBUG] 装备列表更新: {[eq.name for eq in self.equipped]}")
     
     def get_all_cards(self):
         """获取玩家所有区域的牌（手牌、装备区、判定区）"""

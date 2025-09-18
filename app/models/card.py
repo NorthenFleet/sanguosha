@@ -103,9 +103,6 @@ class Deck:
 
     def load_cards(self, card_data_file):
         try:
-            # 延迟导入避免循环导入
-            from app.core.game import Card as GameCard, CardType as GameCardType
-            
             with open(card_data_file, "r", encoding="utf-8") as f:
                 card_data = json.load(f)
 
@@ -113,15 +110,47 @@ class Deck:
             for category, details in card_data.items():
                 if isinstance(details, list):
                     for card in details:
+                        # 根据卡牌类型设置正确的type和category
+                        card_type = CardType.EQUIP if card["type"] == "装备牌" else (
+                            CardType.BASIC if card["type"] == "基本牌" else CardType.TRICK
+                        )
+                        card_category = "equipment" if card["type"] == "装备牌" else (
+                            "basic" if card["type"] == "基本牌" else "trick"
+                        )
+                        
                         if isinstance(card.get("rank"), list):
                             for rank in card["rank"]:
-                                cards.append(GameCard(name=card.get("name", category), card_type=GameCardType(card["type"]), suit=card["suit"], rank=rank))
+                                cards.append(Card(
+                                    name=card.get("name", category), 
+                                    type=card_type,
+                                    category=card_category,
+                                    suit=card["suit"], 
+                                    rank=rank,
+                                    subtype=card.get("subtype")
+                                ))
                         else:
-                            cards.append(GameCard(name=card.get("name", category), card_type=GameCardType(card["type"]), suit=card["suit"], rank=card["rank"]))
+                            cards.append(Card(
+                                name=card.get("name", category), 
+                                type=card_type,
+                                category=card_category,
+                                suit=card["suit"], 
+                                rank=card["rank"],
+                                subtype=card.get("subtype")
+                            ))
                 elif isinstance(details, dict):
                     for suit, ranks in details.get("cards", {}).items():
                         for rank in ranks:
-                            cards.append(GameCard(name=category, card_type=GameCardType(category), suit=suit, rank=rank))
+                            # 根据category名称设置类型
+                            card_type = CardType.EQUIP if category in ["青龙偃月刀", "八卦阵", "赤兔"] else CardType.BASIC
+                            card_category = "equipment" if category in ["青龙偃月刀", "八卦阵", "赤兔"] else "basic"
+                            
+                            cards.append(Card(
+                                name=category, 
+                                type=card_type,
+                                category=card_category,
+                                suit=suit, 
+                                rank=rank
+                            ))
 
             if not cards:
                 raise ValueError("卡牌数据加载失败，未找到任何卡牌信息！")

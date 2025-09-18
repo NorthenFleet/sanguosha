@@ -3,7 +3,7 @@
 """
 import uuid
 from typing import Dict, Optional
-from ..models.game import Game
+from ..core.game import Game
 from ..models.player import Player
 from ..models.character import CharacterFactory
 

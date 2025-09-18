@@ -90,18 +90,12 @@ class Game:
             print("无负面效果。")
 
     def show_player_status(self, player):
-        print(f"  - {player.character.name}: 血量: {player.hp}, 手牌数: {len(player.hand_cards)}, 武器: {player.weapon if player.weapon else '无'}, 铁索连环: {'是' if player.chained else '否'}")
+        print(f"  - {player.character.name}: 血量: {player.hp}, 手牌数: {len(player.hand_cards)}, 武器: {player.weapon.name if player.weapon else '无'}, 铁索连环: {'是' if player.chained else '否'}")
         print("    装备:")
-        print(f"      武器牌: {player.weapon if player.weapon else '无'}")
-        print(f"      防御牌: {player.defense if player.defense else '无'}")
-        print(f"      进攻马: {player.attack_horse if player.attack_horse else '无'}")
-        print(f"      防御马: {player.defense_horse if player.defense_horse else '无'}")
-        if player.equipped:
-            print("    装备:")
-            for equip in player.equipped:
-                print(f"      - {equip}")
-        else:
-            print("    装备: 无")
+        print(f"      武器牌: {player.weapon.name if player.weapon else '无'}")
+        print(f"      防御牌: {player.defense.name if player.defense else '无'}")
+        print(f"      进攻马: {player.attack_horse.name if player.attack_horse else '无'}")
+        print(f"      防御马: {player.defense_horse.name if player.defense_horse else '无'}")
 
     def play_phase(self, player, test_mode=False):
         """出牌阶段: 玩家选择使用手牌，并处理响应逻辑。"""
@@ -199,6 +193,7 @@ class Game:
                             # 如果是装备牌，更新装备状态
                             if card.type and card.type.value == "装备牌":
                                 player.use_card(card)
+                                print(f"{card.name} 已装备到装备区")
                             else:
                                 # 对于非装备牌，直接从手牌中移除
                                 player.hand_cards.pop(choice)
