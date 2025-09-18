@@ -33,11 +33,11 @@ def test_game_flow():
         game = engine.get_game(game_id)
         if game:
             print(f"当前玩家: {game.current_player.character.name}")
-            print(f"玩家手牌数: {len(game.current_player.hand)}")
+            print(f"玩家手牌数: {len(game.current_player.hand_cards)}")
             
-            # 测试出牌阶段
-            if game.current_player.hand:
-                card = game.current_player.hand[0]
+            # 尝试执行一个简单的游戏动作
+            if game.current_player.hand_cards:
+                card = game.current_player.hand_cards[0]
                 print(f"尝试使用卡牌: {card.name}")
                 
     except Exception as e:
@@ -52,7 +52,7 @@ def test_game_flow():
             if game:
                 print(f"当前玩家: {game.current_player.character.name}")
                 print(f"玩家血量: {game.current_player.character.hp}")
-                print(f"手牌数: {len(game.current_player.hand)}")
+                print(f"手牌数: {len(game.current_player.hand_cards)}")
                 
                 # 模拟回合结束
                 if hasattr(game, 'next_turn'):
@@ -80,8 +80,8 @@ def test_game_flow():
         game = engine.get_game(game_id)
         if game:
             # 验证游戏状态一致性
-            total_cards = len(game.deck.cards) + sum(len(player.hand) for player in game.players)
-            print(f"卡牌总数一致性检查: 牌堆 {len(game.deck.cards)} + 手牌 {sum(len(player.hand) for player in game.players)} = {total_cards}")
+            total_cards = len(game.deck.cards) + sum(len(player.hand_cards) for player in game.players)
+            print(f"卡牌总数一致性检查: 牌堆 {len(game.deck.cards)} + 手牌 {sum(len(player.hand_cards) for player in game.players)} = {total_cards}")
             
             # 验证玩家状态
             for i, player in enumerate(game.players):

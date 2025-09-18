@@ -45,6 +45,9 @@ class GameEngine:
         # 初始化游戏
         game.initialize_deck()
         
+        # 设置当前玩家
+        game.current_player = game.players[0]
+        
         # 初始摸牌
         for player in game.players:
             for _ in range(4):
@@ -103,5 +106,5 @@ class GameEngine:
             "current_player_id": game.current_player_index + 1,
             "current_phase": game.current_phase,
             "players": players_status,
-            "deck_count": game.deck.get_total_cards_count()
+            "deck_count": len(game.deck.cards)
         }
