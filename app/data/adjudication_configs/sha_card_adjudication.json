@@ -1,0 +1,91 @@
+{
+  "model_name": "sha_card_adjudication",
+  "description": "杀卡牌的裁决流程配置",
+  "judgment_rules": [
+    {
+      "name": "has_sha_card",
+      "function": "check_has_sha_card",
+      "priority": 100,
+      "required": true,
+      "description": "检查是否有杀卡牌"
+    },
+    {
+      "name": "target_alive",
+      "function": "check_target_alive",
+      "priority": 90,
+      "required": true,
+      "description": "检查目标是否存活"
+    },
+    {
+      "name": "in_attack_range",
+      "function": "check_attack_range",
+      "priority": 80,
+      "required": true,
+      "description": "检查是否在攻击范围内"
+    },
+    {
+      "name": "sha_count_limit",
+      "function": "check_sha_count_limit",
+      "priority": 70,
+      "required": true,
+      "description": "检查出杀次数限制"
+    }
+  ],
+  "modification_rules": [
+    {
+      "name": "weapon_damage_bonus",
+      "function": "apply_weapon_damage_bonus",
+      "priority": 100,
+      "can_trigger_nested": false,
+      "description": "武器伤害加成"
+    },
+    {
+      "name": "skill_damage_modification",
+      "function": "apply_skill_damage_modification",
+      "priority": 90,
+      "can_trigger_nested": true,
+      "description": "技能伤害修正"
+    },
+    {
+      "name": "target_defense_check",
+      "function": "check_target_defense",
+      "priority": 80,
+      "can_trigger_nested": true,
+      "description": "目标防御检查（可能触发闪、无懈可击等）"
+    },
+    {
+      "name": "distance_modification",
+      "function": "apply_distance_modification",
+      "priority": 70,
+      "can_trigger_nested": false,
+      "description": "距离修正"
+    }
+  ],
+  "calculation_rules": [
+    {
+      "name": "final_damage_calculation",
+      "function": "calculate_final_damage",
+      "priority": 100,
+      "description": "计算最终伤害"
+    },
+    {
+      "name": "card_consumption",
+      "function": "calculate_card_consumption",
+      "priority": 90,
+      "description": "计算卡牌消耗"
+    },
+    {
+      "name": "effect_application",
+      "function": "apply_final_effects",
+      "priority": 80,
+      "description": "应用最终效果"
+    }
+  ],
+  "metadata": {
+    "card_type": "basic",
+    "card_name": "杀",
+    "version": "1.0",
+    "author": "system",
+    "tags": ["attack", "basic_card", "damage"]
+  }
+}
