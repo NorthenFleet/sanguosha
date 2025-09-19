@@ -11,7 +11,9 @@ from dataclasses import dataclass, field
 from enum import Enum
 from abc import ABC, abstractmethod
 import logging
-from ..interaction.interaction_model import InteractionContext
+
+# 暂时使用Any类型代替InteractionContext，避免循环导入
+InteractionContext = Any
 
 logger = logging.getLogger(__name__)
 
