@@ -59,18 +59,19 @@ class CardAction(Action):
         """处理对手的响应"""
         # 如果是锦囊牌，先询问所有玩家是否使用无懈可击
         if self.card_type == "trick":
-            # 询问所有玩家是否使用无懈可击
+            print(f"\n=== 锦囊牌 {self.name} 进入响应阶段 ===")
+            # 询问所有玩家是否使用无懈可击（按座次顺序）
             for p in game.players:
                 # 跳过使用者自己
                 if p == player:
                     continue
                     
-                print(f"询问 {p.character.name} 是否使用无懈可击响应 {self.name}...")
+                print(f"\n询问 {p.character.name} 是否使用无懈可击响应 {self.name}...")
                 # 检查玩家是否有无懈可击
                 has_wuxie = any(c.name == "无懈可击" for c in p.hand_cards)
                 
-                # 无论是否有无懈可击，都询问玩家
                 if has_wuxie:
+                    print(f"{p.character.name} 有无懈可击可以使用。")
                     # 让玩家选择是否使用无懈可击
                     use_wuxie = self.ask_for_response(game, p, ["无懈可击"], test_mode=(test_mode or game.current_phase == "test"))
                     if use_wuxie:
@@ -89,14 +90,15 @@ class CardAction(Action):
                         wuxie_action = WuXieKeJiAction()
                         wuxie_action.apply_effect(game, p, player, target_action=self)
                         return False  # 锦囊牌被无懈可击抵消
-                else:
-                    # 即使没有无懈可击，也询问玩家
-                    print(f"{p.character.name} 没有无懈可击可以使用。")
-                    # 在测试模式下，可以跳过询问
-                    if not (test_mode or game.current_phase == "test"):
-                        input(f"{p.character.name} 按任意键继续...")
                     else:
-                        print(f"测试模式：自动跳过询问。")
+                        print(f"{p.character.name} 选择不使用无懈可击。")
+                else:
+                    print(f"{p.character.name} 没有无懈可击可以使用。")
+                    # 在非测试模式下，给玩家一个确认提示
+                    if not (test_mode or game.current_phase == "test"):
+                        input(f"{p.character.name} 按回车键继续...")
+            
+            print(f"=== 无人使用无懈可击，{self.name} 继续结算 ===")
         
         # 对于基本牌或者锦囊牌没有被无懈可击抵消的情况，询问目标玩家是否响应
         if target is None:

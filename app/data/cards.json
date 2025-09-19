@@ -441,6 +441,30 @@
       "category": "trick"
     },
     {
+      "name": "无懈可击",
+      "type": "锦囊牌",
+      "suit": "黑桃",
+      "rank": 11,
+      "effect": "抵消一张锦囊牌的效果。",
+      "category": "trick"
+    },
+    {
+      "name": "无懈可击",
+      "type": "锦囊牌",
+      "suit": "红桃",
+      "rank": 12,
+      "effect": "抵消一张锦囊牌的效果。",
+      "category": "trick"
+    },
+    {
+      "name": "无懈可击",
+      "type": "锦囊牌",
+      "suit": "红桃",
+      "rank": 13,
+      "effect": "抵消一张锦囊牌的效果。",
+      "category": "trick"
+    },
+    {
       "name": "青龙偃月刀",
       "type": "装备牌",
       "suit": "黑桃",
