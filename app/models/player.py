@@ -170,6 +170,10 @@ class Player:
         """检查是否装备了指定武器"""
         return self.weapon and self.weapon.name == weapon_name
     
+    def has_defense_equipment(self, equipment_name):
+        """检查是否装备了指定防御装备"""
+        return self.defense and self.defense.name == equipment_name
+    
     def get_defense_equipment_effects(self):
         """获取防御装备的特殊效果"""
         if not self.defense:
