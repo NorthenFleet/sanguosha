@@ -69,7 +69,7 @@ def test_basic_stack():
     print(f"2. 推入堆栈: {'成功' if success else '失败'}")
     
     # 检查堆栈状态
-    status = stack.get_stack_status()
+    status = stack.get_execution_summary()
     print(f"3. 堆栈状态: 深度={status['current_depth']}, 活跃进程={status['active_processes']}")
     
     # 完成进程
@@ -81,7 +81,7 @@ def test_basic_stack():
     print(f"5. 弹出堆栈: {'成功' if popped else '失败'}")
     
     # 最终状态
-    final_status = stack.get_stack_status()
+    final_status = stack.get_execution_summary()
     print(f"6. 最终状态: 深度={final_status['current_depth']}, 活跃进程={final_status['active_processes']}")
     
     print("✓ 基本堆栈功能测试完成\n")
@@ -137,7 +137,7 @@ def test_nested_process():
     print(f"2. 触发嵌套进程: {nested_process_id}")
     
     # 检查堆栈状态
-    status = stack.get_stack_status()
+    status = stack.get_execution_summary()
     print(f"3. 嵌套后状态: 深度={status['current_depth']}, 活跃进程={status['active_processes']}")
     
     # 完成嵌套进程
@@ -151,7 +151,7 @@ def test_nested_process():
     print("5. 完成主进程")
     
     # 最终状态
-    final_status = stack.get_stack_status()
+    final_status = stack.get_execution_summary()
     print(f"6. 最终状态: 深度={final_status['current_depth']}, 活跃进程={final_status['active_processes']}")
     
     print("✓ 嵌套进程测试完成\n")

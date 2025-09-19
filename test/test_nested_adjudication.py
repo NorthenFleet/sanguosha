@@ -312,9 +312,10 @@ class TestEnhancedAdjudicationEngine(unittest.TestCase):
         
         # 注册奸雄技能触发条件
         def jianxiong_condition(context: InteractionContext) -> bool:
+            target_id = getattr(context.target_player, 'player_id', str(context.target_player)) if context.target_player else None
             return (context.interaction_type == InteractionType.DAMAGE and
                     context.additional_data.get('damage_amount', 0) > 0 and
-                    "player_1" in (context.target_player_ids or []))
+                    target_id == "player_1")
         
         jianxiong_trigger = TriggerCondition(
             event_type="take_damage",
@@ -411,10 +412,11 @@ def run_nested_adjudication_demo():
     print("2. 注册刘备的八卦阵触发条件")
     
     def bagua_condition(context: InteractionContext) -> bool:
+        target_name = getattr(context.target_player, 'name', str(context.target_player)) if context.target_player else None
         return (context.interaction_type == InteractionType.CARD_USE and
                 context.card and 
                 getattr(context.card, 'name', '') == '杀' and
-                "刘备" in (context.target_player_ids or []))
+                target_name == "刘备")
     
     bagua_trigger = TriggerCondition(
         event_type="need_dodge",
