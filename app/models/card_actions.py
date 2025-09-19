@@ -532,7 +532,7 @@ class JieDaoShaRenAction(CardAction):
         attack_targets = []
         for p in game.players:
             if p != weapon_holder and p != player:  # 不能攻击自己和借刀杀人的使用者
-                if weapon_holder.can_attack(p):
+                if weapon_holder.can_attack(p, game.players):  # 传入all_players参数
                     attack_targets.append(p)
         
         if not attack_targets:
@@ -577,7 +577,8 @@ class JieDaoShaRenAction(CardAction):
             
             # 创建杀的动作并执行
             sha_action = ShaAction()
-            result = sha_action.apply_effect(game, weapon_holder, attack_target)
+            # 直接调用apply_default_effect来造成伤害，跳过响应阶段
+            result = sha_action.apply_default_effect(game, weapon_holder, attack_target)
             
             # 将使用的杀放入弃牌堆
             game.discard_pile.append(sha_card)

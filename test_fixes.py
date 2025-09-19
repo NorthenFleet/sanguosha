@@ -54,7 +54,7 @@ def test_sha_damage():
     print(f"使用杀后 - {character2.name}体力: {character2.hp}")
     print("杀的伤害系统测试完成\n")
     
-    if player2.hp == 3:
+    if character2.hp == 3:
         print("✓ 杀的伤害系统正常工作")
     else:
         print("✗ 杀的伤害系统有问题")
@@ -71,10 +71,13 @@ def test_wuzhongshengyou():
     
     # 创建角色和玩家
     character1 = Character("张飞", Kingdom.SHU, 4, ["咆哮"])
+    character2 = Character("曹操", Kingdom.WEI, 4, ["奸雄"])  # 添加第二个玩家以避免索引错误
     player1 = Player(character1)
+    player2 = Player(character2)
     
     # 添加玩家到游戏
     game.add_player(player1)
+    game.add_player(player2)  # 添加第二个玩家
     game.current_player_index = 0
     
     # 创建牌堆
@@ -88,10 +91,10 @@ def test_wuzhongshengyou():
     wzsy_card = Card(name="无中生有", type=CardType.TRICK, suit="红桃", rank=3)
     
     # 创建无中生有动作
-    wzsy_action = WuZhongShengYouAction(game, player1, wzsy_card, [player1])
+    wzsy_action = WuZhongShengYouAction()
     
     # 应用效果
-    wzsy_action.apply_effect()
+    wzsy_action.apply_effect(game, player1)
     
     final_hand_count = len(player1.hand_cards)
     print(f"使用无中生有后 - 手牌数: {final_hand_count}")
@@ -127,18 +130,18 @@ def test_guohechaiqiao():
     game.add_player(player2)
     game.current_player_index = 0
     
-    print(f"使用过河拆桥前 - player2手牌数: {len(player2.hand_cards)}")
+    print(f"使用过河拆桥前 - {character2.name}手牌数: {len(player2.hand_cards)}")
     
     # 创建过河拆桥牌
     ghcq_card = Card(name="过河拆桥", type=CardType.TRICK, suit="梅花", rank=3)
     
     # 创建过河拆桥动作
-    ghcq_action = GuoHeChaiQiaoAction(game, player1, ghcq_card, [player2])
+    ghcq_action = GuoHeChaiQiaoAction()
     
     # 应用效果
-    ghcq_action.apply_effect()
+    ghcq_action.apply_effect(game, player1, player2)
     
-    print(f"使用过河拆桥后 - player2手牌数: {len(player2.hand_cards)}")
+    print(f"使用过河拆桥后 - {character2.name}手牌数: {len(player2.hand_cards)}")
     
     if len(player2.hand_cards) == 0:
         print("✓ 过河拆桥效果正常")

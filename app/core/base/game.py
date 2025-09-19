@@ -40,7 +40,7 @@ class Game:
 
     def add_player(self, player_or_character):
         """添加玩家"""
-        if len(self.players) < 2:
+        if len(self.players) < 8:  # 支持多人游戏，最多8人
             if isinstance(player_or_character, Player):
                 self.players.append(player_or_character)
             else:
