@@ -5,9 +5,11 @@
 包含各种卡牌使用、技能触发的判断条件
 """
 
-from typing import Dict, List, Callable
-from ..interaction.interaction_model import InteractionContext, InteractionType
+from typing import Dict, List, Callable, TYPE_CHECKING
 import logging
+
+if TYPE_CHECKING:
+    from ..interaction.interaction_model import InteractionContext, InteractionType
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +19,7 @@ class JudgmentConditions:
     
     # 基本卡牌使用条件
     @staticmethod
-    def can_use_sha(context: InteractionContext) -> bool:
+    def can_use_sha(context: 'InteractionContext') -> bool:
         """判断是否可以使用杀"""
         if not context.source_player or not context.target_player:
             return False
@@ -52,7 +54,7 @@ class JudgmentConditions:
         return True
     
     @staticmethod
-    def can_use_shan(context: InteractionContext) -> bool:
+    def can_use_shan(context: 'InteractionContext') -> bool:
         """判断是否可以使用闪"""
         if not context.source_player:
             return False
@@ -62,18 +64,15 @@ class JudgmentConditions:
             logger.debug("没有闪卡牌")
             return False
         
-        # 闪通常是被动响应，这里检查是否在响应杀
-        if context.interaction_type == InteractionType.CARD_PLAY:
-            # 检查上下文中是否有需要响应的杀
-            if 'responding_to' in context.additional_data:
-                responding_card = context.additional_data['responding_to']
-                if hasattr(responding_card, 'name') and responding_card.name == "杀":
-                    return True
+        # 检查是否在响应阶段
+        if not hasattr(context, 'is_response') or not context.is_response:
+            logger.debug("不在响应阶段")
+            return False
         
-        return False
+        return True
     
     @staticmethod
-    def can_use_tao(context: InteractionContext) -> bool:
+    def can_use_tao(context: 'InteractionContext') -> bool:
         """判断是否可以使用桃"""
         if not context.source_player:
             return False
@@ -83,51 +82,46 @@ class JudgmentConditions:
             logger.debug("没有桃卡牌")
             return False
         
-        # 确定目标（如果没有指定目标，默认为自己）
+        # 检查目标是否需要治疗
         target = context.target_player or context.source_player
-        
-        # 检查目标是否需要回复
-        if hasattr(target, 'character') and hasattr(target.character, 'hp') and hasattr(target.character, 'max_hp'):
-            if target.character.hp >= target.character.max_hp:
-                logger.debug("目标体力已满")
-                return False
+        if not hasattr(target, 'hp') or target.hp >= target.max_hp:
+            logger.debug("目标不需要治疗")
+            return False
         
         return True
     
     # 装备卡牌使用条件
     @staticmethod
-    def can_equip_weapon(context: InteractionContext) -> bool:
+    def can_equip_weapon(context: 'InteractionContext') -> bool:
         """判断是否可以装备武器"""
         if not context.source_player or not context.card:
             return False
         
-        # 检查卡牌是否为武器
-        if not hasattr(context.card, 'category') or context.card.category != 'equipment':
-            return False
-        
-        if not hasattr(context.card, 'equipment_type') or context.card.equipment_type != 'weapon':
+        # 检查卡牌是否是武器
+        if not hasattr(context.card, 'card_type') or context.card.card_type != "装备":
             return False
         
         return True
     
     @staticmethod
-    def can_equip_armor(context: InteractionContext) -> bool:
+    def can_equip_armor(context: 'InteractionContext') -> bool:
         """判断是否可以装备防具"""
         if not context.source_player or not context.card:
             return False
         
-        # 检查卡牌是否为防具
-        if not hasattr(context.card, 'category') or context.card.category != 'equipment':
+        # 检查卡牌是否是防具
+        if not hasattr(context.card, 'card_type') or context.card.card_type != "装备":
             return False
         
-        if not hasattr(context.card, 'equipment_type') or context.card.equipment_type != 'armor':
+        # 检查是否是防具类型
+        if not hasattr(context.card, 'sub_type') or context.card.sub_type != "防具":
             return False
         
         return True
     
     # 锦囊卡牌使用条件
     @staticmethod
-    def can_use_wuxiekeji(context: InteractionContext) -> bool:
+    def can_use_wuxiekeji(context: 'InteractionContext') -> bool:
         """判断是否可以使用无懈可击"""
         if not context.source_player:
             return False
@@ -137,16 +131,15 @@ class JudgmentConditions:
             logger.debug("没有无懈可击卡牌")
             return False
         
-        # 检查是否有需要无懈的锦囊
-        if 'responding_to' in context.additional_data:
-            responding_card = context.additional_data['responding_to']
-            if hasattr(responding_card, 'category') and responding_card.category == 'trick':
-                return True
+        # 检查是否在响应锦囊牌
+        if not hasattr(context, 'responding_to') or not context.responding_to:
+            logger.debug("不在响应锦囊牌")
+            return False
         
-        return False
+        return True
     
     @staticmethod
-    def can_use_guohechaiqiao(context: InteractionContext) -> bool:
+    def can_use_guohechaiqiao(context: 'InteractionContext') -> bool:
         """判断是否可以使用过河拆桥"""
         if not context.source_player or not context.target_player:
             return False
@@ -156,21 +149,17 @@ class JudgmentConditions:
             logger.debug("没有过河拆桥卡牌")
             return False
         
-        # 检查目标是否有牌可以拆
-        if hasattr(context.target_player, 'hand_cards') and hasattr(context.target_player, 'equipment_area'):
-            total_cards = len(context.target_player.hand_cards)
-            if hasattr(context.target_player.equipment_area, '__len__'):
-                total_cards += len([eq for eq in context.target_player.equipment_area.values() if eq is not None])
-            
-            if total_cards == 0:
-                logger.debug("目标没有可拆的牌")
+        # 检查目标是否有牌
+        if not hasattr(context.target_player, 'hand_cards') or len(context.target_player.hand_cards) == 0:
+            if not hasattr(context.target_player, 'equipment_cards') or len(context.target_player.equipment_cards) == 0:
+                logger.debug("目标没有牌可以拆除")
                 return False
         
         return True
     
     # 技能使用条件
     @staticmethod
-    def can_use_jianxiong(context: InteractionContext) -> bool:
+    def can_use_jianxiong(context: 'InteractionContext') -> bool:
         """判断是否可以使用奸雄技能"""
         if not context.source_player:
             return False
@@ -179,37 +168,34 @@ class JudgmentConditions:
         if not hasattr(context.source_player, 'has_skill') or not context.source_player.has_skill("奸雄"):
             return False
         
-        # 奸雄技能在受到伤害后触发
-        if context.interaction_type == InteractionType.DAMAGE:
-            if 'damage_card' in context.additional_data:
-                return True
+        # 检查是否受到伤害
+        if not hasattr(context, 'damage_amount') or context.damage_amount <= 0:
+            return False
         
-        return False
+        return True
     
     @staticmethod
-    def can_use_rende(context: InteractionContext) -> bool:
+    def can_use_rende(context: 'InteractionContext') -> bool:
         """判断是否可以使用仁德技能"""
-        if not context.source_player:
+        if not context.source_player or not context.target_player:
             return False
         
         # 检查是否有仁德技能
         if not hasattr(context.source_player, 'has_skill') or not context.source_player.has_skill("仁德"):
             return False
         
-        # 检查是否有手牌可以给出
-        if hasattr(context.source_player, 'hand_cards') and len(context.source_player.hand_cards) == 0:
-            logger.debug("没有手牌可以给出")
+        # 检查是否有手牌
+        if not hasattr(context.source_player, 'hand_cards') or len(context.source_player.hand_cards) == 0:
             return False
         
-        # 检查目标玩家
-        if not context.target_player or context.target_player == context.source_player:
-            logger.debug("无效的目标玩家")
+        # 检查目标不是自己
+        if context.source_player == context.target_player:
             return False
         
         return True
     
     @staticmethod
-    def can_use_paoxiao(context: InteractionContext) -> bool:
+    def can_use_paoxiao(context: 'InteractionContext') -> bool:
         """判断是否可以使用咆哮技能"""
         if not context.source_player:
             return False
@@ -226,19 +212,19 @@ class JudgmentRegistry:
     """判断条件注册器"""
     
     def __init__(self):
-        self.conditions: Dict[str, List[Callable[[InteractionContext], bool]]] = {}
+        self.conditions: Dict[str, List[Callable[['InteractionContext'], bool]]] = {}
     
-    def register_condition(self, interaction_key: str, condition: Callable[[InteractionContext], bool]):
+    def register_condition(self, interaction_key: str, condition: Callable[['InteractionContext'], bool]):
         """注册判断条件"""
         if interaction_key not in self.conditions:
             self.conditions[interaction_key] = []
         self.conditions[interaction_key].append(condition)
     
-    def get_conditions(self, interaction_key: str) -> List[Callable[[InteractionContext], bool]]:
-        """获取判断条件"""
+    def get_conditions(self, interaction_key: str) -> List[Callable[['InteractionContext'], bool]]:
+        """获取指定交互的所有判断条件"""
         return self.conditions.get(interaction_key, [])
     
-    def check_all_conditions(self, interaction_key: str, context: InteractionContext) -> bool:
+    def check_all_conditions(self, interaction_key: str, context: 'InteractionContext') -> bool:
         """检查所有条件"""
         conditions = self.get_conditions(interaction_key)
         for condition in conditions:

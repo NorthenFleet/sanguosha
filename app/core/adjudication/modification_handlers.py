@@ -5,11 +5,13 @@
 处理各种响应、技能触发、卡牌效果修正
 """
 
-from typing import Dict, List, Optional, Callable, Any
+from typing import Dict, List, Optional, Callable, Any, TYPE_CHECKING
 from dataclasses import dataclass
 from enum import Enum
-from ..interaction.interaction_model import InteractionContext, InteractionType, ResponseType
 import logging
+
+if TYPE_CHECKING:
+    from ..interaction.interaction_model import InteractionContext, InteractionType, ResponseType
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +29,10 @@ class ModificationPriority(Enum):
 class ModificationResult:
     """修正结果"""
     success: bool                           # 修正是否成功
-    modified_context: InteractionContext    # 修正后的上下文
+    modified_context: 'InteractionContext'    # 修正后的上下文
     additional_effects: List[Dict[str, Any]] = None  # 额外效果
     block_original: bool = False            # 是否阻止原始行为
-    trigger_new_interaction: Optional[InteractionContext] = None  # 是否触发新的交互
+    trigger_new_interaction: Optional['InteractionContext'] = None  # 是否触发新的交互
 
 
 class ModificationHandler:
@@ -39,11 +41,11 @@ class ModificationHandler:
     def __init__(self, priority: ModificationPriority = ModificationPriority.NORMAL):
         self.priority = priority
     
-    def can_handle(self, context: InteractionContext) -> bool:
+    def can_handle(self, context: 'InteractionContext') -> bool:
         """判断是否可以处理此修正"""
         raise NotImplementedError
     
-    def handle(self, context: InteractionContext) -> ModificationResult:
+    def handle(self, context: 'InteractionContext') -> ModificationResult:
         """处理修正"""
         raise NotImplementedError
 
@@ -54,7 +56,7 @@ class ShanResponseHandler(ModificationHandler):
     def __init__(self):
         super().__init__(ModificationPriority.HIGH)
     
-    def can_handle(self, context: InteractionContext) -> bool:
+    def can_handle(self, context: 'InteractionContext') -> bool:
         """判断是否可以处理闪的响应"""
         if context.interaction_type != InteractionType.CARD_PLAY:
             return False
@@ -67,7 +69,7 @@ class ShanResponseHandler(ModificationHandler):
         
         return False
     
-    def handle(self, context: InteractionContext) -> ModificationResult:
+    def handle(self, context: 'InteractionContext') -> ModificationResult:
         """处理闪的响应"""
         logger.info(f"{context.source_player}使用闪响应杀")
         
@@ -94,7 +96,7 @@ class WuxiekejiHandler(ModificationHandler):
     def __init__(self):
         super().__init__(ModificationPriority.HIGHEST)
     
-    def can_handle(self, context: InteractionContext) -> bool:
+    def can_handle(self, context: 'InteractionContext') -> bool:
         """判断是否可以处理无懈可击"""
         if context.interaction_type != InteractionType.CARD_PLAY:
             return False
@@ -107,7 +109,7 @@ class WuxiekejiHandler(ModificationHandler):
         
         return False
     
-    def handle(self, context: InteractionContext) -> ModificationResult:
+    def handle(self, context: 'InteractionContext') -> ModificationResult:
         """处理无懈可击"""
         logger.info(f"{context.source_player}使用无懈可击")
         
@@ -132,7 +134,7 @@ class JianxiongSkillHandler(ModificationHandler):
     def __init__(self):
         super().__init__(ModificationPriority.HIGH)
     
-    def can_handle(self, context: InteractionContext) -> bool:
+    def can_handle(self, context: 'InteractionContext') -> bool:
         """判断是否可以触发奸雄"""
         if context.interaction_type != InteractionType.DAMAGE:
             return False
@@ -143,7 +145,7 @@ class JianxiongSkillHandler(ModificationHandler):
         
         return False
     
-    def handle(self, context: InteractionContext) -> ModificationResult:
+    def handle(self, context: 'InteractionContext') -> ModificationResult:
         """处理奸雄技能"""
         logger.info(f"{context.target_player}触发奸雄技能")
         
@@ -172,7 +174,7 @@ class RendeSkillHandler(ModificationHandler):
     def __init__(self):
         super().__init__(ModificationPriority.NORMAL)
     
-    def can_handle(self, context: InteractionContext) -> bool:
+    def can_handle(self, context: 'InteractionContext') -> bool:
         """判断是否可以使用仁德"""
         if context.interaction_type != InteractionType.SKILL_USE:
             return False
@@ -182,7 +184,7 @@ class RendeSkillHandler(ModificationHandler):
         
         return False
     
-    def handle(self, context: InteractionContext) -> ModificationResult:
+    def handle(self, context: 'InteractionContext') -> ModificationResult:
         """处理仁德技能"""
         logger.info(f"{context.source_player}使用仁德技能")
         
@@ -228,7 +230,7 @@ class PaoxiaoSkillHandler(ModificationHandler):
     def __init__(self):
         super().__init__(ModificationPriority.HIGHEST)  # 锁定技，最高优先级
     
-    def can_handle(self, context: InteractionContext) -> bool:
+    def can_handle(self, context: 'InteractionContext') -> bool:
         """判断是否触发咆哮"""
         if context.interaction_type != InteractionType.CARD_PLAY:
             return False
@@ -241,7 +243,7 @@ class PaoxiaoSkillHandler(ModificationHandler):
         
         return False
     
-    def handle(self, context: InteractionContext) -> ModificationResult:
+    def handle(self, context: 'InteractionContext') -> ModificationResult:
         """处理咆哮技能"""
         logger.info(f"{context.source_player}的咆哮技能生效，无出杀次数限制")
         
@@ -261,7 +263,7 @@ class WeaponEffectHandler(ModificationHandler):
     def __init__(self):
         super().__init__(ModificationPriority.NORMAL)
     
-    def can_handle(self, context: InteractionContext) -> bool:
+    def can_handle(self, context: 'InteractionContext') -> bool:
         """判断是否有武器效果"""
         if context.interaction_type != InteractionType.CARD_PLAY:
             return False
@@ -277,7 +279,7 @@ class WeaponEffectHandler(ModificationHandler):
         
         return False
     
-    def handle(self, context: InteractionContext) -> ModificationResult:
+    def handle(self, context: 'InteractionContext') -> ModificationResult:
         """处理武器效果"""
         weapon = context.source_player.equipment_area['weapon']
         weapon_name = weapon.name if hasattr(weapon, 'name') else "未知武器"
@@ -312,7 +314,7 @@ class ArmorEffectHandler(ModificationHandler):
     def __init__(self):
         super().__init__(ModificationPriority.HIGH)
     
-    def can_handle(self, context: InteractionContext) -> bool:
+    def can_handle(self, context: 'InteractionContext') -> bool:
         """判断是否有防具效果"""
         if context.interaction_type != InteractionType.DAMAGE:
             return False
@@ -325,7 +327,7 @@ class ArmorEffectHandler(ModificationHandler):
         
         return False
     
-    def handle(self, context: InteractionContext) -> ModificationResult:
+    def handle(self, context: 'InteractionContext') -> ModificationResult:
         """处理防具效果"""
         armor = context.target_player.equipment_area['armor']
         armor_name = armor.name if hasattr(armor, 'name') else "未知防具"
@@ -388,7 +390,7 @@ class ModificationEngine:
         self.handlers.append(handler)
         self.handlers.sort(key=lambda h: h.priority.value)
     
-    def process_modifications(self, context: InteractionContext) -> List[ModificationResult]:
+    def process_modifications(self, context: 'InteractionContext') -> List[ModificationResult]:
         """处理所有修正"""
         results = []
         current_context = context

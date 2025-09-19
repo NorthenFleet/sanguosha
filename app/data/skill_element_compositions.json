@@ -1,0 +1,410 @@
+{
+  "skill_compositions": {
+    "奸雄": {
+      "description": "当你受到伤害后，你可以获得对你造成伤害的牌",
+      "trigger": "after_damage_received",
+      "element_requirements": [
+        {
+          "condition": "is_alive",
+          "description": "角色必须存活"
+        }
+      ],
+      "element_effects": [
+        {
+          "type": "gain_card",
+          "description": "获得造成伤害的牌",
+          "target_element": "card"
+        }
+      ]
+    },
+    "反馈": {
+      "description": "当你受到伤害后，你可以获得伤害来源的一张手牌",
+      "trigger": "after_damage_received",
+      "element_requirements": [
+        {
+          "condition": "is_alive",
+          "description": "角色必须存活"
+        }
+      ],
+      "element_effects": [
+        {
+          "type": "steal_card",
+          "description": "获得伤害来源的一张手牌",
+          "source_element": "card",
+          "target_element": "card"
+        }
+      ]
+    },
+    "突袭": {
+      "description": "摸牌阶段，你可以少摸一张牌，然后获得一至两名其他角色的各一张手牌",
+      "trigger": "draw_phase",
+      "element_requirements": [
+        {
+          "condition": "is_alive",
+          "description": "角色必须存活"
+        }
+      ],
+      "element_effects": [
+        {
+          "type": "modify_draw",
+          "description": "少摸一张牌",
+          "target_element": "card",
+          "value": -1
+        },
+        {
+          "type": "steal_card",
+          "description": "获得其他角色的手牌",
+          "source_element": "card",
+          "target_element": "card",
+          "max_targets": 2
+        }
+      ]
+    },
+    "刚烈": {
+      "description": "当你受到伤害后，你可以进行判定：若结果不为红桃，则伤害来源弃置两张牌或受到1点伤害",
+      "trigger": "after_damage_received",
+      "element_requirements": [
+        {
+          "condition": "is_alive",
+          "description": "角色必须存活"
+        }
+      ],
+      "element_effects": [
+        {
+          "type": "judgment",
+          "description": "进行判定",
+          "condition": "not_heart"
+        },
+        {
+          "type": "choice_effect",
+          "description": "伤害来源选择弃牌或受伤",
+          "options": [
+            {
+              "type": "discard_cards",
+              "target_element": "card",
+              "value": 2
+            },
+            {
+              "type": "take_damage",
+              "target_element": "health",
+              "value": 1
+            }
+          ]
+        }
+      ]
+    },
+    "仁德": {
+      "description": "出牌阶段，你可以将任意张手牌交给其他角色，然后你于此回合内不能再对其使用杀",
+      "trigger": "action_phase",
+      "element_requirements": [
+        {
+          "condition": "is_alive",
+          "description": "角色必须存活"
+        },
+        {
+          "condition": "has_card",
+          "description": "必须有手牌"
+        }
+      ],
+      "element_effects": [
+        {
+          "type": "give_cards",
+          "description": "交给其他角色手牌",
+          "source_element": "card",
+          "target_element": "card"
+        },
+        {
+          "type": "add_restriction",
+          "description": "本回合不能对目标使用杀",
+          "restriction_type": "cannot_use_sha"
+        }
+      ]
+    },
+    "武圣": {
+      "description": "你可以将一张红色牌当杀使用或打出",
+      "trigger": "need_sha",
+      "element_requirements": [
+        {
+          "condition": "is_alive",
+          "description": "角色必须存活"
+        },
+        {
+          "condition": "has_red_card",
+          "description": "必须有红色牌"
+        }
+      ],
+      "element_effects": [
+        {
+          "type": "card_substitute",
+          "description": "红色牌当杀使用",
+          "source_element": "card",
+          "substitute_card": "杀",
+          "condition": "red_card"
+        }
+      ]
+    },
+    "咆哮": {
+      "description": "你使用杀无次数限制",
+      "trigger": "passive",
+      "element_requirements": [
+        {
+          "condition": "is_alive",
+          "description": "角色必须存活"
+        }
+      ],
+      "element_effects": [
+        {
+          "type": "remove_limit",
+          "description": "移除杀的使用次数限制",
+          "limit_type": "sha_count"
+        }
+      ]
+    },
+    "龙胆": {
+      "description": "你可以将杀当闪使用或打出，可以将闪当杀使用或打出",
+      "trigger": "need_card",
+      "element_requirements": [
+        {
+          "condition": "is_alive",
+          "description": "角色必须存活"
+        }
+      ],
+      "element_effects": [
+        {
+          "type": "card_substitute",
+          "description": "杀闪互换",
+          "substitutions": [
+            {
+              "from": "杀",
+              "to": "闪"
+            },
+            {
+              "from": "闪", 
+              "to": "杀"
+            }
+          ]
+        }
+      ]
+    },
+    "制衡": {
+      "description": "出牌阶段限一次，你可以弃置任意张牌，然后摸等量的牌",
+      "trigger": "action_phase",
+      "element_requirements": [
+        {
+          "condition": "is_alive",
+          "description": "角色必须存活"
+        },
+        {
+          "condition": "has_card",
+          "description": "必须有手牌"
+        },
+        {
+          "condition": "skill_not_used_this_turn",
+          "skill_name": "制衡",
+          "description": "本回合未使用过制衡"
+        }
+      ],
+      "element_effects": [
+        {
+          "type": "discard_and_draw",
+          "description": "弃牌然后摸等量牌",
+          "target_element": "card"
+        }
+      ]
+    },
+    "观星": {
+      "description": "准备阶段开始时，你可以观看牌堆顶的五张牌，然后将其中任意张牌置于牌堆顶，其余的置于牌堆底",
+      "trigger": "prepare_phase",
+      "element_requirements": [
+        {
+          "condition": "is_alive",
+          "description": "角色必须存活"
+        }
+      ],
+      "element_effects": [
+        {
+          "type": "manipulate_deck",
+          "description": "操作牌堆顶的牌",
+          "view_count": 5,
+          "can_rearrange": true
+        }
+      ]
+    },
+    "空城": {
+      "description": "锁定技，若你没有手牌，你不能成为杀或决斗的目标",
+      "trigger": "passive",
+      "element_requirements": [
+        {
+          "condition": "is_alive",
+          "description": "角色必须存活"
+        },
+        {
+          "condition": "no_hand_cards",
+          "description": "没有手牌"
+        }
+      ],
+      "element_effects": [
+        {
+          "type": "immunity",
+          "description": "不能成为杀或决斗的目标",
+          "immune_to": ["杀", "决斗"]
+        }
+      ]
+    },
+    "青囊": {
+      "description": "出牌阶段限一次，你可以弃置一张手牌，然后令一名角色回复1点体力",
+      "trigger": "action_phase",
+      "element_requirements": [
+        {
+          "condition": "is_alive",
+          "description": "角色必须存活"
+        },
+        {
+          "condition": "has_card",
+          "description": "必须有手牌"
+        },
+        {
+          "condition": "skill_not_used_this_turn",
+          "skill_name": "青囊",
+          "description": "本回合未使用过青囊"
+        }
+      ],
+      "element_effects": [
+        {
+          "type": "discard_card",
+          "description": "弃置一张手牌",
+          "source_element": "card",
+          "value": 1
+        },
+        {
+          "type": "heal",
+          "description": "令一名角色回复体力",
+          "target_element": "health",
+          "value": 1
+        }
+      ]
+    },
+    "无双": {
+      "description": "锁定技，你使用的杀需两张闪才能抵消；你使用的决斗需两张杀才能响应",
+      "trigger": "passive",
+      "element_requirements": [
+        {
+          "condition": "is_alive",
+          "description": "角色必须存活"
+        }
+      ],
+      "element_effects": [
+        {
+          "type": "modify_requirement",
+          "description": "修改响应需求",
+          "modifications": [
+            {
+              "card": "杀",
+              "response_card": "闪",
+              "required_count": 2
+            },
+            {
+              "card": "决斗",
+              "response_card": "杀", 
+              "required_count": 2
+            }
+          ]
+        }
+      ]
+    },
+    "离间": {
+      "description": "出牌阶段限一次，你可以弃置一张牌并选择两名其他角色，然后令其中一名角色对另一名角色使用一张杀",
+      "trigger": "action_phase",
+      "element_requirements": [
+        {
+          "condition": "is_alive",
+          "description": "角色必须存活"
+        },
+        {
+          "condition": "has_card",
+          "description": "必须有手牌"
+        },
+        {
+          "condition": "skill_not_used_this_turn",
+          "skill_name": "离间",
+          "description": "本回合未使用过离间"
+        }
+      ],
+      "element_effects": [
+        {
+          "type": "discard_card",
+          "description": "弃置一张牌",
+          "source_element": "card",
+          "value": 1
+        },
+        {
+          "type": "force_action",
+          "description": "令一名角色对另一名角色使用杀",
+          "action": "use_sha",
+          "target_count": 2
+        }
+      ]
+    }
+  },
+  "element_conditions": {
+    "has_red_card": {
+      "description": "检查是否有红色牌",
+      "implementation": "check_card_color",
+      "params": {
+        "color": "red"
+      }
+    },
+    "no_hand_cards": {
+      "description": "检查是否没有手牌",
+      "implementation": "check_card_count",
+      "params": {
+        "count": 0,
+        "operator": "equal"
+      }
+    },
+    "skill_not_used_this_turn": {
+      "description": "检查技能本回合是否未使用",
+      "implementation": "check_skill_usage_count",
+      "params": {
+        "max_count": 0
+      }
+    }
+  },
+  "element_effects": {
+    "gain_card": {
+      "description": "获得卡牌",
+      "affects_element": "card",
+      "operation": "add"
+    },
+    "steal_card": {
+      "description": "获得其他角色的卡牌",
+      "affects_element": "card",
+      "operation": "transfer"
+    },
+    "discard_card": {
+      "description": "弃置卡牌",
+      "affects_element": "card",
+      "operation": "remove"
+    },
+    "take_damage": {
+      "description": "受到伤害",
+      "affects_element": "health",
+      "operation": "subtract"
+    },
+    "heal": {
+      "description": "回复体力",
+      "affects_element": "health",
+      "operation": "add"
+    },
+    "card_substitute": {
+      "description": "卡牌替换",
+      "affects_element": "card",
+      "operation": "substitute"
+    },
+    "immunity": {
+      "description": "免疫效果",
+      "affects_element": "special",
+      "operation": "protect"
+    }
+  }
+}

@@ -16,12 +16,18 @@ from app.core.adjudication.base_adjudication_model import (
 )
 from app.models.player import Player
 from app.models.card import Card
+from app.models.character import CharacterFactory
 
 
 def create_simple_context():
     """创建简单的测试上下文"""
-    source_player = Player("张三", "魏", "曹操")
-    target_player = Player("李四", "蜀", "刘备")
+    # 创建角色
+    character1 = CharacterFactory.create_character("曹操")
+    character2 = CharacterFactory.create_character("刘备")
+    
+    # 创建玩家
+    source_player = Player(character1)
+    target_player = Player(character2)
     sha_card = Card("杀", "基本", "红桃", 7)
     
     return {
@@ -38,7 +44,7 @@ def test_basic_model():
     
     # 创建模型
     model = BaseAdjudicationModel("test_sha_model")
-    print(f"创建模型: {model.name}")
+    print(f"创建模型: {model.model_name}")
     
     # 定义判断函数
     def check_has_card(context):
@@ -101,12 +107,12 @@ def test_basic_model():
     result = model.execute(context)
     
     # 输出结果
-    print(f"\n裁决执行完成:")
-    print(f"  模型名称: {result.model_name}")
-    print(f"  执行阶段: {result.current_phase}")
+    print(f"裁决执行完成:")
+    print(f"  执行阶段: {result.phase}")
     print(f"  判断结果: {result.judgment_results}")
     print(f"  修正结果: {result.modification_results}")
-    print(f"  计算输出: {result.calculation_outputs}")
+    print(f"  计算结果: {result.calculation_outputs}")
+    print(f"  元数据: {result.metadata}")
     
     return result
 
@@ -164,7 +170,7 @@ def test_required_judgment():
     result = model.execute(context)
     
     print(f"必需判断失败时的结果:")
-    print(f"  当前阶段: {result.current_phase}")
+    print(f"  当前阶段: {result.phase}")
     print(f"  判断结果: {result.judgment_results}")
 
 
