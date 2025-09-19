@@ -8,21 +8,23 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.core.game import Game
+from app.core.event_system import EventManager
 from app.models.card import Card
-from app.models.character import Character
+from app.models.character import Character, Kingdom
 from app.models.player import Player
 
 def test_trick_card_with_wuxie():
     """测试锦囊牌的无懈可击响应机制"""
     print("=== 测试锦囊牌无懈可击响应机制 ===")
     
-    # 创建游戏实例
-    game = Game()
+    # 创建事件管理器和游戏实例
+    event_manager = EventManager()
+    game = Game(event_manager)
     
     # 创建测试角色
-    char1 = Character("刘备", 4, ["仁德", "激将"])
-    char2 = Character("关羽", 4, ["武圣"])
-    char3 = Character("张飞", 4, ["咆哮"])
+    char1 = Character("刘备", Kingdom.SHU, 4, ["仁德", "激将"])
+    char2 = Character("关羽", Kingdom.SHU, 4, ["武圣"])
+    char3 = Character("张飞", Kingdom.SHU, 4, ["咆哮"])
     
     # 创建玩家
     player1 = Player(char1)
@@ -74,12 +76,13 @@ def test_guohe_effect():
     """测试过河拆桥的完整效果"""
     print("\n=== 测试过河拆桥完整效果 ===")
     
-    # 创建游戏实例
-    game = Game()
+    # 创建事件管理器和游戏实例
+    event_manager = EventManager()
+    game = Game(event_manager)
     
     # 创建测试角色
-    char1 = Character("刘备", 4, ["仁德", "激将"])
-    char2 = Character("关羽", 4, ["武圣"])
+    char1 = Character("刘备", Kingdom.SHU, 4, ["仁德", "激将"])
+    char2 = Character("关羽", Kingdom.SHU, 4, ["武圣"])
     
     # 创建玩家
     player1 = Player(char1)
@@ -132,14 +135,15 @@ def test_multiple_wuxie_responses():
     """测试多个玩家的无懈可击响应"""
     print("\n=== 测试多个玩家无懈可击响应 ===")
     
-    # 创建游戏实例
-    game = Game()
+    # 创建事件管理器和游戏实例
+    event_manager = EventManager()
+    game = Game(event_manager)
     
     # 创建测试角色
-    char1 = Character("刘备", 4, ["仁德", "激将"])
-    char2 = Character("关羽", 4, ["武圣"])
-    char3 = Character("张飞", 4, ["咆哮"])
-    char4 = Character("赵云", 4, ["龙胆"])
+    char1 = Character("刘备", Kingdom.SHU, 4, ["仁德", "激将"])
+    char2 = Character("关羽", Kingdom.SHU, 4, ["武圣"])
+    char3 = Character("张飞", Kingdom.SHU, 4, ["咆哮"])
+    char4 = Character("赵云", Kingdom.SHU, 4, ["龙胆"])
     
     # 创建玩家
     player1 = Player(char1)
