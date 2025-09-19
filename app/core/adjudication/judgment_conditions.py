@@ -6,7 +6,7 @@
 """
 
 from typing import Dict, List, Callable
-from .interaction_model import InteractionContext, InteractionType
+from ..interaction.interaction_model import InteractionContext, InteractionType
 import logging
 
 logger = logging.getLogger(__name__)

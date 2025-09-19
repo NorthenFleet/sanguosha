@@ -11,13 +11,13 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.models.character import CharacterFactory, Kingdom
 from app.models.player import Player
-from app.core.game import Game
+from app.core.base.game import Game
 from app.models.card import Card
 from app.models.enums import CardType
 from app.models.skills import (
     JianXiong, FanKui, GangLie, SkillManager
 )
-from app.core.event_system import EventManager
+from app.core.events.event_system import EventManager
 
 def create_test_game():
     """创建测试游戏环境"""

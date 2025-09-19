@@ -10,10 +10,9 @@ from dataclasses import dataclass
 import logging
 from .adjudication_engine import AdjudicationEngine, FinalResult, AdjudicationResult
 from .nested_adjudication_stack import (
-    NestedAdjudicationStack, AdjudicationProcess, TriggerType, 
-    AdjudicationStatus, get_stack_manager
+    NestedAdjudicationStack, AdjudicationProcess, TriggerType, AdjudicationStatus, get_stack_manager
 )
-from .interaction_model import InteractionContext, InteractionType
+from ..interaction.interaction_model import InteractionContext, InteractionType
 from .modification_handlers import ModificationResult
 
 logger = logging.getLogger(__name__)

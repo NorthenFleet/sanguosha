@@ -8,7 +8,7 @@
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass
 from enum import Enum
-from .interaction_model import InteractionContext, InteractionType
+from ..interaction.interaction_model import InteractionContext, InteractionType
 from .modification_handlers import ModificationResult
 import logging
 

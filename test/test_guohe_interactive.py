@@ -12,8 +12,8 @@ from app.models.player import Player
 from app.models.character import Character
 from app.models.enums import CardType
 from app.models.card_actions import GuoHeChaiQiaoAction
-from app.core.game import Game
-from app.core.event_system import EventManager
+from app.core.base.game import Game
+from app.core.events.event_system import EventManager
 
 def create_test_game():
     """创建测试游戏环境"""

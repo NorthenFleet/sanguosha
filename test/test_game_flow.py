@@ -5,7 +5,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.core.game_engine import GameEngine
+from app.core.base.game_engine import GameEngine
 from app.models.character import Character, Kingdom
 from app.models.card import Card
 from app.models.enums import CardType

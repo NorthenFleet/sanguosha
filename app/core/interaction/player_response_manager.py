@@ -9,7 +9,7 @@ import time
 import asyncio
 import threading
 from concurrent.futures import ThreadPoolExecutor, Future
-from .multi_player_event_system import GameEvent, EventResponse, ResponseType, EventPriority
+from ..events.multi_player_event_system import GameEvent, EventResponse, ResponseType, EventPriority
 
 class ResponseWindowState(Enum):
     """响应窗口状态"""

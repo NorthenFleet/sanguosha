@@ -5,8 +5,8 @@
 """
 
 from typing import Dict, Any, Optional
-from ..models.player import Player
-from ..models.card import Card
+from ...models.player import Player
+from ...models.card import Card
 
 
 class EquipmentJudgment:

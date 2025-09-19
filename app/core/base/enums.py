@@ -4,6 +4,8 @@ from enum import Enum, auto
 
 
 class Phase(Enum):
+    BEGIN = auto() # 回合开始
+    JUDGE = auto() # 判断阶段
     DRAW = auto() # 摸牌阶段
     PLAY = auto() # 出牌阶段
     DISCARD = auto() # 弃牌阶段

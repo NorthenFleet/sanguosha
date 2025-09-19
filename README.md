@@ -111,7 +111,7 @@ Client / CLI / Bot
   - Player.use_card → 校验（时机/距离/次数/限制）→ 触发事件（Before/After）→ 更新状态（扣牌、结算）。
 
 ### 8. 依赖与包结构约定
-- 所有跨包导入一律使用绝对导入（如 `from app.core.game import Game`），避免相对导入在调试中失效。
+- 所有跨包导入一律使用绝对导入（如 `from app.core.base.game import Game`），避免相对导入在调试中失效。
 - 顶层通过 `path_utils.setup_paths()` 确保根目录加入 sys.path。
 - 新增模块需在相应包添加 `__init__.py`（已存在 core 的 __init__.py）。
 

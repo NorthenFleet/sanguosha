@@ -8,7 +8,7 @@
 from typing import Dict, List, Optional, Callable, Any
 from dataclasses import dataclass
 from enum import Enum
-from .interaction_model import InteractionContext, InteractionType, ResponseType
+from ..interaction.interaction_model import InteractionContext, InteractionType, ResponseType
 import logging
 
 logger = logging.getLogger(__name__)

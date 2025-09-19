@@ -1,11 +1,11 @@
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from app.core.path_utils import setup_paths
+from app.core.base.path_utils import setup_paths
 setup_paths()
 
-from app.core.event_system import EventManager
-from app.core.game import Game
+from app.core.events.event_system import EventManager
+from app.core.base.game import Game
 from app.models.character import Character
 from app.models.card import Deck, display_deck_info
 

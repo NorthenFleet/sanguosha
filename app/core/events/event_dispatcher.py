@@ -10,8 +10,8 @@ from .multi_player_event_system import (
     MultiPlayerEventSystem, GameEvent, EventResponse, 
     PlayerResponseHandler, EventSubscription, EventPriority, ResponseType
 )
-from .interaction_model import InteractionContext, InteractionResult
-from .adjudication_engine import AdjudicationEngine, AdjudicationResult
+from ..interaction.interaction_model import InteractionContext, InteractionResult
+from ..adjudication.adjudication_engine import AdjudicationEngine, AdjudicationResult
 
 @dataclass
 class EventContext:

@@ -8,10 +8,10 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from app.core.game import Game
+from app.core.base.game import Game
 from app.models.character import Character
 from app.models.player import Player
-from app.core.event_system import EventManager
+from app.core.events.event_system import EventManager
 
 def test_exception_handling():
     """测试异常处理功能"""

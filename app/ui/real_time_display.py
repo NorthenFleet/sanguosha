@@ -10,8 +10,8 @@ import time
 import threading
 from typing import Dict, List, Optional, Callable
 from datetime import datetime
-from ..models.deck import EnhancedDeck
-from ..models.card import Card
+from ...models.deck import EnhancedDeck
+from ...models.card import Card
 from .card_display import CardDisplayManager, GameDisplayInterface
 
 class RealTimeCardMonitor:
@@ -673,7 +673,7 @@ def demo_real_time_display():
     print("=== 实时卡牌显示系统演示 ===")
     
     # 创建组件
-    from ..models.deck import EnhancedDeck
+    from ...models.deck import EnhancedDeck
     deck = EnhancedDeck()
     monitor = RealTimeCardMonitor(deck, update_interval=0.5)
     

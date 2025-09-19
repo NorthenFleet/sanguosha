@@ -11,7 +11,7 @@ from enum import Enum
 from uuid import uuid4
 import time
 import logging
-from .interaction_model import InteractionContext
+from ..interaction.interaction_model import InteractionContext
 from .adjudication_engine import FinalResult, AdjudicationResult
 
 logger = logging.getLogger(__name__)

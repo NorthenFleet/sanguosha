@@ -7,12 +7,12 @@
 
 from typing import Dict, List, Optional, Any
 from .interaction_model import InteractionEngine, InteractionContext, InteractionType
-from .judgment_conditions import default_judgment_registry
-from .modification_handlers import ModificationEngine
-from .adjudication_engine import AdjudicationEngine, FinalResult
-from .game_engine import GameEngine
-from .game import Game
-from ..models.player import Player
+from ..adjudication.judgment_conditions import default_judgment_registry
+from ..adjudication.modification_handlers import ModificationEngine
+from ..adjudication.adjudication_engine import AdjudicationEngine, FinalResult
+from ..base.game_engine import GameEngine
+from ..base.game import Game
+from ...models.player import Player
 import logging
 
 logger = logging.getLogger(__name__)

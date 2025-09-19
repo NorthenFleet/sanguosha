@@ -7,8 +7,8 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from app.core.game import Game
-from app.core.event_system import EventManager
+from app.core.base.game import Game
+from app.core.events.event_system import EventManager
 from app.models.card import Card
 from app.models.character import Character, Kingdom
 from app.models.player import Player

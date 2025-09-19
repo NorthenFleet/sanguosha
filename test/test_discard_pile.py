@@ -10,7 +10,7 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.models.deck import Deck
-from app.core.game import Game, Character
+from app.core.base.game import Game, Character
 from app.models.player import Player
 from app.models.enums import CardType
 

@@ -9,14 +9,14 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.core.interaction_model import (
+from app.core.interaction.interaction_model import (
     InteractionEngine, InteractionContext, InteractionType, 
     JudgmentPhase, ModificationPhase, ResolutionPhase,
     CommonConditions, CommonResolutions
 )
-from app.core.judgment_conditions import JudgmentConditions, default_judgment_registry
-from app.core.modification_handlers import ModificationEngine
-from app.core.adjudication_engine import AdjudicationEngine
+from app.core.adjudication.judgment_conditions import JudgmentConditions, default_judgment_registry
+from app.core.adjudication.modification_handlers import ModificationEngine
+from app.core.adjudication.adjudication_engine import AdjudicationEngine
 from app.models.card import Card
 from app.models.character import CharacterFactory
 import logging

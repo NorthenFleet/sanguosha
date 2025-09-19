@@ -12,7 +12,7 @@ from app.models.player import Player
 from app.models.card import Card
 from app.models.deck import Deck
 from app.models.card_actions import GuoHeChaiQiaoAction
-from app.core.game import Game
+from app.core.base.game import Game
 
 def test_guohe_chaiqi_selection():
     """测试过河拆桥的卡牌选择功能"""

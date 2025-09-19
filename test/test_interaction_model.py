@@ -8,7 +8,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.core.integrated_interaction_system import EnhancedGameEngine
+from app.core.interaction.integrated_interaction_system import EnhancedGameEngine
 from app.models.character import CharacterFactory
 from app.models.card import Card, CardType
 import logging

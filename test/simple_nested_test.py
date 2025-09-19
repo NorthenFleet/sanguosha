@@ -7,11 +7,11 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.core.nested_adjudication_stack import (
+from app.core.adjudication.nested_adjudication_stack import (
     NestedAdjudicationStack, AdjudicationProcess, TriggerType, 
     AdjudicationStatus, get_stack_manager, reset_stack_manager
 )
-from app.core.interaction_model import InteractionContext, InteractionType
+from app.core.interaction.interaction_model import InteractionContext, InteractionType
 
 class MockPlayer:
     def __init__(self, player_id: str, name: str):

@@ -1,10 +1,13 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Dict, List, Any
-from .models import Player, Card
+from ...models.player import Player
+from ...models.card import Card
 from .enums import Phase
 
 
 class GameState(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    
     players: Dict[str, Player]
     turn_order: List[str]
     active: str

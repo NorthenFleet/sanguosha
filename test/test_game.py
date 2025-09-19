@@ -1,7 +1,7 @@
-from app.core.game import Game
+from app.core.base.game import Game
 from app.models.player import Player
 from app.models.character import CharacterFactory
-from app.core.event_system import EventManager
+from app.core.events.event_system import EventManager
 
 # 创建事件管理器
 event_manager = EventManager()

@@ -4,8 +4,8 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
 from app.schemas.game_schema import GameCreate, GameResponse, PlayerAction
-from app.core.game_engine import GameEngine
-from app.core.path_utils import setup_paths
+from app.core.base.game_engine import GameEngine
+from app.core.base.path_utils import setup_paths
 setup_paths()
 
 router = APIRouter(prefix="/game", tags=["game"])

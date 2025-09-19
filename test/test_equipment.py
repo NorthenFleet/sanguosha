@@ -10,7 +10,7 @@ from app.models.player import Player
 from app.models.character import Character
 from app.models.card import Card, CardType
 from app.models.card_actions import ShaAction, create_card_action
-from app.core.game import Game
+from app.core.base.game import Game
 
 def test_equipment_system():
     print("=== 测试装备系统功能 ===")

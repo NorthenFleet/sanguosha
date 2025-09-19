@@ -21,7 +21,7 @@
 ### 1. 交互上下文（InteractionContext）
 
 ```python
-from app.core.interaction_model import InteractionContext, InteractionType
+from app.core.interaction.interaction_model import InteractionContext, InteractionType
 
 context = InteractionContext(
     interaction_type=InteractionType.CARD_USE,
@@ -35,7 +35,7 @@ context = InteractionContext(
 ### 2. 交互引擎（InteractionEngine）
 
 ```python
-from app.core.interaction_model import InteractionEngine
+from app.core.interaction.interaction_model import InteractionEngine
 
 engine = InteractionEngine()
 result = engine.process_interaction(context)
@@ -64,7 +64,7 @@ result = game_engine.interaction_system.process_damage(game_id, source_index=0, 
 ### 添加新的判断条件
 
 ```python
-from app.core.judgment_conditions import default_judgment_registry
+from app.core.adjudication.judgment_conditions import default_judgment_registry
 
 def can_use_new_card(context):
     # 实现判断逻辑
@@ -77,7 +77,7 @@ default_judgment_registry.register_condition("use_new_card", can_use_new_card)
 ### 添加新的修正处理器
 
 ```python
-from app.core.modification_handlers import ModificationHandler, ModificationPriority, ModificationResult
+from app.core.adjudication.modification_handlers import ModificationHandler, ModificationPriority, ModificationResult
 
 class NewSkillHandler(ModificationHandler):
     def __init__(self):
@@ -96,7 +96,7 @@ class NewSkillHandler(ModificationHandler):
         )
 
 # 注册处理器
-from app.core.modification_handlers import ModificationEngine
+from app.core.adjudication.modification_handlers import ModificationEngine
 engine = ModificationEngine()
 engine.register_handler(NewSkillHandler())
 ```
@@ -104,7 +104,7 @@ engine.register_handler(NewSkillHandler())
 ### 添加新的裁决处理器
 
 ```python
-from app.core.interaction_model import InteractionType, InteractionResult
+from app.core.interaction.interaction_model import InteractionType, InteractionResult
 
 def new_interaction_resolution(context):
     # 实现裁决逻辑

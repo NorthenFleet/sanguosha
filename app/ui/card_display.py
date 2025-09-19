@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional
 from datetime import datetime
-from ..models.deck import EnhancedDeck
-from ..models.card import Card
+from ...models.deck import EnhancedDeck
+from ...models.card import Card
 
 class CardDisplayManager:
     """卡牌显示管理器 - 实时显示卡牌数量和状态"""
@@ -312,7 +312,7 @@ def demo_card_display():
     print("=== 卡牌显示系统演示 ===")
     
     # 创建牌堆和显示管理器
-    from ..models.deck import EnhancedDeck
+    from ...models.deck import EnhancedDeck
     deck = EnhancedDeck()
     display_manager = CardDisplayManager(deck)
     game_interface = GameDisplayInterface(deck)

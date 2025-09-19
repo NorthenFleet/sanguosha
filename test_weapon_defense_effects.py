@@ -11,7 +11,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from app.models.player import Player
 from app.models.character import Character, Kingdom
 from app.models.card import Card
-from app.core.equipment_judgment import equipment_judgment
+from app.core.adjudication.equipment_judgment import equipment_judgment
 
 
 def create_test_card(name, card_type="装备", suit="红桃", point=1, damage_type=None):

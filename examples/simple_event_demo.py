@@ -7,13 +7,13 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from app.core.multi_player_event_system import (
+from app.core.events.multi_player_event_system import (
     MultiPlayerEventSystem, GameEvent, EventResponse, EventPriority, ResponseType,
     BasicCardResponseHandler
 )
-from app.core.event_dispatcher import GameEventDispatcher
-from app.core.player_response_manager import PlayerResponseManager, ResponseWindowState
-from app.core.skill_event_handlers import CharacterSkillManager, SkillResponseHandler
+from app.core.events.event_dispatcher import GameEventDispatcher
+from app.core.interaction.player_response_manager import PlayerResponseManager, ResponseWindowState
+from app.core.events.skill_event_handlers import CharacterSkillManager, SkillResponseHandler
 from app.models.card import Card
 from app.models.player import Player
 from app.models.character import Character

@@ -3,9 +3,9 @@
 """
 import uuid
 from typing import Dict, Optional
-from ..core.game import Game
-from ..models.player import Player
-from ..models.character import CharacterFactory
+from .game import Game
+from ...models.player import Player
+from ...models.character import CharacterFactory
 
 
 class GameEngine:
@@ -31,7 +31,7 @@ class GameEngine:
         
         # 创建游戏实例
         game_id = str(uuid.uuid4())
-        from ..core.event_system import EventManager
+        from ..events.event_system import EventManager
         event_manager = EventManager()
         game = Game(event_manager)
         
