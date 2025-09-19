@@ -66,7 +66,8 @@ class ShaAction(CardAction):
         if target is None:
             target = game.get_opponent(player)
         print(f"{target.character.name} 没有闪可以响应，受到1点伤害。")
-        target.character.hp -= 1
+        # 使用游戏的handle_damage方法来处理伤害，这样可以触发相关的装备效果和技能
+        game.handle_damage(target, 1, damage_card=None)
         return True
     
     def apply_effect(self, game, player, target=None):
@@ -296,7 +297,7 @@ class WuZhongShengYouAction(CardAction):
             return False
             
         for _ in range(2):
-            if game.deck.cards:
+            if game.deck.draw_pile:  # 使用draw_pile而不是cards
                 card = game.deck.draw_card()
                 player.hand_cards.append(card)
                 print(f"{player.character.name} 使用无中生有摸了一张 {card}")

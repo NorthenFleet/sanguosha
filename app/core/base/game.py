@@ -199,9 +199,15 @@ class Game:
                                 player.hand_cards.pop(choice)
                             # 触发使用卡牌事件
                             self.event_manager.trigger("play_card", {"player": player, "card": card, "target": self.get_opponent(player)})
-                            # 处理响应 - 这会自动切换到对手的回合进行响应
+                            # 创建卡牌动作并执行效果
                             card_action = self.create_card_action(card)
-                            response_result = card_action.handle_response(self, player, test_mode=False)
+                            
+                            # 对于需要响应的卡牌（如杀、决斗等），使用handle_response
+                            if card.name in ["杀", "决斗", "南蛮入侵", "万箭齐发"]:
+                                response_result = card_action.handle_response(self, player, test_mode=False)
+                            else:
+                                # 对于不需要响应的卡牌（如无中生有、过河拆桥等），直接执行效果
+                                response_result = card_action.apply_effect(self, player)
                             
                             # 卡牌使用完成后，如果不是装备牌且没有停留在场上，则进入弃牌堆
                             if card.type and card.type.value != "装备牌":
