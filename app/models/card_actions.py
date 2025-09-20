@@ -552,12 +552,10 @@ class JieDaoShaRenAction(CardAction):
                 weapon_holder.equipped.remove(weapon)
             weapon_holder.weapon = None
             
-            # 将武器给借刀杀人的使用者
-            if weapon not in player.equipped:
-                player.equipped.append(weapon)
-            player.weapon = weapon
+            # 将武器加入借刀杀人使用者的手牌
+            player.hand_cards.append(weapon)
             
-            print(f"{player.character.name} 获得了 {weapon.name}。")
+            print(f"{player.character.name} 获得了 {weapon.name}，加入手牌。")
             return True
 
 
