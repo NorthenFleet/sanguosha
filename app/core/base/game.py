@@ -173,6 +173,11 @@ class Game:
                         if 0 <= choice < len(player.hand_cards):
                             card = player.hand_cards[choice]
                             
+                            # 检查无懈可击不能在出牌阶段主动使用
+                            if card.name == "无懈可击":
+                                print("无懈可击只能用于响应其他锦囊牌，不能在出牌阶段主动使用。")
+                                continue
+                            
                             # 检查是否可以使用"杀"
                             has_paoxiao = False
                             if card.name == "杀":
@@ -447,7 +452,9 @@ class Game:
         # 触发伤害事件
         self.event_manager.trigger("take_damage", {"player": player, "damage": damage, "damage_card": damage_card})
         
+        # 同时更新player.hp和player.character.hp，确保血量同步
         player.character.hp -= damage
+        player.hp = player.character.hp  # 同步血量
         print(f"{player.character.name} 受到 {damage} 点伤害，剩余血量: {player.character.hp}")
         
         # 检查是否有奸雄技能

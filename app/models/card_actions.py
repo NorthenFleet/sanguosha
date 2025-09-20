@@ -89,12 +89,17 @@ class TaoAction(CardAction):
         super().__init__("桃", "basic", "回复1点体力")
     
     def apply_effect(self, game, player, target=None):
-        if player.character.hp < player.character.max_hp:
-            player.character.hp += 1
-            print(f"{player.character.name} 使用桃回复了1点体力，当前体力: {player.character.hp}")
+        if target is None:
+            target = player
+        
+        if target.character.hp < target.character.max_hp:
+            target.character.hp += 1
+            target.hp = target.character.hp  # 同步血量
+            print(f"{target.character.name} 使用桃回复了1点体力，当前体力: {target.character.hp}")
+            return True
         else:
-            print(f"{player.character.name} 体力已满，无法使用桃。")
-        return True
+            print(f"{target.character.name} 体力已满，无法使用桃。")
+            return False
 
 
 class ShanAction(CardAction):
@@ -203,9 +208,16 @@ class GuoHeChaiQiaoAction(CardAction):
         return selected_card, selected_area_type
     
     def apply_effect(self, game, player, target=None):
-        # 如果没有指定目标，则选择目标
+        from app.core.target_selection import CardTargetSelector
+        
+        # 使用统一的目标选择接口
         if target is None:
-            target = game.select_target(player, "选择【过河拆桥】的目标", test_mode=(game.current_phase == "test"))
+            test_mode = (game.current_phase == "test")
+            target = CardTargetSelector.select_guohe_target(game, player, test_mode)
+        
+        if not target:
+            print("没有可选择的目标，过河拆桥失败。")
+            return False
         
         # 先询问所有玩家是否使用无懈可击
         if not self.handle_response(game, player, target, test_mode=(game.current_phase == "test")):
@@ -256,14 +268,15 @@ class ShunShouQianYangAction(CardAction):
         return selected_card, area_type
     
     def apply_effect(self, game, player, target=None):
-        # 如果没有指定目标，则选择目标
-        if target is None:
-            target = game.select_target(player, "选择【顺手牵羊】的目标", test_mode=(game.current_phase == "test"))
+        from app.core.target_selection import CardTargetSelector
         
-        # 检查距离限制（顺手牵羊要求距离为1）
-        distance = player.get_distance_to(target)
-        if distance > 1:
-            print(f"{player.character.name} 使用顺手牵羊失败，{target.character.name} 距离过远（距离：{distance}）")
+        # 使用统一的目标选择接口
+        if target is None:
+            test_mode = (game.current_phase == "test")
+            target = CardTargetSelector.select_shunshou_target(game, player, test_mode)
+        
+        if not target:
+            print("没有可选择的目标，顺手牵羊失败。")
             return False
         
         # 先询问所有玩家是否使用无懈可击
@@ -344,9 +357,16 @@ class JueDouAction(CardAction):
         return True
     
     def apply_effect(self, game, player, target=None):
-        # 如果没有指定目标，则选择目标
+        from app.core.target_selection import CardTargetSelector
+        
+        # 使用统一的目标选择接口
         if target is None:
-            target = game.select_target(player, "选择【决斗】的目标", test_mode=(game.current_phase == "test"))
+            test_mode = (game.current_phase == "test")
+            target = CardTargetSelector.select_juedou_target(game, player, test_mode)
+        
+        if not target:
+            print("没有可选择的目标，决斗失败。")
+            return False
         
         # 先询问所有玩家是否使用无懈可击
         if not self.handle_response(game, player, target, test_mode=(game.current_phase == "test")):
@@ -478,91 +498,28 @@ class JieDaoShaRenAction(CardAction):
         super().__init__("借刀杀人", "trick", "令一名装备武器的角色对其攻击范围内的另一名角色使用一张杀")
     
     def apply_effect(self, game, player, target=None):
+        from app.core.target_selection import CardTargetSelector
+        
         """借刀杀人的效果：选择一名装备武器的角色，令其对攻击范围内的另一名角色使用杀"""
         
         # 先询问所有玩家是否使用无懈可击
-        if not self.handle_response(game, player, target, test_mode=(game.current_phase == "test")):
+        if not self.handle_response(game, player, None, test_mode=(game.current_phase == "test")):
             # 如果被无懈可击抵消，则不生效
             return False
         
-        # 选择装备武器的目标角色
-        weapon_players = []
-        for p in game.players:
-            if p != player and p.weapon:  # 不能选择自己，且必须装备武器
-                weapon_players.append(p)
+        # 使用统一的目标选择接口
+        test_mode = (game.current_phase == "test")
+        weapon_holder, attack_target = CardTargetSelector.select_jiedao_targets(
+            game, player, test_mode
+        )
         
-        if not weapon_players:
-            print("场上没有装备武器的其他角色，借刀杀人无效。")
+        if not weapon_holder:
+            print("没有可选择的武器持有者，借刀杀人失败。")
             return False
         
-        # 选择装备武器的角色
-        if target is None:
-            if len(weapon_players) == 1:
-                weapon_holder = weapon_players[0]
-            else:
-                print("选择一名装备武器的角色：")
-                for i, p in enumerate(weapon_players):
-                    print(f"{i+1}. {p.character.name} (武器: {p.weapon.name})")
-                
-                test_mode = (game.current_phase == "test")
-                if test_mode:
-                    # 测试模式下自动选择第一个
-                    weapon_holder = weapon_players[0]
-                else:
-                    try:
-                        choice = input("请选择: ")
-                        choice_idx = int(choice) - 1
-                        if 0 <= choice_idx < len(weapon_players):
-                            weapon_holder = weapon_players[choice_idx]
-                        else:
-                            print("无效选择，借刀杀人失败。")
-                            return False
-                    except (ValueError, EOFError):
-                        print("输入无效，借刀杀人失败。")
-                        return False
-        else:
-            weapon_holder = target
-        
-        # 检查武器持有者是否真的装备了武器
-        if not weapon_holder.weapon:
-            print(f"{weapon_holder.character.name} 没有装备武器，借刀杀人无效。")
+        if not attack_target:
+            print(f"{weapon_holder.character.name} 的攻击范围内没有可攻击的目标，借刀杀人失败。")
             return False
-        
-        # 找到武器持有者攻击范围内的其他角色
-        attack_targets = []
-        for p in game.players:
-            if p != weapon_holder and p != player:  # 不能攻击自己和借刀杀人的使用者
-                if weapon_holder.can_attack(p, game.players):  # 传入all_players参数
-                    attack_targets.append(p)
-        
-        if not attack_targets:
-            print(f"{weapon_holder.character.name} 的攻击范围内没有其他角色，借刀杀人无效。")
-            return False
-        
-        # 选择攻击目标
-        if len(attack_targets) == 1:
-            attack_target = attack_targets[0]
-        else:
-            print(f"选择 {weapon_holder.character.name} 要攻击的目标：")
-            for i, p in enumerate(attack_targets):
-                print(f"{i+1}. {p.character.name}")
-            
-            test_mode = (game.current_phase == "test")
-            if test_mode:
-                # 测试模式下自动选择第一个
-                attack_target = attack_targets[0]
-            else:
-                try:
-                    choice = input("请选择攻击目标: ")
-                    choice_idx = int(choice) - 1
-                    if 0 <= choice_idx < len(attack_targets):
-                        attack_target = attack_targets[choice_idx]
-                    else:
-                        print("无效选择，借刀杀人失败。")
-                        return False
-                except (ValueError, EOFError):
-                    print("输入无效，借刀杀人失败。")
-                    return False
         
         print(f"{player.character.name} 使用借刀杀人，令 {weapon_holder.character.name} 对 {attack_target.character.name} 使用杀。")
         
@@ -575,27 +532,29 @@ class JieDaoShaRenAction(CardAction):
             
             print(f"{weapon_holder.character.name} 被迫使用杀对 {attack_target.character.name}。")
             
-            # 创建杀的动作并执行
+            # 创建杀的动作并执行完整的响应流程
             sha_action = ShaAction()
-            # 直接调用apply_default_effect来造成伤害，跳过响应阶段
-            result = sha_action.apply_default_effect(game, weapon_holder, attack_target)
+            # 使用完整的handle_response来处理杀，包括闪的响应
+            result = sha_action.handle_response(game, weapon_holder, attack_target, test_mode=(game.current_phase == "test"))
             
             # 将使用的杀放入弃牌堆
-            game.discard_pile.append(sha_card)
+            game.deck.discard(sha_card)
             print(f"卡牌 {sha_card.name} 进入弃牌堆")
             
-            return result
+            return True
         else:
             # 武器持有者没有杀，需要交出武器给借刀杀人的使用者
             print(f"{weapon_holder.character.name} 没有杀，必须将武器 {weapon_holder.weapon.name} 交给 {player.character.name}。")
             
             # 移除武器持有者的武器
             weapon = weapon_holder.weapon
-            weapon_holder.equipped.remove(weapon)
+            if weapon in weapon_holder.equipped:
+                weapon_holder.equipped.remove(weapon)
             weapon_holder.weapon = None
             
             # 将武器给借刀杀人的使用者
-            player.equipped.append(weapon)
+            if weapon not in player.equipped:
+                player.equipped.append(weapon)
             player.weapon = weapon
             
             print(f"{player.character.name} 获得了 {weapon.name}。")
