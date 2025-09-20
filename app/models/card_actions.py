@@ -9,19 +9,26 @@ class ShaAction(CardAction):
     
     def get_response_cards(self, player):
         response_cards = ["闪"]
-        # 八卦阵可以提供额外的闪避机会
+        # 八卦阵可以提供额外的闪避机会（非锁定技，需要选择）
         if player.has_defense_equipment("八卦阵"):
-            response_cards.append("八卦阵判定")
+            if player.can_trigger_defense_equipment("need_shan"):
+                response_cards.append("八卦阵判定")
         return response_cards
     
     def process_response(self, game, player, opponent, response_card):
         if response_card == "八卦阵判定":
-            # 八卦阵判定
-            if opponent.can_dodge_with_bagua():
-                print(f"{opponent.character.name} 通过八卦阵判定闪避了杀。")
+            # 八卦阵判定（非锁定技，需要玩家选择）
+            if opponent.ask_defense_equipment_choice("need_shan"):
+                print(f"{opponent.character.name} 选择发动八卦阵")
+                if opponent.can_dodge_with_bagua():
+                    print(f"{opponent.character.name} 通过八卦阵判定闪避了杀。")
+                    return False  # 成功闪避
+                else:
+                    print(f"{opponent.character.name} 八卦阵判定失败，无法闪避。")
+                    return True  # 判定失败，受到伤害
             else:
-                print(f"{opponent.character.name} 八卦阵判定失败，无法闪避。")
-                return True  # 判定失败，受到伤害
+                print(f"{opponent.character.name} 选择不发动八卦阵")
+                return True  # 不发动，受到伤害
         else:
             print(f"{opponent.character.name} 使用了 {response_card} 闪避了杀。")
             # 移除使用的闪并放入弃牌堆
@@ -79,6 +86,21 @@ class ShaAction(CardAction):
         if not player.can_attack(target):
             print(f"{target.character.name} 不在攻击范围内！")
             return False
+        
+        # 检查仁王盾（锁定技，自动触发）
+        sha_card = None
+        for card in player.hand_cards:
+            if card.name == "杀":
+                sha_card = card
+                break
+        
+        if sha_card and target.can_trigger_defense_equipment("receive_sha", {"card": sha_card}):
+            defense_effect = target.get_defense_equipment_effects()
+            if (defense_effect.get("skill_type") == "locked" and 
+                defense_effect.get("effect") == "prevent_black_sha" and
+                hasattr(sha_card, 'suit') and sha_card.suit in ["黑桃", "梅花"]):
+                print(f"[锁定技] {target.character.name}的仁王盾自动发动：黑色杀无效")
+                return False  # 杀被无效化
         
         # 杀的效果在handle_response中处理
         return True

@@ -149,21 +149,30 @@ class EquipmentJudgment:
     def _handle_bagua_zhen(self, defender: Player, attacker: Player, card: Card, context: Dict[str, Any]) -> Dict[str, Any]:
         """八卦阵：当你需要使用或打出闪时，你可以进行判定：若结果为红色，则视为你使用或打出了一张闪"""
         if context.get("trigger") == "need_shan":
-            return {
-                "can_trigger": True,
-                "effect": "judgment_shan",
-                "description": f"{defender.character.name}的八卦阵发动，进行判定"
-            }
+            # 非锁定技，需要玩家选择
+            if defender.ask_defense_equipment_choice("need_shan", context):
+                return {
+                    "can_trigger": True,
+                    "effect": "judgment_shan",
+                    "description": f"{defender.character.name}的八卦阵发动，进行判定"
+                }
+            else:
+                return {
+                    "can_trigger": False,
+                    "effect": None,
+                    "description": f"{defender.character.name}选择不发动八卦阵"
+                }
         return {"can_trigger": False, "effect": None}
     
     def _handle_renwang_dun(self, defender: Player, attacker: Player, card: Card, context: Dict[str, Any]) -> Dict[str, Any]:
         """仁王盾：黑色的杀对你无效"""
         if (context.get("trigger") == "receive_sha" and card.name == "杀" and 
             hasattr(card, 'suit') and card.suit in ["黑桃", "梅花"]):
+            # 锁定技，自动触发
             return {
                 "can_trigger": True,
                 "effect": "prevent_black_sha",
-                "description": f"{defender.character.name}的仁王盾发动，黑色杀无效"
+                "description": f"{defender.character.name}的仁王盾自动发动，黑色杀无效"
             }
         return {"can_trigger": False, "effect": None}
     

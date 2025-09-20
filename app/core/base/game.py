@@ -449,6 +449,16 @@ class Game:
     
     def handle_damage(self, player, damage, damage_card=None):
         """处理玩家受到的伤害。"""
+        # 在造成伤害前检查防御装备
+        if damage_card and hasattr(damage_card, 'name') and damage_card.name == "杀":
+            # 检查仁王盾（锁定技）
+            context = {"trigger": "receive_sha", "card": damage_card}
+            if player.can_trigger_defense_equipment("receive_sha", context):
+                defense_effect = player.get_defense_equipment_effects()
+                if defense_effect.get("effect") == "prevent_black_sha":
+                    print(f"{player.character.name}的仁王盾自动发动，黑色杀无效")
+                    return False  # 伤害被防止
+        
         # 触发伤害事件
         self.event_manager.trigger("take_damage", {"player": player, "damage": damage, "damage_card": damage_card})
         

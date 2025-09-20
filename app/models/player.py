@@ -182,28 +182,36 @@ class Player:
         defense_effects = {
             "八卦阵": {
                 "type": "dodge_enhancement",
+                "skill_type": "non_locked",  # 非锁定技
                 "description": "当你需要使用或打出闪时，你可以进行判定：若结果为红色，则视为你使用或打出了一张闪",
                 "trigger": "need_shan",
                 "effect": "judgment_shan",
-                "judgment_condition": "red"
+                "judgment_condition": "red",
+                "can_choose": True  # 可以选择是否发动
             },
             "仁王盾": {
                 "type": "damage_prevention",
+                "skill_type": "locked",  # 锁定技
                 "description": "黑色的杀对你无效",
                 "trigger": "receive_sha",
-                "effect": "prevent_black_sha"
+                "effect": "prevent_black_sha",
+                "can_choose": False  # 自动触发，不可选择
             },
             "白银狮子": {
                 "type": "damage_reduction",
+                "skill_type": "non_locked",  # 非锁定技
                 "description": "当你受到伤害时，若此伤害大于1点，你可以防止多余的伤害",
                 "trigger": "receive_damage",
-                "effect": "reduce_damage_to_1"
+                "effect": "reduce_damage_to_1",
+                "can_choose": True  # 可以选择是否发动
             },
             "藤甲": {
                 "type": "damage_prevention_fire_weakness",
+                "skill_type": "locked",  # 锁定技
                 "description": "南蛮入侵、万箭齐发和普通杀对你无效。你受到火焰伤害时，此伤害+1",
                 "trigger": "receive_damage",
-                "effect": "prevent_normal_damage_fire_weakness"
+                "effect": "prevent_normal_damage_fire_weakness",
+                "can_choose": False  # 自动触发，不可选择
             }
         }
         
@@ -241,13 +249,66 @@ class Player:
         defense_effect = self.get_defense_equipment_effects()
         
         if defense_effect.get("type") == "damage_prevention":
-            # 仁王盾：黑色杀无效
+            # 仁王盾：黑色杀无效（锁定技，自动触发）
             if damage_source.name == "杀" and hasattr(damage_source, 'suit'):
                 if damage_source.suit in ["黑桃", "梅花"]:
                     print(f"[防御装备] {self.character.name}的{self.defense.name}发动：黑色杀无效")
                     return True
         
         return False
+    
+    def can_trigger_defense_equipment(self, trigger_type, context=None):
+        """检查防御装备是否可以触发"""
+        if not self.defense:
+            return False
+        
+        defense_effect = self.get_defense_equipment_effects()
+        
+        # 检查触发条件
+        if defense_effect.get("trigger") != trigger_type:
+            return False
+        
+        # 特殊检查：仁王盾需要检查杀的颜色
+        if (defense_effect.get("effect") == "prevent_black_sha" and 
+            trigger_type == "receive_sha" and context and "card" in context):
+            card = context["card"]
+            if hasattr(card, 'suit') and card.suit in ["黑桃", "梅花"]:
+                return True
+            else:
+                return False
+        
+        # 锁定技自动触发
+        if defense_effect.get("skill_type") == "locked":
+            return True
+        
+        # 非锁定技需要玩家选择
+        if defense_effect.get("skill_type") == "non_locked" and defense_effect.get("can_choose"):
+            return True
+        
+        return False
+    
+    def ask_defense_equipment_choice(self, trigger_type, context=None):
+        """询问玩家是否发动防御装备（仅对非锁定技）"""
+        if not self.defense:
+            return False
+        
+        defense_effect = self.get_defense_equipment_effects()
+        
+        # 只有非锁定技才需要询问
+        if defense_effect.get("skill_type") != "non_locked" or not defense_effect.get("can_choose"):
+            return False
+        
+        # 检查触发条件
+        if defense_effect.get("trigger") != trigger_type:
+            return False
+        
+        print(f"[防御装备选择] {self.character.name}装备了{self.defense.name}")
+        print(f"效果：{defense_effect.get('description')}")
+        
+        # 在实际游戏中，这里应该通过UI让玩家选择
+        # 这里简化为自动选择（可以根据需要修改）
+        choice = input(f"是否发动{self.defense.name}？(y/n): ").lower().strip()
+        return choice in ['y', 'yes', '是']
     
     def perform_judgment(self, judgment_type="八卦阵"):
         """执行判定"""
