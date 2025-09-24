@@ -9,27 +9,58 @@ class ShaAction(CardAction):
     
     def get_response_cards(self, player):
         response_cards = ["闪"]
-        # 八卦阵可以提供额外的闪避机会（非锁定技，需要选择）
-        if player.has_defense_equipment("八卦阵"):
-            if player.can_trigger_defense_equipment("need_shan"):
-                response_cards.append("八卦阵判定")
+        # 八卦阵不直接添加到响应列表，而是在响应处理中单独询问
         return response_cards
     
-    def process_response(self, game, player, opponent, response_card):
-        if response_card == "八卦阵判定":
-            # 八卦阵判定（非锁定技，需要玩家选择）
-            if opponent.ask_defense_equipment_choice("need_shan"):
-                print(f"{opponent.character.name} 选择发动八卦阵")
-                if opponent.can_dodge_with_bagua():
-                    print(f"{opponent.character.name} 通过八卦阵判定闪避了杀。")
-                    return False  # 成功闪避
-                else:
-                    print(f"{opponent.character.name} 八卦阵判定失败，无法闪避。")
-                    return True  # 判定失败，受到伤害
+    def ask_for_response(self, game, player, response_cards, test_mode=False):
+        """重写询问响应方法，优先处理八卦阵"""
+        # 先检查是否装备了八卦阵
+        if player.has_defense_equipment("八卦阵"):
+            print(f"\n{player.character.name} 装备了八卦阵，可以选择发动八卦阵进行判定。")
+            
+            if not test_mode:
+                print("1. 发动八卦阵进行判定")
+                print("2. 不发动八卦阵")
+                
+                try:
+                    choice = input("请选择 (1-发动八卦阵, 2-不发动): ")
+                    if choice == "1":
+                        print(f"{player.character.name} 选择发动八卦阵进行判定")
+                        # 获取判定系统
+                        judgment_system = getattr(game, 'judgment_system', None)
+                        if player.can_dodge_with_bagua(judgment_system):
+                            print(f"{player.character.name} 通过八卦阵判定成功闪避了杀。")
+                            return "八卦阵判定成功"  # 特殊返回值表示八卦阵成功
+                        else:
+                            print(f"{player.character.name} 八卦阵判定失败。")
+                            # 判定失败后，继续询问是否出闪
+                            print("八卦阵判定失败，需要出闪响应。")
+                    elif choice == "2":
+                        print(f"{player.character.name} 选择不发动八卦阵")
+                    else:
+                        print("输入无效，默认不发动八卦阵")
+                except (EOFError, KeyboardInterrupt):
+                    print("\n输入被中断，默认不发动八卦阵")
             else:
-                print(f"{opponent.character.name} 选择不发动八卦阵")
-                return True  # 不发动，受到伤害
-        else:
+                # 测试模式下自动发动八卦阵
+                print(f"{player.character.name} 选择发动八卦阵进行判定")
+                judgment_system = getattr(game, 'judgment_system', None)
+                if player.can_dodge_with_bagua(judgment_system):
+                    print(f"{player.character.name} 通过八卦阵判定成功闪避了杀。")
+                    return "八卦阵判定成功"
+                else:
+                    print(f"{player.character.name} 八卦阵判定失败。")
+        
+        # 如果没有八卦阵或八卦阵判定失败，使用父类的响应方法
+        return super().ask_for_response(game, player, response_cards, test_mode)
+    
+    def process_response(self, game, player, opponent, response_card):
+        # 处理八卦阵判定成功的情况
+        if response_card == "八卦阵判定成功":
+            return False  # 成功闪避，不受到伤害
+        
+        # 处理普通闪的响应
+        if response_card == "闪":
             print(f"{opponent.character.name} 使用了 {response_card} 闪避了杀。")
             # 移除使用的闪并放入弃牌堆
             for i, c in enumerate(opponent.hand_cards):
@@ -38,36 +69,39 @@ class ShaAction(CardAction):
                     game.deck.discard(used_card)
                     print(f"响应卡牌 {response_card} 进入弃牌堆")
                     break
-        
-        # 青龙偃月刀效果：对方使用闪后，可以继续出杀
-        if player.has_weapon_effect("青龙偃月刀"):
-            print(f"{player.character.name} 装备了青龙偃月刀，可以继续出杀！")
-            # 检查是否还有杀可以使用
-            sha_cards = [c for c in player.hand_cards if c.name == "杀"]
-            if sha_cards:
-                print(f"请选择是否继续出杀：")
-                for i, card in enumerate(sha_cards):
-                    print(f"{i+1}. {card}")
-                print(f"{len(sha_cards)+1}. 不出杀")
-                
-                try:
-                    choice = input("请选择: ")
-                    choice_idx = int(choice) - 1
-                    if 0 <= choice_idx < len(sha_cards):
-                        # 继续出杀
-                        selected_card = sha_cards[choice_idx]
-                        player.hand_cards.remove(selected_card)
-                        print(f"{player.character.name} 继续出杀！")
-                        # 递归处理新的杀
-                        return game.handle_response(player, opponent, self)
-                    else:
+            
+            # 青龙偃月刀效果：对方使用闪后，可以继续出杀
+            if player.has_weapon_effect("青龙偃月刀"):
+                print(f"{player.character.name} 装备了青龙偃月刀，可以继续出杀！")
+                # 检查是否还有杀可以使用
+                sha_cards = [c for c in player.hand_cards if c.name == "杀"]
+                if sha_cards:
+                    print(f"请选择是否继续出杀：")
+                    for i, card in enumerate(sha_cards):
+                        print(f"{i+1}. {card}")
+                    print(f"{len(sha_cards)+1}. 不出杀")
+                    
+                    try:
+                        choice = input("请选择: ")
+                        choice_idx = int(choice) - 1
+                        if 0 <= choice_idx < len(sha_cards):
+                            # 继续出杀
+                            selected_card = sha_cards[choice_idx]
+                            player.hand_cards.remove(selected_card)
+                            print(f"{player.character.name} 继续出杀！")
+                            # 递归处理新的杀
+                            return game.handle_response(player, opponent, self)
+                        else:
+                            print(f"{player.character.name} 选择不继续出杀。")
+                    except (ValueError, EOFError):
                         print(f"{player.character.name} 选择不继续出杀。")
-                except (ValueError, EOFError):
-                    print(f"{player.character.name} 选择不继续出杀。")
-            else:
-                print(f"{player.character.name} 没有更多的杀可以使用。")
+                else:
+                    print(f"{player.character.name} 没有更多的杀可以使用。")
+            
+            return False  # 成功响应，不受到伤害
         
-        return False  # 响应成功，不受到伤害
+        # 如果没有有效响应，返回True表示受到伤害
+        return True
     
     def apply_default_effect(self, game, player, target=None):
         if target is None:
@@ -267,7 +301,7 @@ class ShunShouQianYangAction(CardAction):
     def __init__(self):
         super().__init__("顺手牵羊", "trick", "获得目标角色的一张牌")
     
-    def _select_card_from_opponent(self, opponent):
+    def _select_card_from_opponent(self, opponent, game=None, player=None, test_mode=False):
         """从对手的手牌、装备区、判定区中选择一张牌"""
         all_cards = opponent.get_all_cards()
         available_areas = []
@@ -283,11 +317,63 @@ class ShunShouQianYangAction(CardAction):
         if not available_areas:
             return None, None
         
-        # 简化选择逻辑：优先选择手牌，然后装备区，最后判定区
-        area_type, area_name, cards = available_areas[0]
-        selected_card = cards[0]  # 选择第一张牌
+        # 如果是测试模式，使用简化逻辑
+        if test_mode:
+            area_type, area_name, cards = available_areas[0]
+            selected_card = cards[0]
+            return selected_card, area_type
         
-        return selected_card, area_type
+        # 正常模式：让玩家选择区域
+        print(f"\n{player.character.name} 使用顺手牵羊，选择要获得 {opponent.character.name} 的牌：")
+        print("可选择的区域：")
+        for i, (area_type, area_name, cards) in enumerate(available_areas):
+            print(f"{i + 1}. {area_name} ({len(cards)}张牌)")
+        
+        # 获取玩家选择的区域
+        while True:
+            try:
+                choice = input(f"请选择区域 (1-{len(available_areas)}): ").strip()
+                if not choice:  # 处理空输入
+                    continue
+                area_index = int(choice) - 1
+                if 0 <= area_index < len(available_areas):
+                    break
+                else:
+                    print("无效选择，请重新输入")
+            except (ValueError, EOFError, KeyboardInterrupt):
+                print("输入无效或被中断，请重新输入")
+                continue
+        
+        selected_area_type, selected_area_name, selected_area_cards = available_areas[area_index]
+        
+        # 如果选择的是手牌区域，随机选择一张（因为看不到对手手牌）
+        if selected_area_type == 'hand':
+            import random
+            selected_card = random.choice(selected_area_cards)
+            print(f"从 {opponent.character.name} 的手牌中随机获得了一张牌")
+        else:
+            # 装备区和判定区的牌是公开的，让玩家选择具体的牌
+            print(f"\n{selected_area_name}中的牌：")
+            for i, card in enumerate(selected_area_cards):
+                print(f"{i + 1}. {card.name}")
+            
+            # 获取玩家选择的具体牌
+            while True:
+                try:
+                    choice = input(f"请选择要获得的牌 (1-{len(selected_area_cards)}): ").strip()
+                    if not choice:  # 处理空输入
+                        continue
+                    card_index = int(choice) - 1
+                    if 0 <= card_index < len(selected_area_cards):
+                        selected_card = selected_area_cards[card_index]
+                        break
+                    else:
+                        print("无效选择，请重新输入")
+                except (ValueError, EOFError, KeyboardInterrupt):
+                    print("输入无效或被中断，请重新输入")
+                    continue
+        
+        return selected_card, selected_area_type
     
     def apply_effect(self, game, player, target=None):
         from app.core.target_selection import CardTargetSelector
@@ -306,7 +392,7 @@ class ShunShouQianYangAction(CardAction):
             # 如果被无懈可击抵消，则不生效
             return False
         
-        selected_card, area_type = self._select_card_from_opponent(target)
+        selected_card, area_type = self._select_card_from_opponent(target, game, player, test_mode=(game.current_phase == "test"))
         
         if selected_card:
             # 从对手区域移除牌
@@ -510,9 +596,7 @@ class WanJianQiFaAction(CardAction):
         
         return True
     
-    def apply_effect(self, game, player, target=None):
-        # 万箭齐发的效果在handle_response中处理
-        return True
+
 
 
 class JieDaoShaRenAction(CardAction):
@@ -581,6 +665,91 @@ class JieDaoShaRenAction(CardAction):
             return True
 
 
+class ZhangBaSheMaoAction(CardAction):
+    def __init__(self):
+        super().__init__("丈八蛇矛特殊使用", "weapon_special", "将两张手牌当杀使用")
+    
+    def can_use(self, game, player):
+        """检查是否可以使用丈八蛇矛特殊效果"""
+        # 必须装备了丈八蛇矛且手牌数量>=2
+        return (player.has_weapon_effect("丈八蛇矛") and 
+                len(player.hand_cards) >= 2)
+    
+    def select_cards_for_sha(self, game, player, test_mode=False):
+        """选择两张手牌作为杀使用"""
+        if len(player.hand_cards) < 2:
+            return None
+        
+        if test_mode:
+            # 测试模式下自动选择前两张牌
+            return player.hand_cards[:2]
+        
+        print(f"\n{player.character.name} 发动丈八蛇矛，选择两张手牌当杀使用：")
+        print("当前手牌：")
+        for i, card in enumerate(player.hand_cards):
+            print(f"{i+1}. {card.name} ({card.suit}{card.rank})")
+        
+        selected_cards = []
+        try:
+            while len(selected_cards) < 2:
+                prompt = f"请选择第{len(selected_cards)+1}张牌 (1-{len(player.hand_cards)}): "
+                choice = input(prompt)
+                
+                try:
+                    choice_idx = int(choice) - 1
+                    if 0 <= choice_idx < len(player.hand_cards):
+                        selected_card = player.hand_cards[choice_idx]
+                        if selected_card not in selected_cards:
+                            selected_cards.append(selected_card)
+                            print(f"已选择: {selected_card.name}")
+                        else:
+                            print("该牌已被选择，请选择其他牌")
+                    else:
+                        print("输入无效，请重新选择")
+                except ValueError:
+                    print("输入无效，请输入数字")
+            
+            return selected_cards
+            
+        except (EOFError, KeyboardInterrupt):
+            print("\n输入被中断，取消使用丈八蛇矛")
+            return None
+    
+    def apply_effect(self, game, player, target=None):
+        """执行丈八蛇矛特殊使用效果"""
+        if not self.can_use(game, player):
+            print(f"{player.character.name} 无法使用丈八蛇矛特殊效果")
+            return False
+        
+        # 检查是否为测试模式
+        test_mode = hasattr(game, 'current_phase') and game.current_phase == "test"
+        
+        # 选择两张手牌
+        selected_cards = self.select_cards_for_sha(game, player, test_mode)
+        if not selected_cards:
+            return False
+        
+        print(f"{player.character.name} 使用丈八蛇矛，将 {selected_cards[0].name} 和 {selected_cards[1].name} 当杀使用")
+        
+        # 移除选中的两张牌
+        for card in selected_cards:
+            player.hand_cards.remove(card)
+            game.deck.discard(card)
+        
+        # 创建一个虚拟的杀卡牌
+        from app.models.card import Card
+        virtual_sha = Card("杀", "基本牌", "红桃", 7)  # 创建虚拟杀
+        
+        # 执行杀的完整流程，包括对手响应
+        sha_action = ShaAction()
+        # 先执行apply_effect进行基本检查
+        if sha_action.apply_effect(game, player, target):
+            # 然后调用handle_response处理完整的杀流程，包括对手响应
+            return sha_action.handle_response(game, player, target, test_mode=test_mode)
+        else:
+            return False
+
+
 class DefaultAction(CardAction):
     def __init__(self, card_name):
         super().__init__(card_name, "basic", "默认卡牌效果")
@@ -591,6 +760,11 @@ class DefaultAction(CardAction):
 
 
 # 卡牌动作工厂函数
+def create_zhangba_action():
+    """创建丈八蛇矛特殊使用动作"""
+    return ZhangBaSheMaoAction()
+
+
 def create_card_action(card):
     """根据卡牌创建对应的动作实例"""
     action_map = {
@@ -605,6 +779,7 @@ def create_card_action(card):
         "南蛮入侵": NanManRuQinAction,
         "万箭齐发": WanJianQiFaAction,
         "借刀杀人": JieDaoShaRenAction,
+        "丈八蛇矛特殊使用": ZhangBaSheMaoAction,
     }
     
     action_class = action_map.get(card.name)

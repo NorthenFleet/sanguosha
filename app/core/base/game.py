@@ -158,11 +158,21 @@ class Game:
                         type_display = card.type.value if card.type else "unknown"
                         print(f"{idx}. {card.name}({type_display}) - {card.suit}[{card.rank}]")
 
+                    # 检查是否可以使用武器特殊效果
+                    weapon_options = []
+                    if player.has_weapon_effect("丈八蛇矛") and len(player.hand_cards) >= 2:
+                        weapon_options.append("丈八蛇矛")
+                    
+                    if weapon_options:
+                        print("\n武器特殊效果:")
+                        for idx, weapon in enumerate(weapon_options, start=len(player.hand_cards) + 1):
+                            print(f"{idx}. 使用{weapon}特殊效果（将两张手牌当杀使用）")
+
                     print("\n当前牌堆信息:")
                     print(f"摸牌堆卡牌数量: {len(self.deck.cards)}")
                     print(f"弃牌堆卡牌数量: {len(self.deck.discard_pile)}")
                     try:
-                        user_input = input("选择要使用的手牌编号 (输入0结束出牌阶段): ")
+                        user_input = input("选择要使用的手牌编号或武器特殊效果 (输入0结束出牌阶段): ")
                         if not user_input.strip():
                             print("输入不能为空，请重新选择。")
                             continue
@@ -170,6 +180,38 @@ class Game:
                         if choice == "0":
                             break
                         choice = int(choice) - 1
+                        
+                        # 检查是否选择了武器特殊效果
+                        if choice >= len(player.hand_cards) and choice < len(player.hand_cards) + len(weapon_options):
+                            weapon_idx = choice - len(player.hand_cards)
+                            weapon_name = weapon_options[weapon_idx]
+                            
+                            if weapon_name == "丈八蛇矛":
+                                # 检查是否已使用过杀（除非有咆哮）
+                                has_paoxiao = player.character.has_skill("咆哮")
+                                if has_used_kill and not has_paoxiao:
+                                    print("本回合已使用过\"杀\"，无法再次使用。")
+                                    continue
+                                
+                                # 使用丈八蛇矛特殊效果
+                                from app.models.card_actions import ZhangBaSheMaoAction
+                                zhangba_action = ZhangBaSheMaoAction()
+                                
+                                # 选择目标
+                                opponent = self.get_opponent(player)
+                                if opponent and opponent.character.hp > 0:
+                                    print(f"丈八蛇矛目标: {opponent.character.name}")
+                                    success = zhangba_action.apply_effect(self, player, opponent)
+                                    if success:
+                                        has_used_kill = True
+                                        player.has_used_sha = True
+                                        # 触发咆哮技能
+                                        if has_paoxiao:
+                                            player.character.use_skill("咆哮", self, player)
+                                else:
+                                    print("没有有效目标")
+                            continue
+                        
                         if 0 <= choice < len(player.hand_cards):
                             card = player.hand_cards[choice]
                             

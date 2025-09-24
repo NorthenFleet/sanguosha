@@ -310,35 +310,59 @@ class Player:
         choice = input(f"是否发动{self.defense.name}？(y/n): ").lower().strip()
         return choice in ['y', 'yes', '是']
     
-    def perform_judgment(self, judgment_type="八卦阵"):
+    def perform_judgment(self, judgment_type="八卦阵", judgment_system=None):
         """执行判定"""
-        import random
-        
-        # 模拟判定牌（简化版本，实际应该从牌堆顶翻牌）
-        suits = ["红桃", "方片", "梅花", "黑桃"]
-        numbers = list(range(1, 14))  # A到K
-        
-        suit = random.choice(suits)
-        number = random.choice(numbers)
-        
-        print(f"判定牌：{suit}{number}")
-        
-        if judgment_type == "八卦阵":
-            # 八卦阵：红色判定成功
-            success = suit in ["红桃", "方片"]
-            if success:
-                print(f"判定成功！{suit}为红色，视为使用了一张闪。")
-            else:
-                print(f"判定失败！{suit}为黑色。")
-            return success
-        
-        return False
+        if judgment_system:
+            # 使用新的判定系统
+            from ..core.judgment_system import JudgmentType
+            
+            judgment_type_map = {
+                "八卦阵": JudgmentType.BAGUA_ZHEN,
+                "闪电": JudgmentType.LIGHTNING,
+                "乐不思蜀": JudgmentType.LEBUSISHU,
+                "兵粮寸断": JudgmentType.BINGLIANG
+            }
+            
+            judgment_enum = judgment_type_map.get(judgment_type, JudgmentType.BAGUA_ZHEN)
+            result = judgment_system.perform_judgment(judgment_enum, self.character.name)
+            
+            return result.success if result else False
+        else:
+            # 兼容旧的简化判定逻辑
+            import random
+            
+            # 模拟判定牌（简化版本，实际应该从牌堆顶翻牌）
+            suits = ["红桃", "方片", "梅花", "黑桃"]
+            numbers = list(range(1, 14))  # A到K
+            
+            suit = random.choice(suits)
+            number = random.choice(numbers)
+            
+            print(f"判定牌：{suit}{number}")
+            
+            if judgment_type == "八卦阵":
+                # 八卦阵：红色判定成功
+                success = suit in ["红桃", "方片"]
+                if success:
+                    print(f"判定成功！{suit}为红色，视为使用了一张闪。")
+                else:
+                    print(f"判定失败！{suit}为黑色。")
+                return success
+            
+            return False
     
-    def can_dodge_with_bagua(self):
+    def can_dodge_with_bagua(self, judgment_system=None):
         """八卦阵判定是否可以闪避"""
         if self.has_defense_equipment("八卦阵"):
-            print(f"{self.character.name} 装备了八卦阵，进行判定...")
-            return self.perform_judgment("八卦阵")
+            print(f"{self.character.name} 装备了八卦阵，可以进行判定来响应杀...")
+            return self.perform_judgment("八卦阵", judgment_system)
+        return False
+    
+    def ask_bagua_response(self):
+        """询问是否使用八卦阵响应杀"""
+        if self.has_defense_equipment("八卦阵"):
+            choice = input(f"{self.character.name} 装备了八卦阵，是否进行判定来响应杀？(y/n): ").lower().strip()
+            return choice in ['y', 'yes', '是']
         return False
 
     def use_card(self, card):
