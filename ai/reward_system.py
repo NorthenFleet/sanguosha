@@ -11,8 +11,8 @@ from enum import Enum
 import math
 
 from app.core.base.game import Game
-from app.core.base.player import Player
-from app.core.base.card import Card
+from app.models.player import Player
+from app.models.card import Card
 
 class RewardType(Enum):
     """奖励类型枚举"""

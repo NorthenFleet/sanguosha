@@ -179,7 +179,7 @@ class TrainingManager:
             max_grad_norm=self.config['ppo']['max_grad_norm'],
             batch_size=self.config['ppo']['batch_size'],
             mini_batch_size=self.config['ppo']['mini_batch_size'],
-            epochs=self.config['ppo']['epochs'],
+            ppo_epochs=self.config['ppo']['epochs'],  # 使用ppo_epochs而不是epochs
             state_dim=self.config['ppo']['state_dim'],
             action_dim=self.config['ppo']['action_dim'],
             hidden_dim=self.config['ppo']['hidden_dim']
@@ -188,18 +188,13 @@ class TrainingManager:
         # 创建训练配置
         training_config = TrainingConfig(
             max_episodes=self.config['training']['max_episodes'],
-            max_steps_per_episode=self.config['training']['max_steps_per_episode'],
-            num_players=self.config['training']['num_players']
+            max_steps_per_episode=self.config['training']['max_steps_per_episode']
         )
         
         # 创建奖励配置
         reward_config = RewardConfig(
             survival_weight=self.config['reward']['survival_weight'],
             damage_weight=self.config['reward']['damage_weight'],
-            card_advantage_weight=self.config['reward']['card_advantage_weight'],
-            equipment_weight=self.config['reward']['equipment_weight'],
-            strategy_weight=self.config['reward']['strategy_weight'],
-            efficiency_weight=self.config['reward']['efficiency_weight'],
             win_reward=self.config['reward']['win_reward'],
             lose_penalty=self.config['reward']['lose_penalty']
         )
@@ -214,11 +209,7 @@ class TrainingManager:
         networks = create_networks(
             state_dim=ppo_config.state_dim,
             action_dim=ppo_config.action_dim,
-            hidden_dim=ppo_config.hidden_dim,
-            network_type=self.config['network']['type'],
-            use_attention=self.config['network']['use_attention'],
-            attention_heads=self.config['network']['attention_heads'],
-            dropout=self.config['network']['dropout']
+            network_type=self.config['network']['type']
         )
         
         self.agent.network = networks
@@ -319,7 +310,7 @@ class TrainingManager:
             max_grad_norm=self.config['ppo']['max_grad_norm'],
             batch_size=self.config['ppo']['batch_size'],
             mini_batch_size=self.config['ppo']['mini_batch_size'],
-            epochs=self.config['ppo']['epochs'],
+            ppo_epochs=self.config['ppo']['epochs'],
             state_dim=self.config['ppo']['state_dim'],
             action_dim=self.config['ppo']['action_dim'],
             hidden_dim=self.config['ppo']['hidden_dim']

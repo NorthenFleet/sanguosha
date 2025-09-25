@@ -15,9 +15,9 @@ import random
 import copy
 
 from app.core.base.game import Game
-from app.core.base.player import Player
-from app.core.base.character import Character
-from app.core.base.card import Card
+from app.models.player import Player
+from app.models.character import Character
+from app.models.card import Card
 from .game_state_encoder import GameStateEncoder, GameStateVector
 from .ppo_agent import PPOAgent, PPOConfig
 
@@ -124,13 +124,31 @@ class SanguoshaEnvironment:
             initial_state: 初始游戏状态
             action_mask: 初始动作掩码
         """
-        # 创建新游戏
-        self.game = Game()
+        # 创建一个简单的事件管理器
+        class SimpleEventManager:
+            def __init__(self):
+                self.events = []
+            
+            def emit(self, event, data=None):
+                self.events.append((event, data))
+            
+            def trigger(self, event, data=None):
+                """兼容trigger方法"""
+                self.emit(event, data)
+            
+            def clear(self):
+                self.events.clear()
+        
+        event_manager = SimpleEventManager()
+        self.game = Game(event_manager)
         
         # 添加玩家
+        character_names = ["曹操", "刘备"]
         for i in range(num_players):
-            character_name = random.choice(self.available_characters)
-            character = Character(character_name)
+            character_name = character_names[i % len(character_names)]
+            # 使用CharacterFactory创建角色
+            from app.models.character import CharacterFactory
+            character = CharacterFactory.create_character(character_name)
             player = Player(character)
             self.game.add_player(player)
         
