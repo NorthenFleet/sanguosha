@@ -60,12 +60,29 @@ class Game:
         
         self.initialize_deck()
         
-        # 初始摸牌
+        # 初始摸牌 - 增加到6张，提高防御牌概率
         for player in self.players:
-            drawn_cards = self.deck.draw(4)
+            drawn_cards = self.deck.draw(6)
             player.hand_cards.extend(drawn_cards)
             # 触发摸牌事件
-            self.event_manager.trigger("draw_card", {"player": player, "count": 4})
+            self.event_manager.trigger("draw_card", {"player": player, "count": 6})
+            
+            # 确保每个玩家至少有一张闪
+            has_shan = any(card.name == "闪" for card in player.hand_cards)
+            if not has_shan:
+                # 从牌堆中寻找闪并替换一张非关键牌
+                for i, card in enumerate(self.deck.cards):
+                    if card.name == "闪":
+                        # 移除牌堆中的闪
+                        shan_card = self.deck.cards.pop(i)
+                        # 替换玩家手牌中的第一张非闪牌
+                        for j, hand_card in enumerate(player.hand_cards):
+                            if hand_card.name != "闪":
+                                # 将被替换的牌放回牌堆
+                                self.deck.cards.append(player.hand_cards[j])
+                                player.hand_cards[j] = shan_card
+                                break
+                        break
         
         print("游戏开始!")
         self.game_loop()
@@ -83,9 +100,14 @@ class Game:
         self.event_manager.trigger("phase_change", {"phase": "judgment", "player": self.current_player})
         
         print("判定阶段: 检查负面效果...")
-        # 示例逻辑: 随机决定是否有负面效果
-        if random.choice([True, False]):
+        # 检查玩家是否有需要判定的负面效果（如乐不思蜀、兵粮寸断等）
+        has_negative_effects = False
+        
+        # 检查玩家的负面状态
+        if hasattr(self.current_player, 'negative_effects') and self.current_player.negative_effects:
+            has_negative_effects = True
             print("负面效果触发!")
+            # 这里应该处理具体的负面效果判定逻辑
         else:
             print("无负面效果。")
 

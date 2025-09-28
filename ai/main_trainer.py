@@ -365,6 +365,7 @@ class TrainingManager:
             )
             
             episode_reward += reward
+            step += 1  # 移动到这里，确保每次执行动作后都计数
             
             if done:
                 break
@@ -373,7 +374,6 @@ class TrainingManager:
             action_mask = self.environment._get_action_mask(
                 self.environment.game.get_current_player()
             )
-            step += 1
         
         # 更新智能体
         if len(self.agent.buffer.states) >= self.agent.config.batch_size:

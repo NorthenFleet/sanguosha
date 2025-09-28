@@ -9,7 +9,7 @@ class Player:
     """玩家类"""
     def __init__(self, character: Character):
         self.character = character
-        self.hp = character.hp
+        self.hp = character.max_hp  # 使用max_hp而不是hp，确保初始血量正确
         self.hand_cards: List[Card] = []
         self.weapon = None  # 武器牌
         self.defense = None  # 防御牌

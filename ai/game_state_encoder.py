@@ -119,7 +119,7 @@ class GameStateEncoder:
         
         # 基础属性
         features[0] = player.hp / 4.0                    # 当前体力（归一化）
-        features[1] = player.character.hp / 4.0          # 最大体力（归一化）
+        features[1] = player.character.max_hp / 4.0      # 最大体力（归一化）
         features[2] = len(player.hand_cards) / 20.0      # 手牌数量（归一化）
         
         # 装备状态
