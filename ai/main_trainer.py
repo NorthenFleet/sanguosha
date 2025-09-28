@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional
 import torch
+import torch.optim as optim
 import numpy as np
 from datetime import datetime
 
@@ -70,8 +71,8 @@ class TrainingManager:
                 "batch_size": 256,
                 "mini_batch_size": 64,
                 "epochs": 4,
-                "state_dim": 512,
-                "action_dim": 1000,
+                "state_dim": 366,
+                "action_dim": 50,
                 "hidden_dim": 256
             },
             
@@ -201,18 +202,30 @@ class TrainingManager:
         
         # 初始化组件
         self.state_encoder = GameStateEncoder()
-        self.agent = PPOAgent(ppo_config)
         self.environment = SanguoshaEnvironment(training_config)
         self.reward_calculator = RewardCalculator(reward_config)
         
-        # 创建神经网络
+        # 创建PPO智能体（不在初始化时创建网络）
+        self.agent = PPOAgent(ppo_config)
+        
+        # 创建神经网络并替换agent中的网络
         networks = create_networks(
             state_dim=ppo_config.state_dim,
             action_dim=ppo_config.action_dim,
             network_type=self.config['network']['type']
         )
         
-        self.agent.network = networks
+        # 根据网络类型设置agent的网络
+        if self.config['network']['type'] == "actor_critic":
+            self.agent.network = networks["actor_critic"].to(self.agent.device)
+        elif self.config['network']['type'] == "separate":
+            self.agent.policy_network = networks["policy"].to(self.agent.device)
+            self.agent.value_network = networks["value"].to(self.agent.device)
+        elif self.config['network']['type'] == "dueling":
+            self.agent.network = networks["dueling"].to(self.agent.device)
+        
+        # 重新创建优化器以使用新的网络参数
+        self.agent.optimizer = optim.Adam(self.agent.network.parameters(), lr=ppo_config.learning_rate)
         
         self.logger.info("AI组件初始化完成")
     
@@ -363,7 +376,7 @@ class TrainingManager:
             step += 1
         
         # 更新智能体
-        if len(self.agent.buffer.experiences) >= self.agent.config.batch_size:
+        if len(self.agent.buffer.states) >= self.agent.config.batch_size:
             self.agent.update()
         
         return episode_reward, step

@@ -6,6 +6,7 @@ PPO (Proximal Policy Optimization) 智能体实现
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
 from typing import Dict, List, Tuple, Optional
@@ -177,7 +178,7 @@ class PPOAgent:
             'clip_fraction': []
         }
     
-    def select_action(self, game_state, current_player, action_mask=None, training=True):
+    def select_action(self, game_state, current_player, action_mask=None, training=True, deterministic=False):
         """
         选择动作
         Args:
@@ -185,6 +186,7 @@ class PPOAgent:
             current_player: 当前玩家
             action_mask: 动作掩码
             training: 是否为训练模式
+            deterministic: 是否使用确定性策略（评估时使用）
         Returns:
             action: 选择的动作
             log_prob: 动作的对数概率
@@ -201,14 +203,18 @@ class PPOAgent:
             mask_tensor = torch.ones(1, self.config.action_dim).to(self.device)
         
         with torch.no_grad():
-            action, log_prob, value, entropy = self.network.get_action_and_value(state_tensor, mask_tensor)
+            if deterministic:
+                # 确定性策略：选择概率最高的动作
+                action_probs, value = self.network(state_tensor, mask_tensor)
+                action = torch.argmax(action_probs, dim=-1)
+                return action.item(), 0.0, value.item()
+            else:
+                # 随机策略：根据概率分布采样
+                action, log_prob, value, entropy = self.network.get_action_and_value(state_tensor, mask_tensor)
         
         if training:
             return action.item(), log_prob.item(), value.item()
         else:
-            # 推理模式，使用贪婪策略
-            action_probs, value = self.network(state_tensor, mask_tensor)
-            action = torch.argmax(action_probs, dim=-1)
             return action.item(), 0.0, value.item()
     
     def store_experience(self, state, action, reward, next_state, done, log_prob, value, action_mask=None):

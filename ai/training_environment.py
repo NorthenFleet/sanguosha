@@ -20,6 +20,7 @@ from app.models.character import Character
 from app.models.card import Card
 from .game_state_encoder import GameStateEncoder, GameStateVector
 from .ppo_agent import PPOAgent, PPOConfig
+from .automated_game import AutomatedGame
 
 @dataclass
 class TrainingConfig:
@@ -140,7 +141,7 @@ class SanguoshaEnvironment:
                 self.events.clear()
         
         event_manager = SimpleEventManager()
-        self.game = Game(event_manager)
+        self.game = AutomatedGame(event_manager, ai_player_index=0)
         
         # 添加玩家
         character_names = ["曹操", "刘备"]
@@ -181,14 +182,37 @@ class SanguoshaEnvironment:
         
         # 获取当前玩家
         current_player = self.game.get_current_player()
+        if not current_player:
+            # 游戏状态异常，直接结束
+            done = True
+            next_state = self.state_encoder.encode_game_state(self.game, None)
+            return next_state, self.config.lose_reward, done, {"error": "No current player"}
+        
         prev_hp = current_player.hp
         prev_hand_size = len(current_player.hand_cards)
         
         # 执行动作
         reward, action_valid = self._execute_action(action, current_player)
         
-        # 检查游戏是否结束
-        done = self._is_game_over() or self.current_step >= self.config.max_steps_per_episode
+        # 检查游戏是否在动作执行后立即结束
+        done = self._is_game_over()
+        
+        if not done:
+            # 只有在游戏未结束时才执行自动步骤
+            try:
+                # 调用游戏的自动化逻辑
+                self.game.auto_step()
+                # 再次检查游戏是否结束
+                done = self._is_game_over()
+            except Exception as e:
+                print(f"游戏步骤执行错误: {e}")
+                done = True
+                next_state = self.state_encoder.encode_game_state(self.game, current_player)
+                return next_state, reward, done, {"error": str(e)}
+        
+        # 检查是否达到最大步数
+        if self.current_step >= self.config.max_steps_per_episode:
+            done = True
         
         # 计算额外奖励
         if not done:
@@ -213,8 +237,10 @@ class SanguoshaEnvironment:
         
         # 获取下一个状态
         next_player = self.game.get_current_player()
-        next_state = self.state_encoder.encode_game_state(self.game, next_player)
-        next_action_mask = self._get_action_mask(next_player)
+        if next_player:
+            next_state = self.state_encoder.encode_game_state(self.game, next_player)
+        else:
+            next_state = self.state_encoder.encode_game_state(self.game, current_player)
         
         # 记录奖励
         self.step_rewards.append(reward)
@@ -222,9 +248,10 @@ class SanguoshaEnvironment:
         info = {
             'action_valid': action_valid,
             'current_player_id': current_player.character.name if current_player.character else "Unknown",
-            'game_phase': self.game.current_phase,
+            'game_phase': getattr(self.game, 'current_phase', 'unknown'),
             'step': self.current_step,
-            'episode_reward': sum(self.step_rewards)
+            'episode_reward': sum(self.step_rewards),
+            'game_over': done
         }
         
         return next_state, reward, done, info
@@ -240,8 +267,8 @@ class SanguoshaEnvironment:
             action_type = self.action_space.get_action_type(action)
             
             if action == ActionSpace.PASS:
-                # 跳过回合
-                self.game.end_turn()
+                # 跳过回合 - 设置AI动作为pass
+                self.game.set_ai_action('pass')
                 return 0.0, True
             
             elif action_type == "card":
@@ -249,6 +276,12 @@ class SanguoshaEnvironment:
                 card_index = self.action_space.decode_card_action(action)
                 if 0 <= card_index < len(player.hand_cards):
                     card = player.hand_cards[card_index]
+                    # 根据卡牌类型设置不同的AI动作
+                    if card.card_type == "装备牌":
+                        self.game.set_ai_action('equip', card_index)
+                    else:
+                        self.game.set_ai_action('play_card', card_index)
+                    
                     success = self._play_card(player, card)
                     if success:
                         return self.config.card_play_reward, True
