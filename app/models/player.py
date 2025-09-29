@@ -464,7 +464,7 @@ class Player:
         """装备卡牌"""
         print(f"[DEBUG] 开始装备卡牌: {card.name}")
         
-        if card.name in ["青龙偃月刀", "丈八蛇矛", "方天画戟", "麒麟弓", "古锭刀", "朱雀羽扇", "雌雄双股剑"]:
+        if card.name in ["青龙偃月刀", "丈八蛇矛", "方天画戟", "麒麟弓", "古锭刀", "朱雀羽扇", "雌雄双股剑", "诸葛连弩"]:
             # 替换武器
             if self.weapon:
                 self.equipped.remove(self.weapon)
