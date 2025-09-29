@@ -1,0 +1,655 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+1vs1游戏界面
+实现双人对战的完整游戏界面
+"""
+
+import sys
+import os
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, 
+                             QPushButton, QLabel, QFrame, QScrollArea, 
+                             QMessageBox, QProgressBar, QTextEdit, QSplitter,
+                             QGroupBox, QListWidget, QListWidgetItem, QDialog,
+                             QDialogButtonBox, QComboBox, QSpinBox)
+from PyQt5.QtCore import Qt, pyqtSignal, QTimer, QThread, pyqtSlot, QSize
+from PyQt5.QtGui import QFont, QPixmap, QIcon, QPalette, QColor, QPainter, QBrush
+from typing import Dict, List, Optional, Callable
+
+# 导入游戏相关模块
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+from app.core.base.game import Game
+from app.models.player import Player
+from app.models.character import Character
+from app.models.card import Card
+
+class CardWidget(QFrame):
+    """卡牌显示组件"""
+    
+    card_clicked = pyqtSignal(object)  # 卡牌点击信号
+    
+    def __init__(self, card: Card, selectable: bool = True):
+        super().__init__()
+        self.card = card
+        self.selectable = selectable
+        self.selected = False
+        self.init_ui()
+        
+    def init_ui(self):
+        """初始化卡牌UI"""
+        self.setFixedSize(80, 120)
+        self.setFrameStyle(QFrame.Box)
+        self.setLineWidth(2)
+        
+        layout = QVBoxLayout()
+        layout.setContentsMargins(5, 5, 5, 5)
+        
+        # 卡牌名称
+        name_label = QLabel(self.card.name)
+        name_label.setFont(QFont("SimHei", 8, QFont.Bold))
+        name_label.setAlignment(Qt.AlignCenter)
+        name_label.setWordWrap(True)
+        
+        # 卡牌花色和点数
+        suit_point = QLabel(f"{self.card.suit} {self.card.point}")
+        suit_point.setFont(QFont("SimHei", 7))
+        suit_point.setAlignment(Qt.AlignCenter)
+        
+        # 卡牌类型
+        type_label = QLabel(self.card.card_type)
+        type_label.setFont(QFont("SimHei", 6))
+        type_label.setAlignment(Qt.AlignCenter)
+        
+        layout.addWidget(name_label)
+        layout.addWidget(suit_point)
+        layout.addStretch()
+        layout.addWidget(type_label)
+        
+        self.setLayout(layout)
+        self.update_style()
+        
+    def update_style(self):
+        """更新卡牌样式"""
+        if self.selected:
+            self.setStyleSheet("""
+                QFrame {
+                    background-color: #FFD700;
+                    border: 3px solid #FF6347;
+                    border-radius: 8px;
+                }
+                QLabel {
+                    color: #8B4513;
+                }
+            """)
+        elif self.selectable:
+            self.setStyleSheet("""
+                QFrame {
+                    background-color: #F5F5DC;
+                    border: 2px solid #8B4513;
+                    border-radius: 8px;
+                }
+                QFrame:hover {
+                    background-color: #FFFACD;
+                    border-color: #DAA520;
+                }
+                QLabel {
+                    color: #8B4513;
+                }
+            """)
+        else:
+            self.setStyleSheet("""
+                QFrame {
+                    background-color: #D3D3D3;
+                    border: 2px solid #A9A9A9;
+                    border-radius: 8px;
+                }
+                QLabel {
+                    color: #696969;
+                }
+            """)
+            
+    def mousePressEvent(self, event):
+        """鼠标点击事件"""
+        if self.selectable and event.button() == Qt.LeftButton:
+            self.selected = not self.selected
+            self.update_style()
+            self.card_clicked.emit(self.card)
+            
+    def set_selected(self, selected: bool):
+        """设置选中状态"""
+        self.selected = selected
+        self.update_style()
+
+
+class PlayerInfoWidget(QFrame):
+    """玩家信息显示组件"""
+    
+    def __init__(self, player: Player, is_current: bool = False):
+        super().__init__()
+        self.player = player
+        self.is_current = is_current
+        self.init_ui()
+        
+    def init_ui(self):
+        """初始化玩家信息UI"""
+        self.setFrameStyle(QFrame.Box)
+        self.setLineWidth(2)
+        self.setFixedHeight(150)
+        
+        layout = QVBoxLayout()
+        
+        # 玩家名称和角色
+        name_layout = QHBoxLayout()
+        
+        name_label = QLabel(self.player.name)
+        name_label.setFont(QFont("SimHei", 12, QFont.Bold))
+        
+        character_label = QLabel(f"({self.player.character.name})" if self.player.character else "")
+        character_label.setFont(QFont("SimHei", 10))
+        
+        name_layout.addWidget(name_label)
+        name_layout.addWidget(character_label)
+        name_layout.addStretch()
+        
+        # 血量显示
+        hp_layout = QHBoxLayout()
+        hp_label = QLabel("血量:")
+        hp_label.setFont(QFont("SimHei", 10))
+        
+        self.hp_bar = QProgressBar()
+        self.hp_bar.setMaximum(self.player.max_hp)
+        self.hp_bar.setValue(self.player.hp)
+        self.hp_bar.setFormat(f"{self.player.hp}/{self.player.max_hp}")
+        self.hp_bar.setStyleSheet("""
+            QProgressBar {
+                border: 2px solid #8B4513;
+                border-radius: 5px;
+                text-align: center;
+            }
+            QProgressBar::chunk {
+                background-color: #DC143C;
+                border-radius: 3px;
+            }
+        """)
+        
+        hp_layout.addWidget(hp_label)
+        hp_layout.addWidget(self.hp_bar)
+        
+        # 手牌数量
+        hand_label = QLabel(f"手牌: {len(self.player.hand_cards)}张")
+        hand_label.setFont(QFont("SimHei", 10))
+        
+        # 装备区域
+        equipment_label = QLabel("装备:")
+        equipment_label.setFont(QFont("SimHei", 10))
+        
+        self.equipment_layout = QHBoxLayout()
+        self.update_equipment_display()
+        
+        layout.addLayout(name_layout)
+        layout.addLayout(hp_layout)
+        layout.addWidget(hand_label)
+        layout.addWidget(equipment_label)
+        layout.addLayout(self.equipment_layout)
+        layout.addStretch()
+        
+        self.setLayout(layout)
+        self.update_style()
+        
+    def update_style(self):
+        """更新样式"""
+        if self.is_current:
+            self.setStyleSheet("""
+                QFrame {
+                    background-color: #F0E68C;
+                    border: 3px solid #DAA520;
+                    border-radius: 10px;
+                }
+            """)
+        else:
+            self.setStyleSheet("""
+                QFrame {
+                    background-color: #F5F5DC;
+                    border: 2px solid #8B4513;
+                    border-radius: 10px;
+                }
+            """)
+            
+    def update_equipment_display(self):
+        """更新装备显示"""
+        # 清除现有装备显示
+        for i in reversed(range(self.equipment_layout.count())):
+            self.equipment_layout.itemAt(i).widget().setParent(None)
+            
+        # 显示装备
+        equipment_types = ["武器", "防具", "坐骑", "宝物"]
+        for eq_type in equipment_types:
+            equipment = getattr(self.player, f"{eq_type.lower()}_equipment", None)
+            if equipment:
+                eq_widget = CardWidget(equipment, selectable=False)
+                eq_widget.setFixedSize(60, 90)
+                self.equipment_layout.addWidget(eq_widget)
+            else:
+                placeholder = QLabel(eq_type)
+                placeholder.setFixedSize(60, 90)
+                placeholder.setAlignment(Qt.AlignCenter)
+                placeholder.setStyleSheet("""
+                    QLabel {
+                        border: 1px dashed #8B4513;
+                        border-radius: 5px;
+                        color: #A9A9A9;
+                        font-size: 8px;
+                    }
+                """)
+                self.equipment_layout.addWidget(placeholder)
+                
+    def update_player_info(self, player: Player):
+        """更新玩家信息"""
+        self.player = player
+        self.hp_bar.setValue(player.hp)
+        self.hp_bar.setFormat(f"{player.hp}/{player.max_hp}")
+        self.update_equipment_display()
+
+
+class GameLogWidget(QTextEdit):
+    """游戏日志组件"""
+    
+    def __init__(self):
+        super().__init__()
+        self.setReadOnly(True)
+        self.setMaximumHeight(200)
+        self.setFont(QFont("Consolas", 9))
+        self.setStyleSheet("""
+            QTextEdit {
+                background-color: #FFFEF7;
+                border: 2px solid #8B4513;
+                border-radius: 5px;
+                padding: 5px;
+            }
+        """)
+        
+    def add_log(self, message: str, log_type: str = "info"):
+        """添加日志消息"""
+        colors = {
+            "info": "#000000",
+            "action": "#0000FF",
+            "damage": "#FF0000",
+            "heal": "#00AA00",
+            "system": "#800080"
+        }
+        
+        color = colors.get(log_type, "#000000")
+        self.append(f'<span style="color: {color};">{message}</span>')
+        
+        # 自动滚动到底部
+        scrollbar = self.verticalScrollBar()
+        scrollbar.setValue(scrollbar.maximum())
+
+
+class ActionButtonsWidget(QFrame):
+    """动作按钮组件"""
+    
+    action_triggered = pyqtSignal(str)  # 动作触发信号
+    
+    def __init__(self):
+        super().__init__()
+        self.init_ui()
+        
+    def init_ui(self):
+        """初始化动作按钮UI"""
+        layout = QHBoxLayout()
+        
+        # 出牌按钮
+        self.play_card_btn = QPushButton("出牌")
+        self.play_card_btn.setFont(QFont("SimHei", 12))
+        self.play_card_btn.clicked.connect(lambda: self.action_triggered.emit("play_card"))
+        
+        # 结束回合按钮
+        self.end_turn_btn = QPushButton("结束回合")
+        self.end_turn_btn.setFont(QFont("SimHei", 12))
+        self.end_turn_btn.clicked.connect(lambda: self.action_triggered.emit("end_turn"))
+        
+        # 使用技能按钮
+        self.use_skill_btn = QPushButton("使用技能")
+        self.use_skill_btn.setFont(QFont("SimHei", 12))
+        self.use_skill_btn.clicked.connect(lambda: self.action_triggered.emit("use_skill"))
+        
+        # 设置按钮样式
+        button_style = """
+            QPushButton {
+                background-color: #F0E68C;
+                border: 2px solid #DAA520;
+                border-radius: 8px;
+                padding: 8px 16px;
+                color: #8B4513;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #FFD700;
+            }
+            QPushButton:pressed {
+                background-color: #DAA520;
+            }
+            QPushButton:disabled {
+                background-color: #D3D3D3;
+                color: #A9A9A9;
+                border-color: #A9A9A9;
+            }
+        """
+        
+        self.play_card_btn.setStyleSheet(button_style)
+        self.end_turn_btn.setStyleSheet(button_style)
+        self.use_skill_btn.setStyleSheet(button_style)
+        
+        layout.addWidget(self.play_card_btn)
+        layout.addWidget(self.use_skill_btn)
+        layout.addStretch()
+        layout.addWidget(self.end_turn_btn)
+        
+        self.setLayout(layout)
+        
+    def set_buttons_enabled(self, enabled: bool):
+        """设置按钮启用状态"""
+        self.play_card_btn.setEnabled(enabled)
+        self.end_turn_btn.setEnabled(enabled)
+        self.use_skill_btn.setEnabled(enabled)
+
+
+class Game1vs1Widget(QWidget):
+    """1vs1游戏主界面"""
+    
+    back_to_menu = pyqtSignal()  # 返回菜单信号
+    
+    def __init__(self):
+        super().__init__()
+        self.game = None
+        self.player_widgets = {}
+        self.hand_card_widgets = []
+        self.selected_cards = []
+        self.init_ui()
+        self.init_game()
+        
+    def init_ui(self):
+        """初始化游戏界面"""
+        main_layout = QVBoxLayout()
+        
+        # 顶部工具栏
+        toolbar_layout = QHBoxLayout()
+        
+        back_btn = QPushButton("返回主菜单")
+        back_btn.setFont(QFont("SimHei", 10))
+        back_btn.clicked.connect(self.back_to_menu.emit)
+        back_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #CD853F;
+                border: 2px solid #8B4513;
+                border-radius: 5px;
+                padding: 5px 10px;
+                color: white;
+            }
+            QPushButton:hover {
+                background-color: #A0522D;
+            }
+        """)
+        
+        new_game_btn = QPushButton("新游戏")
+        new_game_btn.setFont(QFont("SimHei", 10))
+        new_game_btn.clicked.connect(self.start_new_game)
+        new_game_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #32CD32;
+                border: 2px solid #228B22;
+                border-radius: 5px;
+                padding: 5px 10px;
+                color: white;
+            }
+            QPushButton:hover {
+                background-color: #228B22;
+            }
+        """)
+        
+        toolbar_layout.addWidget(back_btn)
+        toolbar_layout.addWidget(new_game_btn)
+        toolbar_layout.addStretch()
+        
+        # 游戏状态标签
+        self.status_label = QLabel("准备开始游戏...")
+        self.status_label.setFont(QFont("SimHei", 12, QFont.Bold))
+        self.status_label.setAlignment(Qt.AlignCenter)
+        self.status_label.setStyleSheet("color: #8B4513; margin: 10px;")
+        
+        # 创建主游戏区域
+        game_splitter = QSplitter(Qt.Horizontal)
+        
+        # 左侧：对手信息和游戏日志
+        left_widget = QWidget()
+        left_layout = QVBoxLayout()
+        
+        # 对手信息
+        opponent_group = QGroupBox("对手信息")
+        opponent_group.setFont(QFont("SimHei", 10, QFont.Bold))
+        opponent_layout = QVBoxLayout()
+        
+        self.opponent_widget = QLabel("等待对手加入...")
+        self.opponent_widget.setAlignment(Qt.AlignCenter)
+        self.opponent_widget.setMinimumHeight(150)
+        self.opponent_widget.setStyleSheet("""
+            QLabel {
+                border: 2px dashed #8B4513;
+                border-radius: 10px;
+                color: #A9A9A9;
+                font-size: 14px;
+            }
+        """)
+        
+        opponent_layout.addWidget(self.opponent_widget)
+        opponent_group.setLayout(opponent_layout)
+        
+        # 游戏日志
+        log_group = QGroupBox("游戏日志")
+        log_group.setFont(QFont("SimHei", 10, QFont.Bold))
+        log_layout = QVBoxLayout()
+        
+        self.game_log = GameLogWidget()
+        log_layout.addWidget(self.game_log)
+        log_group.setLayout(log_layout)
+        
+        left_layout.addWidget(opponent_group)
+        left_layout.addWidget(log_group)
+        left_widget.setLayout(left_layout)
+        
+        # 右侧：游戏主区域
+        right_widget = QWidget()
+        right_layout = QVBoxLayout()
+        
+        # 游戏区域（牌堆、弃牌堆等）
+        game_area = QFrame()
+        game_area.setFrameStyle(QFrame.Box)
+        game_area.setLineWidth(2)
+        game_area.setMinimumHeight(200)
+        game_area.setStyleSheet("""
+            QFrame {
+                background-color: #F5F5DC;
+                border: 2px solid #8B4513;
+                border-radius: 10px;
+            }
+        """)
+        
+        game_area_layout = QGridLayout()
+        
+        # 牌堆
+        deck_label = QLabel("牌堆\n剩余: 104张")
+        deck_label.setAlignment(Qt.AlignCenter)
+        deck_label.setFixedSize(80, 120)
+        deck_label.setStyleSheet("""
+            QLabel {
+                background-color: #8B4513;
+                color: white;
+                border: 2px solid #654321;
+                border-radius: 8px;
+                font-weight: bold;
+            }
+        """)
+        
+        # 弃牌堆
+        discard_label = QLabel("弃牌堆\n0张")
+        discard_label.setAlignment(Qt.AlignCenter)
+        discard_label.setFixedSize(80, 120)
+        discard_label.setStyleSheet("""
+            QLabel {
+                background-color: #A9A9A9;
+                color: white;
+                border: 2px solid #696969;
+                border-radius: 8px;
+                font-weight: bold;
+            }
+        """)
+        
+        game_area_layout.addWidget(deck_label, 0, 0)
+        game_area_layout.addWidget(discard_label, 0, 1)
+        game_area_layout.setAlignment(Qt.AlignCenter)
+        game_area.setLayout(game_area_layout)
+        
+        # 玩家信息和手牌区域
+        player_group = QGroupBox("我的信息")
+        player_group.setFont(QFont("SimHei", 10, QFont.Bold))
+        player_layout = QVBoxLayout()
+        
+        # 玩家信息
+        self.player_widget = QLabel("等待游戏开始...")
+        self.player_widget.setAlignment(Qt.AlignCenter)
+        self.player_widget.setMinimumHeight(150)
+        self.player_widget.setStyleSheet("""
+            QLabel {
+                border: 2px dashed #8B4513;
+                border-radius: 10px;
+                color: #A9A9A9;
+                font-size: 14px;
+            }
+        """)
+        
+        # 手牌区域
+        hand_cards_group = QGroupBox("手牌")
+        hand_cards_group.setFont(QFont("SimHei", 9))
+        hand_cards_layout = QVBoxLayout()
+        
+        self.hand_cards_scroll = QScrollArea()
+        self.hand_cards_scroll.setWidgetResizable(True)
+        self.hand_cards_scroll.setMaximumHeight(140)
+        self.hand_cards_scroll.setStyleSheet("""
+            QScrollArea {
+                border: 1px solid #8B4513;
+                border-radius: 5px;
+                background-color: #FFFEF7;
+            }
+        """)
+        
+        self.hand_cards_widget = QWidget()
+        self.hand_cards_layout = QHBoxLayout()
+        self.hand_cards_layout.setAlignment(Qt.AlignLeft)
+        self.hand_cards_widget.setLayout(self.hand_cards_layout)
+        self.hand_cards_scroll.setWidget(self.hand_cards_widget)
+        
+        hand_cards_layout.addWidget(self.hand_cards_scroll)
+        hand_cards_group.setLayout(hand_cards_layout)
+        
+        # 动作按钮
+        self.action_buttons = ActionButtonsWidget()
+        self.action_buttons.action_triggered.connect(self.handle_action)
+        
+        player_layout.addWidget(self.player_widget)
+        player_layout.addWidget(hand_cards_group)
+        player_layout.addWidget(self.action_buttons)
+        player_group.setLayout(player_layout)
+        
+        right_layout.addWidget(game_area)
+        right_layout.addWidget(player_group)
+        right_widget.setLayout(right_layout)
+        
+        # 添加到分割器
+        game_splitter.addWidget(left_widget)
+        game_splitter.addWidget(right_widget)
+        game_splitter.setSizes([300, 700])  # 设置初始比例
+        
+        # 组装主布局
+        main_layout.addLayout(toolbar_layout)
+        main_layout.addWidget(self.status_label)
+        main_layout.addWidget(game_splitter)
+        
+        self.setLayout(main_layout)
+        
+        # 设置背景
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #FFF8DC;
+            }
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #8B4513;
+                border-radius: 5px;
+                margin-top: 10px;
+                padding-top: 10px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px 0 5px;
+            }
+        """)
+        
+    def init_game(self):
+        """初始化游戏"""
+        try:
+            # 这里可以初始化游戏逻辑
+            self.game_log.add_log("游戏界面初始化完成", "system")
+            self.game_log.add_log("点击'新游戏'开始1vs1对战", "info")
+            self.status_label.setText("点击'新游戏'开始对战")
+        except Exception as e:
+            self.game_log.add_log(f"游戏初始化失败: {str(e)}", "system")
+            
+    def start_new_game(self):
+        """开始新游戏"""
+        self.game_log.add_log("开始新的1vs1游戏", "system")
+        self.status_label.setText("游戏进行中...")
+        
+        # 这里可以添加实际的游戏初始化逻辑
+        # 例如：创建玩家、发牌、设置初始状态等
+        
+        self.game_log.add_log("游戏开始！", "action")
+        
+    @pyqtSlot(str)
+    def handle_action(self, action: str):
+        """处理玩家动作"""
+        if action == "play_card":
+            if self.selected_cards:
+                card_names = [card.name for card in self.selected_cards]
+                self.game_log.add_log(f"出牌: {', '.join(card_names)}", "action")
+                self.selected_cards.clear()
+                self.update_hand_cards_display()
+            else:
+                QMessageBox.information(self, "提示", "请先选择要出的牌！")
+                
+        elif action == "end_turn":
+            self.game_log.add_log("结束回合", "action")
+            
+        elif action == "use_skill":
+            self.game_log.add_log("使用技能", "action")
+            
+    def update_hand_cards_display(self):
+        """更新手牌显示"""
+        # 清除现有手牌显示
+        for widget in self.hand_card_widgets:
+            widget.setParent(None)
+        self.hand_card_widgets.clear()
+        
+        # 这里可以添加实际的手牌更新逻辑
+        
+    @pyqtSlot(object)
+    def on_card_clicked(self, card: Card):
+        """处理卡牌点击"""
+        if card in self.selected_cards:
+            self.selected_cards.remove(card)
+        else:
+            self.selected_cards.append(card)
+            
+        self.game_log.add_log(f"{'选中' if card in self.selected_cards else '取消选中'}卡牌: {card.name}", "info")
