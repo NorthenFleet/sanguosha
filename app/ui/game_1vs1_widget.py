@@ -16,12 +16,13 @@ from PyQt5.QtCore import Qt, pyqtSignal, QTimer, QThread, pyqtSlot, QSize
 from PyQt5.QtGui import QFont, QPixmap, QIcon, QPalette, QColor, QPainter, QBrush
 from typing import Dict, List, Optional, Callable
 
-# 导入游戏相关模块
+# 添加项目根目录到路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from app.core.base.game import Game
 from app.models.player import Player
 from app.models.character import Character
 from app.models.card import Card
+from app.ui.player_selection_dialog import PlayerSelectionDialog
 
 class CardWidget(QFrame):
     """卡牌显示组件"""
@@ -360,14 +361,19 @@ class Game1vs1Widget(QWidget):
     
     back_to_menu = pyqtSignal()  # 返回菜单信号
     
-    def __init__(self):
+    def __init__(self, ai_manager=None):
         super().__init__()
         self.game = None
+        self.ai_manager = ai_manager  # AI管理器
         self.player_widgets = {}
         self.hand_card_widgets = []
         self.selected_cards = []
         self.init_ui()
-        self.init_game()
+        # 不在初始化时自动开始游戏
+        
+    def set_ai_manager(self, ai_manager):
+        """设置AI管理器"""
+        self.ai_manager = ai_manager
         
     def init_ui(self):
         """初始化游戏界面"""
@@ -609,13 +615,91 @@ class Game1vs1Widget(QWidget):
             
     def start_new_game(self):
         """开始新游戏"""
+        # 显示玩家选择对话框
+        dialog = PlayerSelectionDialog(self, self.ai_manager)
+        if dialog.exec_() != QDialog.Accepted:
+            return
+            
+        # 获取游戏设置
+        settings = dialog.get_game_settings()
+        
         self.game_log.add_log("开始新的1vs1游戏", "system")
         self.status_label.setText("游戏进行中...")
         
-        # 这里可以添加实际的游戏初始化逻辑
-        # 例如：创建玩家、发牌、设置初始状态等
-        
-        self.game_log.add_log("游戏开始！", "action")
+        try:
+            # 导入游戏核心模块
+            from app.core.events.event_system import EventManager
+            
+            # 创建事件管理器和游戏实例
+            event_manager = EventManager()
+            self.game = Game(event_manager)
+            
+            # 获取选择的武将
+            player1_character = settings['player1_character']
+            player2_character = settings['player2_character']
+            player2_type = settings['player2_type']
+            ai_difficulty = settings['ai_difficulty']
+            
+            # 添加玩家1到游戏
+            player1 = Player(player1_character, is_ai=False)
+            self.game.add_player(player1)
+            self.game_log.add_log(f"玩家1选择: {player1_character.name} ({player1_character.kingdom})", "info")
+            
+            # 添加玩家2到游戏
+            if player2_type == "ai":
+                # 创建AI玩家
+                player2 = Player(player2_character, is_ai=True, ai_difficulty=ai_difficulty)
+                
+                # 设置AI智能体
+                if self.ai_manager and self.ai_manager.is_initialized:
+                    ai_agent = self.ai_manager.create_ai_player(player2_character)
+                    if ai_agent:
+                        player2.ai_agent = ai_agent
+                        self.game_log.add_log(f"AI玩家选择: {player2_character.name} ({player2_character.kingdom}) - 难度: {ai_difficulty}", "info")
+                    else:
+                        self.game_log.add_log("AI玩家创建失败，使用简单AI", "system")
+                else:
+                    # 使用简单AI
+                    self.game_log.add_log(f"简单AI选择: {player2_character.name} ({player2_character.kingdom}) - 难度: {ai_difficulty}", "info")
+                
+                self.game.add_player(player2)
+                    
+                # 更新对手信息显示
+                self.opponent_widget.setText(f"AI对手\n{player2_character.name}\n({player2_character.kingdom})\n难度: {ai_difficulty}")
+                self.opponent_widget.setStyleSheet("""
+                    QLabel {
+                        border: 2px solid #228B22;
+                        border-radius: 10px;
+                        color: #228B22;
+                        font-size: 14px;
+                        font-weight: bold;
+                    }
+                """)
+            else:
+                # 创建真人玩家
+                player2 = Player(player2_character, is_ai=False)
+                self.game.add_player(player2)
+                self.game_log.add_log(f"玩家2选择: {player2_character.name} ({player2_character.kingdom})", "info")
+                
+                # 更新对手信息显示
+                self.opponent_widget.setText(f"真人对手\n{player2_character.name}\n({player2_character.kingdom})\n等待连接...")
+                self.opponent_widget.setStyleSheet("""
+                    QLabel {
+                        border: 2px solid #4169E1;
+                        border-radius: 10px;
+                        color: #4169E1;
+                        font-size: 14px;
+                        font-weight: bold;
+                    }
+                """)
+            
+            # 启动游戏
+            self.game.start_game()
+            self.game_log.add_log("游戏开始！双方开始对战", "action")
+            
+        except Exception as e:
+            self.game_log.add_log(f"游戏启动失败: {str(e)}", "system")
+            QMessageBox.critical(self, "错误", f"游戏启动失败: {str(e)}")
         
     @pyqtSlot(str)
     def handle_action(self, action: str):

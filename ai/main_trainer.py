@@ -27,6 +27,111 @@ from ai.reward_system import RewardCalculator, RewardConfig
 from ai.self_play_trainer import SelfPlayTrainer, SelfPlayConfig
 from ai.distributed_ppo import DistributedPPOTrainer, DistributedConfig
 
+def load_config(config_path: Optional[str] = None) -> Dict:
+    """加载配置文件 - 公共函数"""
+    default_config = {
+        # 基础配置
+        "experiment_name": f"sanguosha_ai_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+        "save_dir": "models/experiments",
+        "device": "cuda" if torch.cuda.is_available() else "cpu",
+        "seed": 42,
+        
+        # PPO配置
+        "ppo": {
+            "learning_rate": 3e-4,
+            "gamma": 0.99,
+            "gae_lambda": 0.95,
+            "clip_epsilon": 0.2,
+            "value_coef": 0.5,
+            "entropy_coef": 0.01,
+            "max_grad_norm": 0.5,
+            "batch_size": 256,
+            "mini_batch_size": 64,
+            "ppo_epochs": 4,  # 修改为ppo_epochs
+            "state_dim": 366,
+            "action_dim": 50,
+            "hidden_dim": 256
+        },
+        
+        # 训练配置
+        "training": {
+            "max_episodes": 50000,
+            "max_steps_per_episode": 200,
+            "eval_interval": 1000,
+            "save_interval": 5000,
+            "log_interval": 100,
+            "num_players": 3,
+            "enable_self_play": True
+        },
+        
+        # 奖励配置
+        "reward": {
+            "survival_weight": 1.0,
+            "damage_weight": 0.8,
+            "card_advantage_weight": 0.3,
+            "equipment_weight": 0.2,
+            "strategy_weight": 0.5,
+            "efficiency_weight": 0.3,
+            "win_reward": 10.0,
+            "lose_penalty": -5.0
+        },
+        
+        # 环境配置
+        "environment": {
+            "max_hand_size": 10,
+            "deck_size": 108,
+            "enable_skills": True,
+            "enable_equipment": True
+        },
+        
+        # 自对弈配置
+        "self_play": {
+            "pool_size": 10,
+            "update_interval": 2000,
+            "evaluation_games": 100,
+            "win_rate_threshold": 0.6,
+            "diversity_weight": 0.3
+        },
+        
+        # 分布式配置
+        "distributed": {
+            "enabled": False,
+            "world_size": 4,
+            "num_workers": 3,
+            "num_learners": 1,
+            "backend": "nccl",
+            "master_addr": "localhost",
+            "master_port": "12355"
+        },
+        
+        # 网络架构
+        "network": {
+            "type": "actor_critic",  # actor_critic, dueling
+            "use_attention": True,
+            "attention_heads": 8,
+            "dropout": 0.1
+        }
+    }
+    
+    if config_path and Path(config_path).exists():
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                user_config = json.load(f)
+            # 递归更新配置
+            def update_dict(d, u):
+                for k, v in u.items():
+                    if isinstance(v, dict):
+                        d[k] = update_dict(d.get(k, {}), v)
+                    else:
+                        d[k] = v
+                return d
+            default_config = update_dict(default_config, user_config)
+        except Exception as e:
+            print(f"警告: 加载配置文件失败 {config_path}: {e}")
+    
+    return default_config
+
+
 class TrainingManager:
     """训练管理器"""
     
@@ -52,98 +157,7 @@ class TrainingManager:
         
     def _load_config(self, config_path: Optional[str]) -> Dict:
         """加载配置文件"""
-        default_config = {
-            # 基础配置
-            "experiment_name": f"sanguosha_ai_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-            "save_dir": "models/experiments",
-            "device": "cuda" if torch.cuda.is_available() else "cpu",
-            "seed": 42,
-            
-            # PPO配置
-            "ppo": {
-                "learning_rate": 3e-4,
-                "gamma": 0.99,
-                "gae_lambda": 0.95,
-                "clip_epsilon": 0.2,
-                "value_coef": 0.5,
-                "entropy_coef": 0.01,
-                "max_grad_norm": 0.5,
-                "batch_size": 256,
-                "mini_batch_size": 64,
-                "epochs": 4,
-                "state_dim": 366,
-                "action_dim": 50,
-                "hidden_dim": 256
-            },
-            
-            # 训练配置
-            "training": {
-                "max_episodes": 50000,
-                "max_steps_per_episode": 200,
-                "eval_interval": 1000,
-                "save_interval": 5000,
-                "log_interval": 100,
-                "num_players": 3,
-                "enable_self_play": True
-            },
-            
-            # 奖励配置
-            "reward": {
-                "survival_weight": 1.0,
-                "damage_weight": 0.8,
-                "card_advantage_weight": 0.3,
-                "equipment_weight": 0.2,
-                "strategy_weight": 0.5,
-                "efficiency_weight": 0.3,
-                "win_reward": 10.0,
-                "lose_penalty": -5.0
-            },
-            
-            # 自对弈配置
-            "self_play": {
-                "pool_size": 10,
-                "update_interval": 2000,
-                "evaluation_games": 100,
-                "win_rate_threshold": 0.6,
-                "diversity_weight": 0.3
-            },
-            
-            # 分布式配置
-            "distributed": {
-                "enabled": False,
-                "world_size": 4,
-                "num_workers": 3,
-                "num_learners": 1,
-                "backend": "nccl",
-                "master_addr": "localhost",
-                "master_port": "12355"
-            },
-            
-            # 网络架构
-            "network": {
-                "type": "actor_critic",  # actor_critic, dueling
-                "use_attention": True,
-                "attention_heads": 8,
-                "dropout": 0.1
-            }
-        }
-        
-        if config_path and os.path.exists(config_path):
-            with open(config_path, 'r', encoding='utf-8') as f:
-                user_config = json.load(f)
-            
-            # 递归更新配置
-            def update_dict(d, u):
-                for k, v in u.items():
-                    if isinstance(v, dict):
-                        d[k] = update_dict(d.get(k, {}), v)
-                    else:
-                        d[k] = v
-                return d
-            
-            default_config = update_dict(default_config, user_config)
-        
-        return default_config
+        return load_config(config_path)
     
     def _setup_logging(self):
         """设置日志"""
@@ -180,7 +194,7 @@ class TrainingManager:
             max_grad_norm=self.config['ppo']['max_grad_norm'],
             batch_size=self.config['ppo']['batch_size'],
             mini_batch_size=self.config['ppo']['mini_batch_size'],
-            ppo_epochs=self.config['ppo']['epochs'],  # 使用ppo_epochs而不是epochs
+            ppo_epochs=self.config['ppo']['ppo_epochs'],  # 使用ppo_epochs而不是epochs
             state_dim=self.config['ppo']['state_dim'],
             action_dim=self.config['ppo']['action_dim'],
             hidden_dim=self.config['ppo']['hidden_dim']
@@ -323,7 +337,7 @@ class TrainingManager:
             max_grad_norm=self.config['ppo']['max_grad_norm'],
             batch_size=self.config['ppo']['batch_size'],
             mini_batch_size=self.config['ppo']['mini_batch_size'],
-            ppo_epochs=self.config['ppo']['epochs'],
+            ppo_epochs=self.config['ppo']['ppo_epochs'],
             state_dim=self.config['ppo']['state_dim'],
             action_dim=self.config['ppo']['action_dim'],
             hidden_dim=self.config['ppo']['hidden_dim']

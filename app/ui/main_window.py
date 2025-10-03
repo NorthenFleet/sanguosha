@@ -31,6 +31,7 @@ class GameModeSelector(QWidget):
     
     def __init__(self):
         super().__init__()
+        self.ai_manager = None  # AI管理器
         self.init_ui()
         
     def init_ui(self):
@@ -209,10 +210,29 @@ class GameModeSelector(QWidget):
         
     def get_game_settings(self):
         """获取游戏设置"""
-        return {
+        settings = {
             'difficulty': self.difficulty_combo.currentText(),
             'turn_time': self.time_spin.value()
         }
+        
+        # 添加AI设置
+        if self.ai_manager and self.ai_manager.is_initialized:
+            settings['ai_enabled'] = True
+            settings['ai_agent'] = self.ai_manager.get_ai_agent()
+        else:
+            settings['ai_enabled'] = False
+            settings['ai_agent'] = None
+            
+        return settings
+    
+    def set_ai_manager(self, ai_manager):
+        """设置AI管理器"""
+        self.ai_manager = ai_manager
+        
+        # 如果AI可用，可以在界面上显示AI状态
+        if self.ai_manager and self.ai_manager.is_initialized:
+            # 这里可以添加AI状态指示器
+            pass
 
 
 class MainWindow(QMainWindow):
@@ -222,6 +242,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.current_mode = None
         self.game_widgets = {}
+        self.ai_manager = None  # AI管理器
         self.init_ui()
         
     def init_ui(self):
@@ -332,14 +353,21 @@ class MainWindow(QMainWindow):
             
             # 创建1vs1游戏界面
             if Game1vs1Widget and "1vs1" not in self.game_widgets:
-                game_widget = Game1vs1Widget()
+                # 传递AI管理器到游戏界面
+                game_widget = Game1vs1Widget(ai_manager=self.ai_manager)
                 game_widget.back_to_menu.connect(self.back_to_menu)
                 self.game_widgets["1vs1"] = game_widget
                 self.stacked_widget.addWidget(game_widget)
+            elif "1vs1" in self.game_widgets:
+                # 如果已存在，确保AI管理器是最新的
+                self.game_widgets["1vs1"].set_ai_manager(self.ai_manager)
             
             if "1vs1" in self.game_widgets:
                 self.stacked_widget.setCurrentWidget(self.game_widgets["1vs1"])
-                self.status_bar.showMessage("1vs1对战模式已启动")
+                if self.ai_manager and self.ai_manager.is_initialized:
+                    self.status_bar.showMessage("1vs1对战模式已启动 (AI已就绪)")
+                else:
+                    self.status_bar.showMessage("1vs1对战模式已启动")
             else:
                 QMessageBox.warning(self, "错误", "无法加载1vs1游戏界面，请检查相关文件是否存在。")
                 self.status_bar.showMessage("1vs1模式加载失败")
@@ -437,6 +465,23 @@ class MainWindow(QMainWindow):
             event.accept()
         else:
             event.ignore()
+    
+    def set_ai_manager(self, ai_manager):
+        """设置AI管理器"""
+        self.ai_manager = ai_manager
+        # 将AI管理器传递给模式选择器
+        if hasattr(self.mode_selector, 'set_ai_manager'):
+            self.mode_selector.set_ai_manager(ai_manager)
+        
+        # 更新状态栏显示AI状态
+        if self.ai_manager and self.ai_manager.is_initialized:
+            self.statusBar().showMessage("AI系统已就绪")
+        else:
+            self.statusBar().showMessage("AI系统未启用")
+    
+    def get_ai_manager(self):
+        """获取AI管理器"""
+        return self.ai_manager
 
 
 def main():

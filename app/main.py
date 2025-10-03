@@ -1,5 +1,6 @@
 import sys
 import os
+import argparse
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.core.base.path_utils import setup_paths
 setup_paths()
@@ -10,7 +11,7 @@ from app.models.character import Character
 from app.models.card import Deck, display_deck_info
 
 
-def main():
+def main_cli():
     # 初始化事件管理器和游戏实例
     event_manager = EventManager()
     game = Game(event_manager)
@@ -76,6 +77,121 @@ def main():
 
     # 再次显示牌堆信息
     display_deck_info(deck)
+
+
+def main_gui():
+    """启动GUI模式的游戏"""
+    try:
+        from PyQt5.QtWidgets import QApplication
+        from app.ui.main_window import MainWindow
+        
+        # 初始化AI管理器
+        ai_manager = None
+        try:
+            # 尝试导入AI组件
+            from ai.ppo_agent import PPOAgent, PPOConfig
+            from ai.main_trainer import load_config
+            from pathlib import Path
+            
+            # 创建AI管理器类
+            class AIPlayerManager:
+                def __init__(self, config_path=None):
+                    self.config_path = config_path or "ai/config/default_config.json"
+                    self.ai_agents = {}
+                    self.is_initialized = False
+                    
+                def initialize(self):
+                    try:
+                        config = load_config(self.config_path)
+                        ppo_config = PPOConfig(**config.get('ppo', {}))
+                        self.ai_agents['default'] = PPOAgent(ppo_config)
+                        
+                        # 尝试加载预训练模型
+                        model_path = Path("models/experiments/best_model.pth")
+                        if model_path.exists():
+                            try:
+                                self.ai_agents['default'].load_model(str(model_path))
+                                print(f"成功加载预训练模型: {model_path}")
+                            except Exception as e:
+                                print(f"加载预训练模型失败: {e}")
+                        
+                        self.is_initialized = True
+                        print("AI玩家系统初始化成功")
+                        return True
+                    except Exception as e:
+                        print(f"AI玩家系统初始化失败: {e}")
+                        return False
+                        
+                def get_ai_agent(self, agent_name='default'):
+                    if not self.is_initialized:
+                        return None
+                    return self.ai_agents.get(agent_name)
+                    
+                def create_ai_player(self, character, agent_name='default'):
+                    agent = self.get_ai_agent(agent_name)
+                    if agent is None:
+                        return None
+                    return {
+                        'character': character,
+                        'agent': agent,
+                        'type': 'ai',
+                        'name': f"AI-{character.name}"
+                    }
+            
+            # 创建并初始化AI管理器
+            ai_manager = AIPlayerManager()
+            ai_initialized = ai_manager.initialize()
+            if not ai_initialized:
+                print("AI系统初始化失败，将使用简单AI")
+                ai_manager = None
+                
+        except ImportError as e:
+            print(f"AI模块不可用: {e}")
+            ai_manager = None
+        except Exception as e:
+            print(f"AI系统初始化错误: {e}")
+            ai_manager = None
+        
+        # 创建Qt应用
+        app = QApplication(sys.argv)
+        app.setApplicationName("三国杀")
+        app.setApplicationVersion("1.0")
+        app.setOrganizationName("AI Game Studio")
+        
+        # 创建主窗口
+        window = MainWindow()
+        
+        # 如果AI可用，将AI管理器传递给主窗口
+        if ai_manager and ai_manager.is_initialized:
+            window.set_ai_manager(ai_manager)
+            print("AI系统已集成到GUI界面")
+        
+        window.show()
+        sys.exit(app.exec_())
+    except ImportError:
+        print("错误: 无法导入PyQt5，请安装PyQt5或使用命令行模式")
+        print("安装命令: pip install PyQt5")
+        sys.exit(1)
+    except Exception as e:
+        print(f"GUI启动失败: {e}")
+        sys.exit(1)
+
+
+def main():
+    """主函数，处理命令行参数"""
+    parser = argparse.ArgumentParser(description='三国杀游戏')
+    parser.add_argument('--mode', choices=['cli', 'gui'], default='gui', 
+                       help='游戏模式: cli(命令行) 或 gui(图形界面)')
+    parser.add_argument('--no-ai', action='store_true', 
+                       help='禁用AI功能')
+    
+    args = parser.parse_args()
+    
+    if args.mode == 'gui':
+        main_gui()
+    else:
+        main_cli()
+
 
 if __name__ == "__main__":
     main()

@@ -7,7 +7,7 @@ from .card import Card
 
 class Player:
     """玩家类"""
-    def __init__(self, character: Character):
+    def __init__(self, character: Character, is_ai: bool = False, ai_difficulty: str = "normal"):
         self.character = character
         self.hp = character.max_hp  # 使用max_hp而不是hp，确保初始血量正确
         self.hand_cards: List[Card] = []
@@ -20,6 +20,11 @@ class Player:
         self.chained = False
         self.has_used_sha = False  # 跟踪本回合是否使用过杀
         self.position = 0  # 玩家座位位置（用于多人游戏距离计算）
+        
+        # AI相关属性
+        self.is_ai = is_ai
+        self.ai_difficulty = ai_difficulty  # "easy", "normal", "hard"
+        self.ai_agent = None  # AI智能体实例
 
     def draw_card(self, deck: List[Card], count: int):
         """从牌堆摸牌"""
