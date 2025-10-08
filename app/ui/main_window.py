@@ -107,7 +107,7 @@ class GameModeSelector(QWidget):
                 border: 2px solid #8B4513;
                 border-radius: 8px;
                 padding: 8px 16px;
-                color: white;
+                color: black;
             }
             QPushButton:hover {
                 background-color: #A0522D;

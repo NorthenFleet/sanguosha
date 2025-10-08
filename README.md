@@ -199,3 +199,60 @@ Client / CLI / Bot
 - 锁定技：满足条件必然发动的技能。
 - 主动技：玩家在时机窗口主动选择发动的技能。
 - 伤害结算：包含来源、目标、伤害值、可被修改或转移的过程。
+
+## 启动程序与AI训练
+
+### 游戏本体启动（PyQt）
+- 前置：`pip install PyQt5`
+- 命令：`python main_launcher.py --mode gui`
+- 说明：
+  - 启动图形界面，支持加载默认智能体（PPO）。
+  - 若存在 `models/experiments/best_model.pth`，将自动加载作为演示对战智能体。
+  - 可通过 `--no-ai` 禁用智能体，用于纯人类对战或界面演示：`python main_launcher.py --mode gui --no-ai`。
+  - 控制台模式（无GUI）：`python main_launcher.py --mode console`，适合快速测试与调试。
+
+### 统一启动器 CLI
+- `python main_launcher.py --mode gui|console|train [--no-ai] [--config <path>] [--debug]`
+  - `--mode gui`：启动 PyQt 图形界面。
+  - `--mode console`：启动控制台模式。
+  - `--mode train`：启动 AI 训练流程（调用 AI 主训练脚本）。
+  - `--no-ai`：禁用智能体加载。
+  - `--config`：指定 AI 配置文件（如 `ai/config/default_config.json`）。
+  - `--debug`：开启详细日志输出。
+
+### AI训练启动（通用脚本）
+- 通用训练脚本：`python ai/scripts/train_rl.py --algorithm <ppo|dqn|a3c> [参数]`
+- 常用参数：
+  - `--episodes`：训练回合/步数目标（A3C按全局步数近似）。
+  - `--log_dir`：日志输出目录（默认 `logs/<algo>`）。
+  - `--model_dir`：模型保存目录（默认 `models/<algo>`）。
+  - `--self_play`：启用自对弈（PPO/DQN支持）。
+  - `--num_workers`：A3C并行 worker 数量。
+  - `--eval_interval` / `--save_interval`：评估/保存间隔。
+  - `--config`：加载 JSON/YAML 配置并与命令行覆盖合并。
+
+- 示例：
+  - PPO：`python ai/scripts/train_rl.py --algorithm ppo --episodes 20000 --self_play --eval_interval 1000`
+  - DQN：`python ai/scripts/train_rl.py --algorithm dqn --episodes 30000 --eval_interval 1000 --save_interval 5000`
+  - A3C：`python ai/scripts/train_rl.py --algorithm a3c --episodes 100000 --num_workers 8 --eval_interval 5000`
+
+### 训练过程状态显示与监控
+- 控制台/日志输出：
+  - PPO：周期性打印 `Reward`、`Length`、`WinRate`、`Time`；评估阶段记录 `win_rate` 等。
+  - DQN：打印 `Reward`、`Length`、`WinRate`、`Loss`、`Time`；训练步输出 `loss`、`avg_q_value`、`td_error`、`epsilon`。
+  - A3C：各 worker 汇报 `actor_loss`、`critic_loss`、`entropy_loss`、`episode_reward`、`episode_length`，训练器聚合并输出平均指标。
+- 日志文件：按算法写入 `logs/<algo>/<experiment>.log`；模型与检查点保存在 `models/<algo>/`。
+- 可视化与追踪：
+  - 可在配置中启用 Weights & Biases（`use_wandb`）进行在线追踪。
+  - 训练工具模块可将指标保存为 `metrics.json` 并生成 `training_metrics.png`，用于离线查看。
+
+### 模型评估与对战
+- 通用评估脚本：`python ai/scripts/evaluate_rl.py --algorithm <ppo|dqn|a3c> --model <path> [--config <path>]`
+- 在 GUI 模式下，若检测到最佳模型 `models/experiments/best_model.pth`，会自动加载用于对战演示。
+
+### 训练方法与模型组合（概览）
+- PPO：Actor-Critic 策略梯度，支持自对弈与分布式，适合复杂状态空间。
+- DQN：多智能体 DQN，经验回放与目标网络，适合离散动作空间。
+- A3C：异步并行 Actor-Critic（可选 LSTM），通过多 worker 加速训练。
+
+如需更细的算法/架构说明与配置项，请参阅 `ai/README.md`。

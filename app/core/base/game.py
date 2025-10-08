@@ -4,6 +4,7 @@
 from enum import Enum
 from typing import List, Dict, Optional
 import random
+import time
 from app.models.skills import SkillManager, PaoXiao, KeJi, YingZi, JianXiong
 from app.models.card import Deck, Card
 from app.models.action import CardAction, SkillAction
@@ -24,6 +25,8 @@ class Game:
         self.current_player = None  # 添加当前玩家属性
         self.skill_manager = SkillManager()
         self.event_manager = event_manager
+        # UI交互控制标记：用于在非测试模式下由UI驱动回合流程
+        self.end_turn_requested = False
         # 注册技能
         self.skill_manager.register_skill(JianXiong())
         self.skill_manager.register_skill(PaoXiao())
@@ -49,7 +52,7 @@ class Game:
             return True
         return False
 
-    def start_game(self):
+    def start_game(self, test_mode: bool = False):
         """开始游戏"""
         if len(self.players) != 2:
             print("需要2名玩家才能开始游戏")
@@ -85,7 +88,7 @@ class Game:
                         break
         
         print("游戏开始!")
-        self.game_loop()
+        self.game_loop(test_mode=test_mode)
 
     def game_loop(self):
         """游戏主循环"""
@@ -137,8 +140,8 @@ class Game:
                 # 触发使用技能事件
                 self.event_manager.trigger("use_skill", {"player": player, "skill": "咆哮"})
         
-        # 在测试模式下自动选择手牌
-        if test_mode:
+        # 在测试模式或AI玩家自动选择手牌
+        if test_mode or getattr(player, 'is_ai', False):
             # 自动使用第一张手牌
             if player.hand_cards:
                 card = player.hand_cards[0]
@@ -169,134 +172,17 @@ class Game:
                     self.deck.discard(card)
                     print(f"卡牌 {card.name} 进入弃牌堆")
         else:
-            while True:
-                print("\n当前场上状态:")
-                for p in self.players:
-                    self.show_player_status(p)
+            # 在非测试模式下交由UI控制：等待用户点击“结束回合”按钮
+            print("由UI控制出牌阶段，等待结束回合请求...")
+            self.end_turn_requested = False
+            # 简单的等待循环，不阻塞UI线程（游戏运行在后台线程）
+            while not self.end_turn_requested and not self.is_game_over():
+                time.sleep(0.05)
+            print(f"{player.character.name} 结束出牌阶段。")
 
-                if player.hand_cards:
-                    print("\n你的手牌:")
-                    for idx, card in enumerate(player.hand_cards, start=1):
-                        type_display = card.type.value if card.type else "unknown"
-                        print(f"{idx}. {card.name}({type_display}) - {card.suit}[{card.rank}]")
-
-                    # 检查是否可以使用武器特殊效果
-                    weapon_options = []
-                    if player.has_weapon_effect("丈八蛇矛") and len(player.hand_cards) >= 2:
-                        weapon_options.append("丈八蛇矛")
-                    
-                    if weapon_options:
-                        print("\n武器特殊效果:")
-                        for idx, weapon in enumerate(weapon_options, start=len(player.hand_cards) + 1):
-                            print(f"{idx}. 使用{weapon}特殊效果（将两张手牌当杀使用）")
-
-                    print("\n当前牌堆信息:")
-                    print(f"摸牌堆卡牌数量: {len(self.deck.cards)}")
-                    print(f"弃牌堆卡牌数量: {len(self.deck.discard_pile)}")
-                    try:
-                        user_input = input("选择要使用的手牌编号或武器特殊效果 (输入0结束出牌阶段): ")
-                        if not user_input.strip():
-                            print("输入不能为空，请重新选择。")
-                            continue
-                        choice = user_input
-                        if choice == "0":
-                            break
-                        choice = int(choice) - 1
-                        
-                        # 检查是否选择了武器特殊效果
-                        if choice >= len(player.hand_cards) and choice < len(player.hand_cards) + len(weapon_options):
-                            weapon_idx = choice - len(player.hand_cards)
-                            weapon_name = weapon_options[weapon_idx]
-                            
-                            if weapon_name == "丈八蛇矛":
-                                # 检查是否已使用过杀（除非有咆哮）
-                                has_paoxiao = player.character.has_skill("咆哮")
-                                if has_used_kill and not has_paoxiao:
-                                    print("本回合已使用过\"杀\"，无法再次使用。")
-                                    continue
-                                
-                                # 使用丈八蛇矛特殊效果
-                                from app.models.card_actions import ZhangBaSheMaoAction
-                                zhangba_action = ZhangBaSheMaoAction()
-                                
-                                # 选择目标
-                                opponent = self.get_opponent(player)
-                                if opponent and opponent.character.hp > 0:
-                                    print(f"丈八蛇矛目标: {opponent.character.name}")
-                                    success = zhangba_action.apply_effect(self, player, opponent)
-                                    if success:
-                                        has_used_kill = True
-                                        player.has_used_sha = True
-                                        # 触发咆哮技能
-                                        if has_paoxiao:
-                                            player.character.use_skill("咆哮", self, player)
-                                else:
-                                    print("没有有效目标")
-                            continue
-                        
-                        if 0 <= choice < len(player.hand_cards):
-                            card = player.hand_cards[choice]
-                            
-                            # 检查无懈可击不能在出牌阶段主动使用
-                            if card.name == "无懈可击":
-                                print("无懈可击只能用于响应其他锦囊牌，不能在出牌阶段主动使用。")
-                                continue
-                            
-                            # 检查是否可以使用"杀"
-                            has_paoxiao = False
-                            if card.name == "杀":
-                                # 检查是否有咆哮技能
-                                has_paoxiao = player.character.has_skill("咆哮")
-                                if has_used_kill and not has_paoxiao:
-                                    print("本回合已使用过\"杀\"，无法再次使用。")
-                                    continue
-                                has_used_kill = True
-                                player.has_used_sha = True
-                            
-                            # 触发咆哮技能
-                            if has_paoxiao:
-                                player.character.use_skill("咆哮", self, player)
-                            
-                            card = player.hand_cards[choice]
-                            print(f"\n{player.character.name} 使用了手牌: {card}")
-                            # 如果是装备牌，更新装备状态
-                            if card.type and card.type.value == "装备牌":
-                                player.use_card(card)
-                                print(f"{card.name} 已装备到装备区")
-                            else:
-                                # 对于非装备牌，直接从手牌中移除
-                                player.hand_cards.pop(choice)
-                            # 触发使用卡牌事件
-                            self.event_manager.trigger("play_card", {"player": player, "card": card, "target": self.get_opponent(player)})
-                            # 创建卡牌动作并执行效果
-                            card_action = self.create_card_action(card)
-                            
-                            # 对于需要响应的卡牌（如杀、决斗等），使用handle_response
-                            if card.name in ["杀", "决斗", "南蛮入侵", "万箭齐发"]:
-                                response_result = card_action.handle_response(self, player, test_mode=False)
-                            else:
-                                # 对于不需要响应的卡牌（如无中生有、过河拆桥等），直接执行效果
-                                response_result = card_action.apply_effect(self, player)
-                            
-                            # 卡牌使用完成后，如果不是装备牌且没有停留在场上，则进入弃牌堆
-                            if card.type and card.type.value != "装备牌":
-                                self.deck.discard(card)
-                                print(f"卡牌 {card.name} 进入弃牌堆")
-                            
-                            # 如果是无中生有被无懈可击响应，继续出牌阶段
-                            if response_result == "continue_play_phase":
-                                card_action = self.create_card_action(card)
-                                card_action.handle_response(self, player, test_mode=False)
-                        else:
-                            print("选择无效，请重新选择。")
-                    except ValueError:
-                        print("输入无效，请重新选择。")
-                    except (EOFError, KeyboardInterrupt):
-                        print("\n游戏被中断。")
-                        return
-                else:
-                    print("没有手牌可用。")
-                    break
+    def request_end_turn(self):
+        """供UI调用：请求结束当前玩家的出牌阶段。"""
+        self.end_turn_requested = True
 
     def handle_response(self, player, card, test_mode=False):
         """处理出牌响应逻辑。"""

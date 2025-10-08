@@ -311,3 +311,52 @@ MIT License
 ## 联系方式
 
 如有问题或建议，请提交Issue或联系开发团队。
+
+---
+
+## 通用训练脚本与评估
+
+### 通用训练脚本（推荐）
+
+统一入口，简化算法切换与参数管理：
+
+```bash
+# 选择算法：ppo / dqn / a3c
+python ai/scripts/train_rl.py --algorithm ppo --episodes 20000 --self_play --eval_interval 1000
+python ai/scripts/train_rl.py --algorithm dqn --episodes 30000 --eval_interval 1000 --save_interval 5000
+python ai/scripts/train_rl.py --algorithm a3c --episodes 100000 --num_workers 8 --eval_interval 5000
+
+# 指定日志与模型目录
+python ai/scripts/train_rl.py --algorithm ppo --log_dir logs --model_dir models
+
+# 指定外部配置（JSON/YAML），并与CLI覆盖合并
+python ai/scripts/train_rl.py --algorithm ppo --config ai/config/default_config.json
+```
+
+训练过程会在控制台与日志中显示关键指标：
+- PPO：`Reward`、`Length`、`WinRate`、`PolicyLoss`、`ValueLoss`、`Entropy`。
+- DQN：`Reward`、`Length`、`WinRate`、`Loss`、`AvgQValue`、`TDError`、`Epsilon`。
+- A3C：`ActorLoss`、`CriticLoss`、`EntropyLoss`、`EpisodeReward`、`EpisodeLength`（worker聚合）。
+
+日志与模型输出位置默认：
+- 日志：`logs/<algo>/<experiment>.log`
+- 模型：`models/<algo>/`（包含最佳模型与检查点）
+
+可视化建议：
+- 在配置中启用 `use_wandb: true` 使用 Weights & Biases 实时追踪。
+- 使用训练工具模块生成 `metrics.json` 与 `training_metrics.png` 离线查看。
+
+### 脚本化评估
+
+使用通用评估脚本对不同算法的模型进行评估：
+
+```bash
+# 选择算法并提供模型文件
+python ai/scripts/evaluate_rl.py --algorithm dqn --model models/dqn/best_model.pth
+python ai/scripts/evaluate_rl.py --algorithm a3c --model models/a3c/best_model.pth
+
+# 可选评估配置（例如对局数量、对手类型等）
+python ai/scripts/evaluate_rl.py --algorithm ppo --config ai/config/eval_config.yaml
+```
+
+评估脚本将输出主要指标（胜率、平均奖励、回合长度等），并可生成报告与图表（详见 `ai/evaluation/evaluation_system.py`）。

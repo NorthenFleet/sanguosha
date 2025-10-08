@@ -52,7 +52,7 @@ class CardWidget(QFrame):
         name_label.setWordWrap(True)
         
         # 卡牌花色和点数
-        suit_point = QLabel(f"{self.card.suit} {self.card.point}")
+        suit_point = QLabel(f"{self.card.suit} {self.card.rank}")
         suit_point.setFont(QFont("SimHei", 7))
         suit_point.setAlignment(Qt.AlignCenter)
         
@@ -318,7 +318,7 @@ class ActionButtonsWidget(QFrame):
         # 设置按钮样式
         button_style = """
             QPushButton {
-                background-color: #F0E68C;
+                background-color: rgba(240, 230, 140, 210);
                 border: 2px solid #DAA520;
                 border-radius: 8px;
                 padding: 8px 16px;
@@ -326,13 +326,13 @@ class ActionButtonsWidget(QFrame):
                 font-weight: bold;
             }
             QPushButton:hover {
-                background-color: #FFD700;
+                background-color: rgba(255, 215, 0, 220);
             }
             QPushButton:pressed {
-                background-color: #DAA520;
+                background-color: rgba(218, 165, 32, 230);
             }
             QPushButton:disabled {
-                background-color: #D3D3D3;
+                background-color: rgba(211, 211, 211, 180);
                 color: #A9A9A9;
                 border-color: #A9A9A9;
             }
@@ -358,18 +358,34 @@ class ActionButtonsWidget(QFrame):
 
 class Game1vs1Widget(QWidget):
     """1vs1游戏主界面"""
+    # 事件桥接信号：在UI线程安全地处理游戏事件
+    event_signal = pyqtSignal(str, object)
     
     back_to_menu = pyqtSignal()  # 返回菜单信号
     
     def __init__(self, ai_manager=None):
         super().__init__()
+        self.setObjectName("Game1vs1Widget")
         self.game = None
+        self.game_thread = None
         self.ai_manager = ai_manager  # AI管理器
         self.player_widgets = {}
         self.hand_card_widgets = []
+        # 为历史代码兼容提供别名，避免属性拼写差异导致的异常
+        # 统一返回同一列表对象，避免重绑造成引用失效
+        
         self.selected_cards = []
+        self.human_player = None
+        self.deck_label = None
+        self.discard_label = None
         self.init_ui()
+        # 连接事件桥接信号到处理槽
+        self.event_signal.connect(self.on_event_received)
         # 不在初始化时自动开始游戏
+
+    @property
+    def hand_cards_widgets(self):
+        return self.hand_card_widgets
         
     def set_ai_manager(self, ai_manager):
         """设置AI管理器"""
@@ -391,7 +407,7 @@ class Game1vs1Widget(QWidget):
                 border: 2px solid #8B4513;
                 border-radius: 5px;
                 padding: 5px 10px;
-                color: white;
+                color: black;
             }
             QPushButton:hover {
                 background-color: #A0522D;
@@ -407,7 +423,7 @@ class Game1vs1Widget(QWidget):
                 border: 2px solid #228B22;
                 border-radius: 5px;
                 padding: 5px 10px;
-                color: white;
+                color: black;
             }
             QPushButton:hover {
                 background-color: #228B22;
@@ -475,7 +491,7 @@ class Game1vs1Widget(QWidget):
         game_area.setMinimumHeight(200)
         game_area.setStyleSheet("""
             QFrame {
-                background-color: #F5F5DC;
+                background-color: rgba(245, 245, 220, 200);
                 border: 2px solid #8B4513;
                 border-radius: 10px;
             }
@@ -484,35 +500,35 @@ class Game1vs1Widget(QWidget):
         game_area_layout = QGridLayout()
         
         # 牌堆
-        deck_label = QLabel("牌堆\n剩余: 104张")
-        deck_label.setAlignment(Qt.AlignCenter)
-        deck_label.setFixedSize(80, 120)
-        deck_label.setStyleSheet("""
+        self.deck_label = QLabel("牌堆\n剩余: 104张")
+        self.deck_label.setAlignment(Qt.AlignCenter)
+        self.deck_label.setFixedSize(80, 120)
+        self.deck_label.setStyleSheet("""
             QLabel {
-                background-color: #8B4513;
-                color: white;
+                background-color: rgba(139, 69, 19, 220);
+                color: black;
                 border: 2px solid #654321;
                 border-radius: 8px;
                 font-weight: bold;
             }
         """)
-        
+
         # 弃牌堆
-        discard_label = QLabel("弃牌堆\n0张")
-        discard_label.setAlignment(Qt.AlignCenter)
-        discard_label.setFixedSize(80, 120)
-        discard_label.setStyleSheet("""
+        self.discard_label = QLabel("弃牌堆\n0张")
+        self.discard_label.setAlignment(Qt.AlignCenter)
+        self.discard_label.setFixedSize(80, 120)
+        self.discard_label.setStyleSheet("""
             QLabel {
-                background-color: #A9A9A9;
-                color: white;
+                background-color: rgba(169, 169, 169, 220);
+                color: black;
                 border: 2px solid #696969;
                 border-radius: 8px;
                 font-weight: bold;
             }
         """)
-        
-        game_area_layout.addWidget(deck_label, 0, 0)
-        game_area_layout.addWidget(discard_label, 0, 1)
+
+        game_area_layout.addWidget(self.deck_label, 0, 0)
+        game_area_layout.addWidget(self.discard_label, 0, 1)
         game_area_layout.setAlignment(Qt.AlignCenter)
         game_area.setLayout(game_area_layout)
         
@@ -546,7 +562,7 @@ class Game1vs1Widget(QWidget):
             QScrollArea {
                 border: 1px solid #8B4513;
                 border-radius: 5px;
-                background-color: #FFFEF7;
+                background-color: rgba(255, 254, 247, 180);
             }
         """)
         
@@ -562,6 +578,8 @@ class Game1vs1Widget(QWidget):
         # 动作按钮
         self.action_buttons = ActionButtonsWidget()
         self.action_buttons.action_triggered.connect(self.handle_action)
+        # 初始禁用，待进入玩家的出牌阶段再启用
+        self.action_buttons.set_buttons_enabled(False)
         
         player_layout.addWidget(self.player_widget)
         player_layout.addWidget(hand_cards_group)
@@ -584,23 +602,39 @@ class Game1vs1Widget(QWidget):
         
         self.setLayout(main_layout)
         
-        # 设置背景
-        self.setStyleSheet("""
-            QWidget {
-                background-color: #FFF8DC;
-            }
-            QGroupBox {
+        # 设置背景与整体半透明主题，适配参考图片
+        try:
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            bg_path = os.path.join(project_root, "data", "5591740407797_.pic.jpg")
+        except Exception:
+            bg_path = ""
+
+        self.setStyleSheet(f"""
+            QWidget#Game1vs1Widget {{
+                border-image: url('{bg_path}') 0 0 0 0 stretch stretch;
+            }}
+            QGroupBox {{
+                background-color: rgba(255, 248, 220, 210);
                 font-weight: bold;
                 border: 2px solid #8B4513;
-                border-radius: 5px;
+                border-radius: 8px;
                 margin-top: 10px;
-                padding-top: 10px;
-            }
-            QGroupBox::title {
+                padding-top: 12px;
+            }}
+            QGroupBox::title {{
                 subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 5px 0 5px;
-            }
+                left: 12px;
+                padding: 0 6px 0 6px;
+                color: #8B4513;
+            }}
+            QLabel {{
+                color: #2f2f2f;
+            }}
+            QScrollArea {{
+                border: 1px solid #8B4513;
+                border-radius: 6px;
+                background-color: rgba(255, 254, 247, 180);
+            }}
         """)
         
     def init_game(self):
@@ -628,10 +662,11 @@ class Game1vs1Widget(QWidget):
         
         try:
             # 导入游戏核心模块
-            from app.core.events.event_system import EventManager
+            from app.core.events.event_system import EventManager, EventType
             
             # 创建事件管理器和游戏实例
             event_manager = EventManager()
+            self.register_event_listeners(event_manager)
             self.game = Game(event_manager)
             
             # 获取选择的武将
@@ -644,6 +679,10 @@ class Game1vs1Widget(QWidget):
             player1 = Player(player1_character, is_ai=False)
             self.game.add_player(player1)
             self.game_log.add_log(f"玩家1选择: {player1_character.name} ({player1_character.kingdom})", "info")
+            # 设置真人玩家引用并初始化信息显示
+            self.human_player = player1
+            self.update_player_info_text()
+            self.update_hand_cards_display()
             
             # 添加玩家2到游戏
             if player2_type == "ai":
@@ -693,23 +732,222 @@ class Game1vs1Widget(QWidget):
                     }
                 """)
             
-            # 启动游戏
-            self.game.start_game()
-            self.game_log.add_log("游戏开始！双方开始对战", "action")
+            # 启动游戏：在后台线程运行，并启用测试模式以避免交互阻塞
+            try:
+                # 若已有线程在运行，先等待其结束
+                if self.game_thread and self.game_thread.isRunning():
+                    self.game_log.add_log("检测到已有游戏线程，等待其结束...", "info")
+                    self.game_thread.wait(1000)
+
+                class GameRunnerThread(QThread):
+                    def __init__(self, game, test_mode=False, parent=None):
+                        super().__init__(parent)
+                        self._game = game
+                        self._test_mode = test_mode
+                    def run(self):
+                        try:
+                            self._game.start_game(test_mode=self._test_mode)
+                        except Exception as e:
+                            print(f"Game thread error: {e}")
+
+                # 非测试模式，让UI驱动出牌阶段
+                self.game_thread = GameRunnerThread(self.game, test_mode=False, parent=self)
+                self.game_thread.finished.connect(self.on_game_finished)
+                self.game_thread.start()
+                self.game_log.add_log("游戏开始！双方开始对战（后台运行）", "action")
+            except Exception as e:
+                raise e
             
         except Exception as e:
             self.game_log.add_log(f"游戏启动失败: {str(e)}", "system")
             QMessageBox.critical(self, "错误", f"游戏启动失败: {str(e)}")
+
+    def on_game_finished(self):
+        """游戏线程结束回调"""
+        self.status_label.setText("游戏已结束")
+        self.game_log.add_log("游戏结束，感谢游玩！", "system")
+
+    def register_event_listeners(self, event_manager):
+        """订阅事件，并通过信号桥接到UI线程"""
+        from app.core.events.event_system import EventType
+
+        def make_listener(evt_type: str):
+            def listener(event_data):
+                # 将事件转发到UI线程
+                self.event_signal.emit(evt_type, event_data)
+            return listener
+
+        for evt in [
+            EventType.GAME_START,
+            EventType.DRAW_CARD,
+            EventType.DISCARD_CARD,
+            EventType.PLAY_CARD,
+            EventType.USE_SKILL,
+            EventType.PHASE_CHANGE,
+            EventType.TAKE_DAMAGE,
+            EventType.PLAYER_DEATH,
+            EventType.GAME_END,
+        ]:
+            event_manager.register_listener(evt, make_listener(evt.value))
+
+    @pyqtSlot(str, object)
+    def on_event_received(self, event_type: str, event_data: object):
+        """统一事件处理入口，更新UI显示与日志"""
+        try:
+            # 日志与状态
+            if event_type == "game_start":
+                self.status_label.setText("游戏进行中...")
+                self.game_log.add_log("游戏开始", "system")
+                # 初始化牌堆显示
+                if self.game and self.deck_label:
+                    self.deck_label.setText(f"牌堆\n剩余: {len(self.game.deck.cards)}张")
+                if self.game and self.discard_label:
+                    self.discard_label.setText(f"弃牌堆\n{len(self.game.deck.discard_pile)}张")
+                # 初始刷新玩家信息与手牌
+                self.update_player_info_text()
+                self.update_hand_cards_display()
+                # 开局默认禁用动作按钮，等待阶段切换到玩家的出牌阶段
+                if self.action_buttons:
+                    self.action_buttons.set_buttons_enabled(False)
+
+            elif event_type == "draw_card":
+                player = event_data.get("player")
+                count = event_data.get("count")
+                if player:
+                    self.game_log.add_log(f"{player.character.name} 摸牌 {count} 张", "info")
+                if self.game and self.deck_label:
+                    self.deck_label.setText(f"牌堆\n剩余: {len(self.game.deck.cards)}张")
+                if player is self.human_player:
+                    self.update_hand_cards_display()
+                    self.update_player_info_text()
+
+            elif event_type == "discard_card":
+                player = event_data.get("player")
+                card = event_data.get("card")
+                if player and card:
+                    self.game_log.add_log(f"{player.character.name} 弃置 {card.name}", "action")
+                if self.game and self.discard_label:
+                    self.discard_label.setText(f"弃牌堆\n{len(self.game.deck.discard_pile)}张")
+                if player is self.human_player:
+                    self.update_hand_cards_display()
+                    self.update_player_info_text()
+
+            elif event_type == "play_card":
+                player = event_data.get("player")
+                card = event_data.get("card")
+                target = event_data.get("target")
+                if player and card:
+                    msg = f"{player.character.name} 使用 {card.name}"
+                    if target:
+                        msg += f" -> {target.character.name}"
+                    self.game_log.add_log(msg, "action")
+                if player is self.human_player:
+                    self.update_hand_cards_display()
+                    self.update_player_info_text()
+
+            elif event_type == "use_skill":
+                player = event_data.get("player")
+                skill = event_data.get("skill")
+                if player and skill:
+                    self.game_log.add_log(f"{player.character.name} 触发技能【{skill}】", "action")
+
+            elif event_type == "phase_change":
+                phase = event_data.get("phase")
+                player = event_data.get("player")
+                if phase:
+                    phase_map = {
+                        "judgment": "判定阶段",
+                        "play": "出牌阶段",
+                        "discard": "弃牌阶段",
+                    }
+                    phase_text = phase_map.get(phase, str(phase))
+                    if player:
+                        self.status_label.setText(f"{player.character.name} 的{phase_text}")
+                    else:
+                        self.status_label.setText(f"当前阶段: {phase_text}")
+                    # 仅当为真人玩家且处于出牌阶段时启用动作按钮
+                    if self.action_buttons:
+                        is_human_turn = (player is self.human_player)
+                        self.action_buttons.set_buttons_enabled(is_human_turn and phase == "play")
+
+            elif event_type == "take_damage":
+                player = event_data.get("player")
+                damage = event_data.get("damage")
+                if player and damage is not None:
+                    self.game_log.add_log(f"{player.character.name} 受到 {damage} 点伤害", "damage")
+                if player is self.human_player:
+                    self.update_player_info_text()
+
+            elif event_type == "player_death":
+                player = event_data.get("player")
+                if player:
+                    self.game_log.add_log(f"{player.character.name} 死亡", "system")
+
+            elif event_type == "game_end":
+                winner = event_data.get("winner")
+                if winner:
+                    self.game_log.add_log(f"胜者: {winner.character.name}", "system")
+                else:
+                    self.game_log.add_log("平局", "system")
+                self.status_label.setText("游戏已结束")
+                if self.action_buttons:
+                    self.action_buttons.set_buttons_enabled(False)
+        except Exception as e:
+            # 避免事件处理导致UI崩溃
+            self.game_log.add_log(f"事件处理异常: {e}", "system")
         
     @pyqtSlot(str)
     def handle_action(self, action: str):
         """处理玩家动作"""
         if action == "play_card":
+            if not self.game or not self.human_player:
+                QMessageBox.information(self, "提示", "游戏尚未开始或玩家未就绪！")
+                return
+
             if self.selected_cards:
-                card_names = [card.name for card in self.selected_cards]
-                self.game_log.add_log(f"出牌: {', '.join(card_names)}", "action")
-                self.selected_cards.clear()
-                self.update_hand_cards_display()
+                # 逐张处理选中的卡牌（当前按顺序逐一使用）
+                for card in list(self.selected_cards):
+                    try:
+                        # 防止 UI 线程阻塞，尽量简化响应流程
+                        # 先从手牌中移除（装备牌由 Player.use_card 处理）
+                        if getattr(card, 'type', None) and getattr(card.type, 'value', None) == "装备牌":
+                            self.human_player.use_card(card)
+                            # 装备牌不进弃牌堆，但可记录动作
+                            self.game_log.add_log(f"装备 {card.name}", "action")
+                            # 触发使用卡牌事件到 UI
+                            target = self.game.get_opponent(self.human_player)
+                            self.game.event_manager.trigger("play_card", {"player": self.human_player, "card": card, "target": target})
+                        else:
+                            # 非装备牌：移除 -> 触发事件 -> 执行效果 -> 进入弃牌堆
+                            if card in self.human_player.hand_cards:
+                                self.human_player.hand_cards.remove(card)
+                            target = self.game.get_opponent(self.human_player)
+                            # 触发使用事件（用于 UI 刷新）
+                            self.game.event_manager.trigger("play_card", {"player": self.human_player, "card": card, "target": target})
+                            # 执行卡牌效果（在测试模式下快速处理响应，避免阻塞）
+                            card_action = self.game.create_card_action(card)
+                            try:
+                                # 对需要响应的卡牌，走测试模式简化响应
+                                if hasattr(card, 'name') and card.name in ["杀", "决斗", "南蛮入侵", "万箭齐发"]:
+                                    card_action.handle_response(self.game, self.human_player, test_mode=True)
+                                else:
+                                    card_action.apply_effect(self.game, self.human_player)
+                            except Exception as e:
+                                # 效果执行异常时写日志但不中断流程
+                                self.game_log.add_log(f"卡牌效果执行异常: {getattr(card, 'name', str(card))} - {str(e)}", "system")
+                            # 进入弃牌堆并触发弃牌事件
+                            if getattr(card, 'type', None) and getattr(card.type, 'value', None) != "装备牌":
+                                self.game.deck.discard(card)
+                                self.game.event_manager.trigger("discard_card", {"player": self.human_player, "card": card})
+
+                        # 从选择列表移除该卡
+                        if card in self.selected_cards:
+                            self.selected_cards.remove(card)
+                    finally:
+                        # 每张牌处理后刷新一次显示，保持 UI 顺畅
+                        self.update_hand_cards_display()
+                        self.update_player_info_text()
+                
             else:
                 QMessageBox.information(self, "提示", "请先选择要出的牌！")
                 
@@ -725,8 +963,40 @@ class Game1vs1Widget(QWidget):
         for widget in self.hand_card_widgets:
             widget.setParent(None)
         self.hand_card_widgets.clear()
+        while self.hand_cards_layout.count():
+            item = self.hand_cards_layout.takeAt(0)
+            w = item.widget()
+            if w:
+                w.setParent(None)
         
-        # 这里可以添加实际的手牌更新逻辑
+        if not self.human_player:
+            return
+        
+        if not self.human_player.hand_cards:
+            placeholder = QLabel("暂无手牌")
+            placeholder.setAlignment(Qt.AlignCenter)
+            placeholder.setStyleSheet("color: #A9A9A9;")
+            self.hand_cards_layout.addWidget(placeholder)
+            return
+        
+        for card in self.human_player.hand_cards:
+            cw = CardWidget(card, selectable=True)
+            cw.card_clicked.connect(self.on_card_clicked)
+            self.hand_card_widgets.append(cw)
+            self.hand_cards_layout.addWidget(cw)
+
+    def update_player_info_text(self):
+        """更新玩家信息文本（姓名、阵营、血量、手牌数量）"""
+        if not self.human_player or not self.human_player.character:
+            self.player_widget.setText("等待游戏开始...")
+            return
+        name = self.human_player.character.name
+        kingdom = getattr(self.human_player.character, 'kingdom', '')
+        hp = getattr(self.human_player, 'hp', None)
+        max_hp = getattr(self.human_player.character, 'max_hp', None)
+        hand_count = len(self.human_player.hand_cards)
+        hp_text = f"{hp}/{max_hp}" if hp is not None and max_hp is not None else str(hp or '')
+        self.player_widget.setText(f"真人玩家\n{name}\n({kingdom})\n血量: {hp_text}\n手牌: {hand_count}张")
         
     @pyqtSlot(object)
     def on_card_clicked(self, card: Card):

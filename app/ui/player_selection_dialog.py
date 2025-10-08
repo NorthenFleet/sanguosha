@@ -118,7 +118,7 @@ class PlayerSelectionDialog(QDialog):
         self.start_button.setStyleSheet("""
             QPushButton {
                 background-color: #228B22;
-                color: white;
+                color: black;
                 border: none;
                 border-radius: 8px;
                 font-weight: bold;
@@ -138,7 +138,7 @@ class PlayerSelectionDialog(QDialog):
         self.cancel_button.setStyleSheet("""
             QPushButton {
                 background-color: #DC143C;
-                color: white;
+                color: black;
                 border: none;
                 border-radius: 8px;
             }

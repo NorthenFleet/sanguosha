@@ -248,7 +248,7 @@ class WebDisplayGenerator:
         header {
             text-align: center;
             margin-bottom: 30px;
-            color: white;
+            color: black;
         }
         
         header h1 {

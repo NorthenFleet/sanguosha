@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>UI颜色预览（黑色文字）</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #FFF8E7; color: #000; padding: 24px; }
+    h1 { margin-bottom: 16px; }
+    .row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+    .btn { padding: 10px 16px; border-radius: 8px; border: none; font-weight: bold; color: black; }
+    .btn-green { background-color: #228B22; }
+    .btn-red { background-color: #DC143C; }
+    .btn-brown { background-color: #CD853F; border: 2px solid #8B4513; border-radius: 5px; }
+    .btn-lime { background-color: #32CD32; border: 2px solid #228B22; border-radius: 5px; }
+
+    .label { width: 100px; height: 120px; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold; color: black; }
+    .label-deck { background-color: #8B4513; border: 2px solid #654321; }
+    .label-discard { background-color: #A9A9A9; border: 2px solid #696969; }
+  </style>
+</head>
+<body>
+  <h1>黑色文字样式预览</h1>
+
+  <div class="row">
+    <button class="btn btn-green">开始游戏</button>
+    <button class="btn btn-red">取消</button>
+  </div>
+
+  <div class="row">
+    <button class="btn btn-brown">返回主菜单</button>
+    <button class="btn btn-lime">新游戏</button>
+  </div>
+
+  <div class="row">
+    <div class="label label-deck">牌堆<br/>剩余: 104张</div>
+    <div class="label label-discard">弃牌堆<br/>0张</div>
+  </div>
+
+  <p>以上元素模拟了应用中的主要文字区域，均已采用黑色字体以提升可读性。</p>
+</body>
+</html>

@@ -1546,7 +1546,7 @@ python main.py
     },
     "server_settings": {
         "host": "0.0.0.0",
-        "port": 8000,
+        "port": 8090,
         "debug": false,
         "log_level": "INFO"
     },
