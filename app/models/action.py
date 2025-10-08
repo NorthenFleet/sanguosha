@@ -83,8 +83,14 @@ class CardAction(Action):
                                 game.deck.discard(used_card)
                                 print(f"无懈可击进入弃牌堆")
                                 break
-                        # 触发使用卡牌事件
-                        game.event_manager.trigger("play_card", {"player": p, "card": used_card, "target": player})
+                        # 触发使用卡牌事件（响应：无懈可击）
+                        game.event_manager.trigger("play_card", {
+                            "player": p,
+                            "card": used_card,
+                            "target": player,
+                            "is_response": True,
+                            "response_type": "wuxie"
+                        })
                         # 获取无懈可击动作并执行
                         from .card_actions import WuXieKeJiAction
                         wuxie_action = WuXieKeJiAction()
@@ -187,8 +193,14 @@ class CardAction(Action):
                 print(f"响应卡牌 {response_card} 进入弃牌堆")
                 break
         
-        # 触发使用卡牌事件
-        game.event_manager.trigger("play_card", {"player": opponent, "card": used_card, "target": player})
+        # 触发使用卡牌事件（响应：例如 闪）
+        game.event_manager.trigger("play_card", {
+            "player": opponent,
+            "card": used_card,
+            "target": player,
+            "is_response": True,
+            "response_type": response_card
+        })
         
         # 可能需要进一步的响应
         return self.handle_further_response(game, player, opponent, response_card)

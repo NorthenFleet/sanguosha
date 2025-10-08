@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 """
 三国杀游戏主启动器
 整合PyQt5界面和AI玩家系统，提供统一的游戏入口
@@ -52,7 +53,8 @@ class AIPlayerManager:
     
     def __init__(self, config_path: Optional[str] = None):
         self.config_path = config_path or "ai/config/default_config.json"
-        self.ai_agents: Dict[str, PPOAgent] = {}
+        # 使用延迟注解避免在AI不可用时NameError
+        self.ai_agents: Dict[str, 'PPOAgent'] = {}
         self.is_initialized = False
         
     def initialize(self) -> bool:

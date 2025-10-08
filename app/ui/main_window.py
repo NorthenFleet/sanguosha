@@ -380,6 +380,8 @@ class MainWindow(QMainWindow):
             
     def back_to_menu(self):
         """返回主菜单"""
+        # 在切换前停止当前模式的游戏线程，避免残留线程导致销毁异常
+        self._stop_current_mode_thread()
         self.stacked_widget.setCurrentWidget(self.mode_selector)
         self.current_mode = None
         self.status_bar.showMessage("已返回主菜单")
@@ -399,6 +401,8 @@ class MainWindow(QMainWindow):
                 # 重新创建游戏界面
                 if self.current_mode in self.game_widgets:
                     old_widget = self.game_widgets[self.current_mode]
+                    # 停止并清理旧界面的游戏线程
+                    self._stop_game_thread(old_widget)
                     self.stacked_widget.removeWidget(old_widget)
                     old_widget.deleteLater()
                     del self.game_widgets[self.current_mode]
@@ -462,9 +466,46 @@ class MainWindow(QMainWindow):
         )
         
         if reply == QMessageBox.Yes:
+            # 在窗口关闭前，尝试优雅停止所有模式的游戏线程
+            try:
+                self._stop_current_mode_thread()
+            except Exception:
+                pass
             event.accept()
         else:
             event.ignore()
+
+    def _stop_current_mode_thread(self):
+        """停止当前模式下的游戏线程（如果存在）。"""
+        if self.current_mode and self.current_mode in self.game_widgets:
+            widget = self.game_widgets[self.current_mode]
+            self._stop_game_thread(widget)
+
+    def _stop_game_thread(self, widget):
+        """请求停止并等待指定游戏界面中的后台线程。"""
+        try:
+            if hasattr(widget, 'game_thread') and widget.game_thread:
+                # 如果线程在运行，先请求停止游戏循环
+                if hasattr(widget, 'game') and widget.game:
+                    try:
+                        widget.game.request_stop()
+                    except Exception:
+                        pass
+                # 等待线程优雅退出
+                try:
+                    if widget.game_thread.isRunning():
+                        widget.game_thread.wait(1500)
+                except Exception:
+                    pass
+                # 如果仍在运行则尝试强制终止，避免QThread销毁异常
+                try:
+                    if widget.game_thread.isRunning():
+                        widget.game_thread.terminate()
+                        widget.game_thread.wait(500)
+                except Exception:
+                    pass
+        except Exception:
+            pass
     
     def set_ai_manager(self, ai_manager):
         """设置AI管理器"""

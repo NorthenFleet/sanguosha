@@ -1,0 +1,1 @@
+ python3 main_launcher.py --mode gui --no-ai

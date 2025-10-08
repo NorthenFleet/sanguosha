@@ -27,6 +27,8 @@ class Game:
         self.event_manager = event_manager
         # UI交互控制标记：用于在非测试模式下由UI驱动回合流程
         self.end_turn_requested = False
+        # 运行控制：用于优雅停止后台线程
+        self._stop_requested = False
         # 注册技能
         self.skill_manager.register_skill(JianXiong())
         self.skill_manager.register_skill(PaoXiao())
@@ -90,11 +92,22 @@ class Game:
         print("游戏开始!")
         self.game_loop(test_mode=test_mode)
 
-    def game_loop(self):
-        """游戏主循环"""
+    def request_stop(self):
+        """供UI调用：请求优雅停止游戏循环。"""
+        self._stop_requested = True
+
+    def reset_stop_flag(self):
+        """重置停止标记，允许重新开始游戏。"""
+        self._stop_requested = False
+
+    def game_loop(self, test_mode=False):
+        """游戏主循环: 包括判定、摸牌、出牌、弃牌阶段。"""
         print("游戏主循环开始...")
         # 设置当前玩家
         self.current_player = self.players[self.current_player_index]
+        if self._stop_requested:
+            print("检测到停止请求，退出游戏循环。")
+            return
 
     def judgment_phase(self):
         """判定阶段: 检查是否有负面效果并处理。"""
@@ -177,6 +190,9 @@ class Game:
             self.end_turn_requested = False
             # 简单的等待循环，不阻塞UI线程（游戏运行在后台线程）
             while not self.end_turn_requested and not self.is_game_over():
+                if self._stop_requested:
+                    print("检测到停止请求，中止当前出牌阶段。")
+                    return
                 time.sleep(0.05)
             print(f"{player.character.name} 结束出牌阶段。")
 
@@ -229,6 +245,9 @@ class Game:
             # 在测试模式下自动弃牌
             if test_mode:
                 while len(player.hand_cards) > player.character.hp:
+                    if self._stop_requested:
+                        print("检测到停止请求，中止弃牌阶段。")
+                        return
                     if player.hand_cards:
                         discarded_card = player.hand_cards.pop()
                         self.deck.discard(discarded_card)
@@ -236,28 +255,26 @@ class Game:
                         # 触发弃牌事件
                         self.event_manager.trigger("discard_card", {"player": player, "card": discarded_card})
             else:
-                # 弃牌直到手牌数等于血量
+                # GUI模式下避免阻塞控制台输入：按简单策略自动弃到血量
                 while len(player.hand_cards) > player.character.hp:
-                    print(f"\n{player.character.name} 的手牌:")
-                    for i, card in enumerate(player.hand_cards):
-                        type_display = card.type.value if card.type else "unknown"
-                        print(f"{i+1}. {card.name}({type_display})")
-                    try:
-                        user_input = input("选择要弃置的手牌编号: ")
-                        if not user_input.strip():
-                            print("输入不能为空，请重新选择。")
-                            continue
-                        choice = int(user_input) - 1
-                        if 0 <= choice < len(player.hand_cards):
-                            discarded_card = player.hand_cards.pop(choice)
-                            self.deck.discard(discarded_card)
-                            print(f"{player.character.name} 弃置了 {discarded_card.name}，进入弃牌堆")
-                            # 触发弃牌事件
-                            self.event_manager.trigger("discard_card", {"player": player, "card": discarded_card})
-                        else:
-                            print("无效的选择，请重新选择。")
-                    except (ValueError, EOFError, KeyboardInterrupt):
-                        print("请输入有效的数字。")
+                    if self._stop_requested:
+                        print("检测到停止请求，中止弃牌阶段。")
+                        return
+                    if player.hand_cards:
+                        # 简化策略：优先弃置非装备牌，若全是装备则弃末尾
+                        idx = None
+                        for i in range(len(player.hand_cards)-1, -1, -1):
+                            card_i = player.hand_cards[i]
+                            if getattr(card_i, 'type', None) and getattr(card_i.type, 'value', None) != "装备牌":
+                                idx = i
+                                break
+                        if idx is None:
+                            idx = len(player.hand_cards) - 1
+                        discarded_card = player.hand_cards.pop(idx)
+                        self.deck.discard(discarded_card)
+                        print(f"{player.character.name} 自动弃置了 {discarded_card.name}，进入弃牌堆")
+                        # 触发弃牌事件
+                        self.event_manager.trigger("discard_card", {"player": player, "card": discarded_card})
 
     def draw_phase(self, player):
         """摸牌阶段: 玩家从牌堆中摸牌。"""
@@ -297,12 +314,18 @@ class Game:
         self.current_player = self.players[self.current_player_index]
         
         while not self.is_game_over():
+            if self._stop_requested:
+                print("检测到停止请求，退出游戏主循环。")
+                return
             for i, player in enumerate(self.players):
                 # 更新当前玩家
                 self.current_player_index = i
                 self.current_player = player
                 
                 print(f"\n=== {player.character.name} 的回合 ===")
+                if self._stop_requested:
+                    print("检测到停止请求，中止当前回合。")
+                    return
                 self.judgment_phase()
                 self.draw_phase(player)
                 self.play_phase(player, test_mode=test_mode)

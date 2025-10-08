@@ -1,0 +1,94 @@
+{
+  "metadata": {
+    "game_name": "三国杀",
+    "mode": "3v3",
+    "room_id": "故事三军自由[22833]",
+    "timestamp": {
+      "elapsed_seconds": 228,
+      "total_seconds": 874
+    },
+    "game_state": {
+      "current_round": 1,
+      "current_phase": "PLAY",
+      "active_player_id": 5
+    }
+  },
+  "players": [
+    {
+      "id": 1,
+      "name": "敌方武将A",
+      "team": "ENEMY",
+      "role": "REBEL",
+      "position": "UPPER_LEFT",
+      "health": { "current": 4, "max": 4 },
+      "status_effects": [],
+      "is_alive": true
+    },
+    {
+      "id": 2,
+      "name": "敌方武将B",
+      "team": "ENEMY",
+      "role": "LOYALIST",
+      "position": "UPPER_CENTER",
+      "health": { "current": 4, "max": 4 },
+      "status_effects": [],
+      "is_alive": true
+    },
+    {
+      "id": 3,
+      "name": "敌方武将C",
+      "team": "ENEMY",
+      "role": "LORD",
+      "position": "UPPER_RIGHT",
+      "health": { "current": 5, "max": 5 },
+      "status_effects": [],
+      "is_alive": true
+    },
+    {
+      "id": 4,
+      "name": "我方武将D",
+      "team": "ALLY",
+      "role": "LOYALIST",
+      "position": "LOWER_LEFT",
+      "health": { "current": 4, "max": 4 },
+      "status_effects": [],
+      "is_alive": true
+    },
+    {
+      "id": 5,
+      "name": "我方武将E",
+      "team": "ALLY",
+      "role": "LORD",
+      "position": "LOWER_CENTER",
+      "health": { "current": 3, "max": 3 },
+      "status_effects": [],
+      "is_alive": true
+    },
+    {
+      "id": 6,
+      "name": "我方武将F",
+      "team": "ALLY",
+      "role": "LOYALIST",
+      "position": "LOWER_RIGHT",
+      "health": { "current": 4, "max": 4 },
+      "status_effects": [],
+      "is_alive": true
+    }
+  ],
+  "hand_cards": [
+    { "id": "card_01", "type": "SHAN", "suit": "SPADE", "rank": 8 },
+    { "id": "card_02", "type": "SHUN_SHOU_QIAN_YANG", "suit": "HEART", "rank": 1 },
+    { "id": "card_03", "type": "TAO", "suit": "CLUB", "rank": 12 }
+  ],
+  "game_log": [
+    "徐盛【对敌发动'整军'】",
+    "许褚【传给相邻特手牌加置武将装备】",
+    "周瑜【打出【乐不思蜀】】",
+    "貂蝉【打出【兵粮寸断】】"
+  ],
+  "available_actions": [
+    { "action_type": "PLAY_CARD", "target": "ANY_ENEMY" },
+    { "action_type": "END_PHASE" },
+    { "action_type": "USE_SKILL" }
+  ]
+}

@@ -181,17 +181,25 @@ class PlayerInfoWidget(QFrame):
         hand_label.setFont(QFont("SimHei", 10))
         
         # 装备区域
-        equipment_label = QLabel("装备:")
+        equipment_label = QLabel("装备区")
         equipment_label.setFont(QFont("SimHei", 10))
         
         self.equipment_layout = QHBoxLayout()
         self.update_equipment_display()
+
+        # 判定区域
+        judgment_label = QLabel("判定区")
+        judgment_label.setFont(QFont("SimHei", 10))
+        self.judgment_layout = QHBoxLayout()
+        self.update_judgment_display()
         
         layout.addLayout(name_layout)
         layout.addLayout(hp_layout)
         layout.addWidget(hand_label)
         layout.addWidget(equipment_label)
         layout.addLayout(self.equipment_layout)
+        layout.addWidget(judgment_label)
+        layout.addLayout(self.judgment_layout)
         layout.addStretch()
         
         self.setLayout(layout)
@@ -222,16 +230,20 @@ class PlayerInfoWidget(QFrame):
         for i in reversed(range(self.equipment_layout.count())):
             self.equipment_layout.itemAt(i).widget().setParent(None)
             
-        # 显示装备
-        equipment_types = ["武器", "防具", "坐骑", "宝物"]
-        for eq_type in equipment_types:
-            equipment = getattr(self.player, f"{eq_type.lower()}_equipment", None)
+        # 显示装备（对齐Player模型：weapon/defense/attack_horse/defense_horse）
+        equipment_slots = [
+            ("武器", getattr(self.player, "weapon", None)),
+            ("防具", getattr(self.player, "defense", None)),
+            ("+1坐骑", getattr(self.player, "defense_horse", None)),
+            ("-1坐骑", getattr(self.player, "attack_horse", None)),
+        ]
+        for slot_name, equipment in equipment_slots:
             if equipment:
                 eq_widget = CardWidget(equipment, selectable=False)
                 eq_widget.setFixedSize(60, 90)
                 self.equipment_layout.addWidget(eq_widget)
             else:
-                placeholder = QLabel(eq_type)
+                placeholder = QLabel(slot_name)
                 placeholder.setFixedSize(60, 90)
                 placeholder.setAlignment(Qt.AlignCenter)
                 placeholder.setStyleSheet("""
@@ -239,10 +251,36 @@ class PlayerInfoWidget(QFrame):
                         border: 1px dashed #8B4513;
                         border-radius: 5px;
                         color: #A9A9A9;
-                        font-size: 8px;
+                        font-size: 10px;
                     }
                 """)
                 self.equipment_layout.addWidget(placeholder)
+
+    def update_judgment_display(self):
+        """更新判定区显示"""
+        # 清除现有判定显示
+        for i in reversed(range(self.judgment_layout.count())):
+            self.judgment_layout.itemAt(i).widget().setParent(None)
+        # 判定区卡牌
+        judgments = getattr(self.player, "judgment_area", []) or []
+        if judgments:
+            for card in judgments:
+                j_widget = CardWidget(card, selectable=False)
+                j_widget.setFixedSize(50, 75)
+                self.judgment_layout.addWidget(j_widget)
+        else:
+            placeholder = QLabel("无判定牌")
+            placeholder.setFixedSize(80, 30)
+            placeholder.setAlignment(Qt.AlignCenter)
+            placeholder.setStyleSheet("""
+                QLabel {
+                    border: 1px dashed #696969;
+                    border-radius: 5px;
+                    color: #A9A9A9;
+                    font-size: 10px;
+                }
+            """)
+            self.judgment_layout.addWidget(placeholder)
                 
     def update_player_info(self, player: Player):
         """更新玩家信息"""
@@ -250,6 +288,7 @@ class PlayerInfoWidget(QFrame):
         self.hp_bar.setValue(player.hp)
         self.hp_bar.setFormat(f"{player.hp}/{player.max_hp}")
         self.update_equipment_display()
+        self.update_judgment_display()
 
 
 class GameLogWidget(QTextEdit):
@@ -376,6 +415,8 @@ class Game1vs1Widget(QWidget):
         
         self.selected_cards = []
         self.human_player = None
+        self.player_info_panel = None
+        self._player_layout = None
         self.deck_label = None
         self.discard_label = None
         self.init_ui()
@@ -476,8 +517,7 @@ class Game1vs1Widget(QWidget):
         log_layout.addWidget(self.game_log)
         log_group.setLayout(log_layout)
         
-        left_layout.addWidget(opponent_group)
-        left_layout.addWidget(log_group)
+        # 左侧布局稍后添加组件（先定义game_area与player_group）
         left_widget.setLayout(left_layout)
         
         # 右侧：游戏主区域
@@ -536,6 +576,8 @@ class Game1vs1Widget(QWidget):
         player_group = QGroupBox("我的信息")
         player_group.setFont(QFont("SimHei", 10, QFont.Bold))
         player_layout = QVBoxLayout()
+        # 保存引用以便后续插入详细信息面板
+        self._player_layout = player_layout
         
         # 玩家信息
         self.player_widget = QLabel("等待游戏开始...")
@@ -586,14 +628,18 @@ class Game1vs1Widget(QWidget):
         player_layout.addWidget(self.action_buttons)
         player_group.setLayout(player_layout)
         
-        right_layout.addWidget(game_area)
-        right_layout.addWidget(player_group)
+        # 右侧改为显示对手信息 + 游戏日志
+        right_layout.addWidget(opponent_group)
+        right_layout.addWidget(log_group)
+        # 在定义完成后，将组件加入左侧布局
+        left_layout.addWidget(game_area)
+        left_layout.addWidget(player_group)
         right_widget.setLayout(right_layout)
         
         # 添加到分割器
         game_splitter.addWidget(left_widget)
         game_splitter.addWidget(right_widget)
-        game_splitter.setSizes([300, 700])  # 设置初始比例
+        game_splitter.setSizes([500, 500])  # 设置初始比例为左右均衡
         
         # 组装主布局
         main_layout.addLayout(toolbar_layout)
@@ -683,6 +729,29 @@ class Game1vs1Widget(QWidget):
             self.human_player = player1
             self.update_player_info_text()
             self.update_hand_cards_display()
+
+            # 在开始新局时插入详细信息面板（装备区与判定区）
+            try:
+                # 若已存在旧面板，移除
+                if self.player_info_panel:
+                    try:
+                        self._player_layout.removeWidget(self.player_info_panel)
+                        self.player_info_panel.setParent(None)
+                    except Exception:
+                        pass
+                    self.player_info_panel = None
+                # 首次插入时移除占位标签
+                if self.player_widget and self.player_widget.parent() is not None:
+                    try:
+                        self._player_layout.removeWidget(self.player_widget)
+                        self.player_widget.setParent(None)
+                    except Exception:
+                        pass
+                # 创建并插入面板到布局顶部
+                self.player_info_panel = PlayerInfoWidget(player=self.human_player)
+                self._player_layout.insertWidget(0, self.player_info_panel)
+            except Exception as _e:
+                self.game_log.add_log(f"玩家信息面板初始化异常: {_e}", "system")
             
             # 添加玩家2到游戏
             if player2_type == "ai":
@@ -734,10 +803,15 @@ class Game1vs1Widget(QWidget):
             
             # 启动游戏：在后台线程运行，并启用测试模式以避免交互阻塞
             try:
-                # 若已有线程在运行，先等待其结束
+                # 若已有线程在运行，先请求停止并等待其结束
                 if self.game_thread and self.game_thread.isRunning():
-                    self.game_log.add_log("检测到已有游戏线程，等待其结束...", "info")
-                    self.game_thread.wait(1000)
+                    self.game_log.add_log("检测到已有游戏线程，正在请求停止...", "info")
+                    try:
+                        if self.game and hasattr(self.game, "request_stop"):
+                            self.game.request_stop()
+                    except Exception:
+                        pass
+                    self.game_thread.wait(2000)
 
                 class GameRunnerThread(QThread):
                     def __init__(self, game, test_mode=False, parent=None):
@@ -750,7 +824,7 @@ class Game1vs1Widget(QWidget):
                         except Exception as e:
                             print(f"Game thread error: {e}")
 
-                # 非测试模式，让UI驱动出牌阶段
+                # 恢复为UI驱动模式（非测试），以验证停止逻辑
                 self.game_thread = GameRunnerThread(self.game, test_mode=False, parent=self)
                 self.game_thread.finished.connect(self.on_game_finished)
                 self.game_thread.start()
@@ -766,6 +840,31 @@ class Game1vs1Widget(QWidget):
         """游戏线程结束回调"""
         self.status_label.setText("游戏已结束")
         self.game_log.add_log("游戏结束，感谢游玩！", "system")
+
+    def closeEvent(self, event):
+        """窗口关闭事件：确保后台游戏线程被安全停止"""
+        try:
+            if hasattr(self, 'game_thread') and self.game_thread and self.game_thread.isRunning():
+                # 优先请求游戏停止
+                try:
+                    if self.game:
+                        self.game.request_stop()
+                        self.game_log.add_log("请求停止游戏循环...", "system")
+                except Exception:
+                    pass
+                # 等待线程优雅退出
+                self.game_thread.wait(1500)
+                # 若仍在运行则强制终止，避免QThread销毁异常
+                if self.game_thread.isRunning():
+                    try:
+                        self.game_log.add_log("强制终止游戏线程...", "system")
+                    except Exception:
+                        pass
+                    self.game_thread.terminate()
+                    self.game_thread.wait(500)
+        except Exception:
+            pass
+        super().closeEvent(event)
 
     def register_event_listeners(self, event_manager):
         """订阅事件，并通过信号桥接到UI线程"""
@@ -836,8 +935,15 @@ class Game1vs1Widget(QWidget):
                 player = event_data.get("player")
                 card = event_data.get("card")
                 target = event_data.get("target")
+                is_response = event_data.get("is_response", False)
+                response_type = event_data.get("response_type")
                 if player and card:
-                    msg = f"{player.character.name} 使用 {card.name}"
+                    if is_response:
+                        msg = f"{player.character.name} 响应：使用 {card.name}"
+                        if response_type:
+                            msg += f"（{response_type}）"
+                    else:
+                        msg = f"{player.character.name} 使用 {card.name}"
                     if target:
                         msg += f" -> {target.character.name}"
                     self.game_log.add_log(msg, "action")
@@ -882,6 +988,32 @@ class Game1vs1Widget(QWidget):
                 player = event_data.get("player")
                 if player:
                     self.game_log.add_log(f"{player.character.name} 死亡", "system")
+                    try:
+                        # 弹窗提示是否重新开局
+                        msg = QMessageBox(self)
+                        msg.setWindowTitle("本局结束")
+                        msg.setText(f"{player.character.name} 已阵亡。是否重新开一局？")
+                        msg.setIcon(QMessageBox.Question)
+                        restart_btn = msg.addButton("重新开局", QMessageBox.AcceptRole)
+                        back_btn = msg.addButton("返回菜单", QMessageBox.RejectRole)
+                        msg.exec_()
+                        if msg.clickedButton() is restart_btn:
+                            # 请求停止当前游戏，加速结束
+                            try:
+                                if self.game and hasattr(self.game, "request_stop"):
+                                    self.game.request_stop()
+                            except Exception:
+                                pass
+                            # 开始新游戏（内部会等待线程结束）
+                            self.start_new_game()
+                        elif msg.clickedButton() is back_btn:
+                            # 返回主菜单
+                            try:
+                                self.back_to_menu.emit()
+                            except Exception:
+                                pass
+                    except Exception as _e:
+                        self.game_log.add_log(f"重开局提示弹窗异常: {_e}", "system")
 
             elif event_type == "game_end":
                 winner = event_data.get("winner")
@@ -916,14 +1048,14 @@ class Game1vs1Widget(QWidget):
                             self.game_log.add_log(f"装备 {card.name}", "action")
                             # 触发使用卡牌事件到 UI
                             target = self.game.get_opponent(self.human_player)
-                            self.game.event_manager.trigger("play_card", {"player": self.human_player, "card": card, "target": target})
+                            self.game.event_manager.trigger("play_card", {"player": self.human_player, "card": card, "target": target, "is_response": False})
                         else:
                             # 非装备牌：移除 -> 触发事件 -> 执行效果 -> 进入弃牌堆
                             if card in self.human_player.hand_cards:
                                 self.human_player.hand_cards.remove(card)
                             target = self.game.get_opponent(self.human_player)
                             # 触发使用事件（用于 UI 刷新）
-                            self.game.event_manager.trigger("play_card", {"player": self.human_player, "card": card, "target": target})
+                            self.game.event_manager.trigger("play_card", {"player": self.human_player, "card": card, "target": target, "is_response": False})
                             # 执行卡牌效果（在测试模式下快速处理响应，避免阻塞）
                             card_action = self.game.create_card_action(card)
                             try:
@@ -952,10 +1084,88 @@ class Game1vs1Widget(QWidget):
                 QMessageBox.information(self, "提示", "请先选择要出的牌！")
                 
         elif action == "end_turn":
-            self.game_log.add_log("结束回合", "action")
+            # UI请求结束当前出牌阶段，通知Game并禁用按钮，等待阶段切换
+            try:
+                if not self.game or not self.human_player:
+                    QMessageBox.information(self, "提示", "游戏尚未开始或玩家未就绪！")
+                    return
+                # 记录日志并请求结束回合
+                self.game_log.add_log("结束回合", "action")
+                self.game.request_end_turn()
+                # 立即禁用动作按钮，避免重复点击
+                if self.action_buttons:
+                    self.action_buttons.set_buttons_enabled(False)
+            except Exception as e:
+                self.game_log.add_log(f"结束回合请求异常: {e}", "system")
             
         elif action == "use_skill":
-            self.game_log.add_log("使用技能", "action")
+            # 选择并触发角色的一个主动技能（示例：仁德、制衡等在出牌阶段）
+            try:
+                if not self.game or not self.human_player or not self.human_player.character:
+                    QMessageBox.information(self, "提示", "游戏或玩家未就绪，无法使用技能！")
+                    return
+
+                character = self.human_player.character
+                skills = getattr(character, 'skills', []) or []
+                if not skills:
+                    QMessageBox.information(self, "提示", "当前武将没有可用技能！")
+                    return
+
+                # 简化交互：若只有一个技能则直接尝试触发；多个技能时弹窗选择
+                selected_skill = None
+                if len(skills) == 1:
+                    selected_skill = skills[0]
+                else:
+                    # 使用简单选择对话框
+                    dlg = QDialog(self)
+                    dlg.setWindowTitle("选择技能")
+                    v = QVBoxLayout(dlg)
+                    label = QLabel("请选择要使用的技能：")
+                    v.addWidget(label)
+                    combo = QComboBox()
+                    for s in skills:
+                        combo.addItem(s)
+                    v.addWidget(combo)
+                    btns = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+                    v.addWidget(btns)
+                    btns.accepted.connect(dlg.accept)
+                    btns.rejected.connect(dlg.reject)
+                    if dlg.exec_() == QDialog.Accepted:
+                        selected_skill = combo.currentText()
+                    else:
+                        return
+
+                if not selected_skill:
+                    return
+
+                # 记录日志并触发技能事件（供UI刷新）
+                self.game_log.add_log(f"使用技能【{selected_skill}】", "action")
+                self.game.event_manager.trigger("use_skill", {"player": self.human_player, "skill": selected_skill})
+
+                # 优先尝试通过角色API触发（部分角色已实现具体技能逻辑）
+                used = False
+                try:
+                    if hasattr(character, 'use_skill'):
+                        used = bool(character.use_skill(selected_skill, self.game, self.human_player))
+                except Exception:
+                    used = False
+
+                # 如果角色API未处理，再尝试全局SkillManager触发（主动技能通常在出牌阶段）
+                if not used and hasattr(self.game, 'skill_manager'):
+                    try:
+                        # 这里将事件类型标为"phase_change"，便于如仁德/制衡这类在出牌阶段的技能通过条件判断
+                        used = bool(self.game.skill_manager.trigger_skill(selected_skill, self.game, self.human_player, event_type="phase_change", phase="play"))
+                    except Exception:
+                        used = False
+
+                if not used:
+                    QMessageBox.information(self, "提示", f"技能【{selected_skill}】当前无法发动或未实现。")
+                else:
+                    # 成功触发后刷新手牌与信息（若技能影响这些状态）
+                    self.update_hand_cards_display()
+                    self.update_player_info_text()
+            except Exception as e:
+                self.game_log.add_log(f"使用技能异常: {e}", "system")
             
     def update_hand_cards_display(self):
         """更新手牌显示"""
@@ -988,7 +1198,9 @@ class Game1vs1Widget(QWidget):
     def update_player_info_text(self):
         """更新玩家信息文本（姓名、阵营、血量、手牌数量）"""
         if not self.human_player or not self.human_player.character:
-            self.player_widget.setText("等待游戏开始...")
+            # 若仍使用占位标签
+            if isinstance(self.player_widget, QLabel):
+                self.player_widget.setText("等待游戏开始...")
             return
         name = self.human_player.character.name
         kingdom = getattr(self.human_player.character, 'kingdom', '')
@@ -996,7 +1208,14 @@ class Game1vs1Widget(QWidget):
         max_hp = getattr(self.human_player.character, 'max_hp', None)
         hand_count = len(self.human_player.hand_cards)
         hp_text = f"{hp}/{max_hp}" if hp is not None and max_hp is not None else str(hp or '')
-        self.player_widget.setText(f"真人玩家\n{name}\n({kingdom})\n血量: {hp_text}\n手牌: {hand_count}张")
+        if isinstance(self.player_widget, QLabel):
+            self.player_widget.setText(f"真人玩家\n{name}\n({kingdom})\n血量: {hp_text}\n手牌: {hand_count}张")
+        # 同步详细信息面板（装备区与判定区）
+        if self.player_info_panel:
+            try:
+                self.player_info_panel.update_player_info(self.human_player)
+            except Exception:
+                pass
         
     @pyqtSlot(object)
     def on_card_clicked(self, card: Card):
