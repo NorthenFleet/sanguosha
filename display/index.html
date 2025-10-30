@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>三国杀 1v1 网页版预览</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="top-bar">
+        <div class="brand">三国杀</div>
+        <div class="controls">
+          <button id="btn-new-game">新游戏</button>
+          <button id="btn-back">返回菜单</button>
+        </div>
+      </header>
+
+      <main class="game-layout">
+        <!-- 左侧：我方信息与手牌 -->
+        <section class="player-side">
+          <div class="player-panel" id="player-panel">
+            <div class="row header">
+              <div class="name">玩家：<span id="player-name">曹操</span></div>
+              <div class="character">武将：<span id="player-character">魏·曹操</span></div>
+            </div>
+            <div class="row hp">
+              <label>血量</label>
+              <div class="hp-bar">
+                <div class="hp-fill" id="player-hp-fill" style="width: 75%"></div>
+              </div>
+              <div class="hp-text" id="player-hp-text">3 / 4</div>
+            </div>
+            <div class="row equipment">
+              <div class="slot">
+                <label>武器</label>
+                <div class="card-slot" id="player-weapon"></div>
+              </div>
+              <div class="slot">
+                <label>防具</label>
+                <div class="card-slot" id="player-defense"></div>
+              </div>
+              <div class="slot">
+                <label>+1马</label>
+                <div class="card-slot" id="player-attack-horse"></div>
+              </div>
+              <div class="slot">
+                <label>-1马</label>
+                <div class="card-slot" id="player-defense-horse"></div>
+              </div>
+            </div>
+            <div class="row judgment">
+              <label>判定区</label>
+              <div class="card-list" id="player-judgment"></div>
+            </div>
+          </div>
+
+          <div class="hand-panel">
+            <div class="section-title">手牌（<span id="player-hand-count">0</span>）</div>
+            <div class="hand-cards" id="player-hand"></div>
+          </div>
+        </section>
+
+        <!-- 中间：桌面与日志 -->
+        <section class="center-side">
+          <div class="table-top">
+            <div class="deck" id="deck">牌堆：剩余 <span id="deck-count">0</span></div>
+            <div class="discard" id="discard">弃牌堆：<span id="discard-count">0</span></div>
+          </div>
+          <div class="action-bar">
+            <button id="btn-play-card">出牌</button>
+            <button id="btn-use-skill">技能</button>
+            <button id="btn-end-turn">结束回合</button>
+          </div>
+          <div class="log" id="log"></div>
+        </section>
+
+        <!-- 右侧：对手信息与手牌（隐藏或信息化） -->
+        <section class="opponent-side">
+          <div class="player-panel" id="opponent-panel">
+            <div class="row header">
+              <div class="name">对手：<span id="opponent-name">孙权</span></div>
+              <div class="character">武将：<span id="opponent-character">吴·孙权</span></div>
+            </div>
+            <div class="row hp">
+              <label>血量</label>
+              <div class="hp-bar">
+                <div class="hp-fill" id="opponent-hp-fill" style="width: 100%"></div>
+              </div>
+              <div class="hp-text" id="opponent-hp-text">4 / 4</div>
+            </div>
+            <div class="row equipment">
+              <div class="slot">
+                <label>武器</label>
+                <div class="card-slot" id="opponent-weapon"></div>
+              </div>
+              <div class="slot">
+                <label>防具</label>
+                <div class="card-slot" id="opponent-defense"></div>
+              </div>
+              <div class="slot">
+                <label>+1马</label>
+                <div class="card-slot" id="opponent-attack-horse"></div>
+              </div>
+              <div class="slot">
+                <label>-1马</label>
+                <div class="card-slot" id="opponent-defense-horse"></div>
+              </div>
+            </div>
+            <div class="row judgment">
+              <label>判定区</label>
+              <div class="card-list" id="opponent-judgment"></div>
+            </div>
+          </div>
+
+          <div class="hand-panel">
+            <div class="section-title">手牌（未知）</div>
+            <div class="hand-cards opponent" id="opponent-hand"></div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="status-bar">
+        <div id="status-text">准备开始游戏...</div>
+      </footer>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+  </html>
