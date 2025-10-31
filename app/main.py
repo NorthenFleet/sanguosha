@@ -177,21 +177,8 @@ def main_gui():
         sys.exit(1)
 
 
-def main():
-    """主函数，处理命令行参数"""
-    parser = argparse.ArgumentParser(description='三国杀游戏')
-    parser.add_argument('--mode', choices=['cli', 'gui'], default='gui', 
-                       help='游戏模式: cli(命令行) 或 gui(图形界面)')
-    parser.add_argument('--no-ai', action='store_true', 
-                       help='禁用AI功能')
-    
-    args = parser.parse_args()
-    
-    if args.mode == 'gui':
-        main_gui()
-    else:
-        main_cli()
-
-
 if __name__ == "__main__":
-    main()
+    print("注意: 此文件不再作为独立入口程序使用")
+    print("请使用项目根目录的 main_launcher.py 启动游戏")
+    print("示例: python main_launcher.py --mode gui")
+    sys.exit(1)

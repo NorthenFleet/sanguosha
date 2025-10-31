@@ -525,21 +525,8 @@ class MainWindow(QMainWindow):
         return self.ai_manager
 
 
-def main():
-    """主函数"""
-    app = QApplication(sys.argv)
-    
-    # 设置应用程序信息
-    app.setApplicationName("三国杀")
-    app.setApplicationVersion("1.0")
-    app.setOrganizationName("AI Game Studio")
-    
-    # 创建并显示主窗口
-    window = MainWindow()
-    window.show()
-    
-    sys.exit(app.exec_())
-
-
 if __name__ == '__main__':
-    main()
+    print("注意: 此文件不再作为独立入口程序使用")
+    print("请使用项目根目录的 main_launcher.py 启动游戏")
+    print("示例: python main_launcher.py --mode gui")
+    sys.exit(1)

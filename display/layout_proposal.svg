@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="1200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; fill: #333; }
+      .subtitle { font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; fill: #555; }
+      .section-title { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; fill: #666; }
+      .text { font-family: Arial, sans-serif; font-size: 12px; fill: #333; }
+      .code { font-family: 'Courier New', monospace; font-size: 11px; fill: #333; }
+      .highlight { fill: #e3f2fd; }
+      .container { fill: #f5f5f5; stroke: #ccc; stroke-width: 1; }
+      .component { fill: #fff; stroke: #999; stroke-width: 1; }
+      .player { fill: #e8f5e9; stroke: #4caf50; stroke-width: 2; }
+      .opponent { fill: #ffebee; stroke: #f44336; stroke-width: 2; }
+      .game-area { fill: #e8eaf6; stroke: #3f51b5; stroke-width: 2; }
+      .controls { fill: #fff3e0; stroke: #ff9800; stroke-width: 2; }
+      .info { fill: #f3e5f5; stroke: #9c27b0; stroke-width: 2; }
+    </style>
+  </defs>
+  
+  <!-- 标题 -->
+  <text x="600" y="40" text-anchor="middle" class="title">三国杀1v1游戏界面 - 详细布局设计方案</text>
+  
+  <!-- 布局概览 -->
+  <rect x="50" y="70" width="1100" height="400" class="container" rx="5"/>
+  <text x="600" y="90" text-anchor="middle" class="subtitle">布局概览</text>
+  
+  <!-- 对手区域 -->
+  <rect x="350" y="110" width="500" height="80" class="opponent" rx="5"/>
+  <text x="600" y="130" text-anchor="middle" class="section-title">对手区域 (opponent-area)</text>
+  <rect x="370" y="140" width="60" height="40" fill="#f44336" rx="3"/>
+  <text x="400" y="165" text-anchor="middle" class="text" fill="white">角色</text>
+  <rect x="440" y="140" width="120" height="40" fill="#ffcdd2" rx="3"/>
+  <text x="500" y="155" text-anchor="middle" class="text">生命值: 4/4</text>
+  <text x="500" y="175" text-anchor="middle" class="text">手牌: 5</text>
+  <rect x="570" y="140" width="120" height="40" fill="#ffcdd2" rx="3"/>
+  <text x="630" y="155" text-anchor="middle" class="text">装备区</text>
+  <rect x="700" y="140" width="120" height="40" fill="#ffcdd2" rx="3"/>
+  <text x="760" y="155" text-anchor="middle" class="text">判定区</text>
+  
+  <!-- 中央游戏区域 -->
+  <rect x="200" y="200" width="800" height="150" class="game-area" rx="5"/>
+  <text x="600" y="220" text-anchor="middle" class="section-title">中央游戏区域 (game-area)</text>
+  
+  <rect x="220" y="240" width="100" height="100" fill="#c5cae9" rx="3"/>
+  <text x="270" y="260" text-anchor="middle" class="text">牌堆</text>
+  <text x="270" y="280" text-anchor="middle" class="text">剩余: 45</text>
+  <rect x="230" y="290" width="80" height="40" fill="#3f51b5" rx="3"/>
+  <text x="270" y="315" text-anchor="middle" class="text" fill="white">牌堆</text>
+  
+  <rect x="330" y="240" width="100" height="100" fill="#c5cae9" rx="3"/>
+  <text x="380" y="260" text-anchor="middle" class="text">弃牌堆</text>
+  <text x="380" y="280" text-anchor="middle" class="text">数量: 12</text>
+  <rect x="340" y="290" width="80" height="40" fill="#673ab7" rx="3"/>
+  <text x="380" y="315" text-anchor="middle" class="text" fill="white">弃牌堆</text>
+  
+  <rect x="440" y="240" width="320" height="100" fill="#c5cae9" rx="3"/>
+  <text x="600" y="260" text-anchor="middle" class="text">游戏状态</text>
+  <text x="600" y="280" text-anchor="middle" class="text">当前回合: 玩家</text>
+  <text x="600" y="300" text-anchor="middle" class="text">阶段: 出牌阶段</text>
+  <text x="600" y="320" text-anchor="middle" class="text">回合数: 3</text>
+  
+  <rect x="770" y="240" width="210" height="100" fill="#c5cae9" rx="3"/>
+  <text x="875" y="260" text-anchor="middle" class="text">最近动作</text>
+  <text x="875" y="280" text-anchor="middle" class="text">玩家使用了【杀】</text>
+  <text x="875" y="300" text-anchor="middle" class="text">对手使用了【闪】</text>
+  <text x="875" y="320" text-anchor="middle" class="text">玩家摸了两张牌</text>
+  
+  <!-- 玩家区域 -->
+  <rect x="200" y="360" width="800" height="100" class="player" rx="5"/>
+  <text x="600" y="380" text-anchor="middle" class="section-title">玩家区域 (player-area)</text>
+  
+  <rect x="220" y="400" width="60" height="50" fill="#4caf50" rx="3"/>
+  <text x="250" y="430" text-anchor="middle" class="text" fill="white">角色</text>
+  
+  <rect x="290" y="400" width="120" height="50" fill="#c8e6c9" rx="3"/>
+  <text x="350" y="420" text-anchor="middle" class="text">生命值: 3/4</text>
+  <text x="350" y="440" text-anchor="middle" class="text">手牌: 4</text>
+  
+  <rect x="420" y="400" width="120" height="50" fill="#c8e6c9" rx="3"/>
+  <text x="480" y="420" text-anchor="middle" class="text">装备区</text>
+  <text x="480" y="440" text-anchor="middle" class="text">武器: 青釭剑</text>
+  
+  <rect x="550" y="400" width="120" height="50" fill="#c8e6c9" rx="3"/>
+  <text x="610" y="420" text-anchor="middle" class="text">判定区</text>
+  <text x="610" y="440" text-anchor="middle" class="text">空</text>
+  
+  <rect x="680" y="400" width="300" height="50" fill="#c8e6c9" rx="3"/>
+  <text x="830" y="420" text-anchor="middle" class="text">操作区</text>
+  <rect x="690" y="425" width="60" height="20" fill="#ff5722" rx="2"/>
+  <text x="720" y="440" text-anchor="middle" class="text" fill="white">出牌</text>
+  <rect x="760" y="425" width="60" height="20" fill="#9c27b0" rx="2"/>
+  <text x="790" y="440" text-anchor="middle" class="text" fill="white">技能</text>
+  <rect x="830" y="425" width="70" height="20" fill="#607d8b" rx="2"/>
+  <text x="865" y="440" text-anchor="middle" class="text" fill="white">结束回合</text>
+  <rect x="910" y="425" width="60" height="20" fill="#2196f3" rx="2"/>
+  <text x="940" y="440" text-anchor="middle" class="text" fill="white">菜单</text>
+  
+  <!-- 手牌区域 -->
+  <rect x="50" y="200" width="140" height="260" class="info" rx="5"/>
+  <text x="120" y="220" text-anchor="middle" class="section-title">游戏信息 (game-info)</text>
+  <text x="70" y="240" class="text">• 游戏ID: G12345</text>
+  <text x="70" y="260" class="text">• 游戏时间: 05:23</text>
+  <text x="70" y="280" class="text">• 玩家: 陆逊</text>
+  <text x="70" y="300" class="text">• 对手: 曹操</text>
+  
+  <text x="70" y="330" class="section-title">游戏日志:</text>
+  <rect x="70" y="340" width="100" height="110" fill="#f3e5f5" rx="3"/>
+  <text x="80" y="355" class="text" font-size="10">回合3开始</text>
+  <text x="80" y="370" class="text" font-size="10">玩家摸了两张牌</text>
+  <text x="80" y="385" class="text" font-size="10">玩家使用了杀</text>
+  <text x="80" y="400" class="text" font-size="10">对手使用了闪</text>
+  <text x="80" y="415" class="text" font-size="10">玩家结束回合</text>
+  <text x="80" y="430" class="text" font-size="10">对手回合开始</text>
+  
+  <!-- 右侧快捷操作 -->
+  <rect x="1010" y="200" width="140" height="260" class="controls" rx="5"/>
+  <text x="1080" y="220" text-anchor="middle" class="section-title">快捷操作 (controls)</text>
+  
+  <rect x="1025" y="240" width="110" height="30" fill="#2196f3" rx="3"/>
+  <text x="1080" y="260" text-anchor="middle" class="text" fill="white">新游戏</text>
+  
+  <rect x="1025" y="280" width="110" height="30" fill="#ff9800" rx="3"/>
+  <text x="1080" y="300" text-anchor="middle" class="text" fill="white">返回菜单</text>
+  
+  <rect x="1025" y="320" width="110" height="30" fill="#4caf50" rx="3"/>
+  <text x="1080" y="340" text-anchor="middle" class="text" fill="white">游戏设置</text>
+  
+  <rect x="1025" y="360" width="110" height="30" fill="#f44336" rx="3"/>
+  <text x="1080" y="380" text-anchor="middle" class="text" fill="white">退出游戏</text>
+  
+  <rect x="1025" y="400" width="110" height="30" fill="#9e9e9e" rx="3"/>
+  <text x="1080" y="420" text-anchor="middle" class="text" fill="white">帮助</text>
+  
+  <!-- 手牌区域 -->
+  <rect x="50" y="480" width="1100" height="120" class="container" rx="5"/>
+  <text x="600" y="500" text-anchor="middle" class="subtitle">手牌区域 (hand-area)</text>
+  
+  <rect x="100" y="520" width="1000" height="70" fill="#fff8e1" stroke="#ffc107" stroke-width="2" rx="5"/>
+  <text x="600" y="540" text-anchor="middle" class="section-title">玩家手牌</text>
+  
+  <rect x="120" y="550" width="40" height="30" fill="#fff" stroke="#333" rx="2"/>
+  <text x="140" y="570" text-anchor="middle" class="text">杀</text>
+  
+  <rect x="170" y="550" width="40" height="30" fill="#fff" stroke="#333" rx="2"/>
+  <text x="190" y="570" text-anchor="middle" class="text">闪</text>
+  
+  <rect x="220" y="550" width="40" height="30" fill="#fff" stroke="#333" rx="2"/>
+  <text x="240" y="570" text-anchor="middle" class="text">桃</text>
+  
+  <rect x="270" y="550" width="40" height="30" fill="#fff" stroke="#333" rx="2"/>
+  <text x="290" y="570" text-anchor="middle" class="text">无懈</text>
+  
+  <!-- HTML结构建议 -->
+  <rect x="50" y="620" width="1100" height="250" class="container" rx="5"/>
+  <text x="600" y="640" text-anchor="middle" class="subtitle">HTML结构建议</text>
+  
+  <rect x="70" y="660" width="1060" height="200" class="highlight" rx="3"/>
+  <text x="80" y="680" class="code">&lt;div id="game-container"&gt;</text>
+  <text x="100" y="700" class="code">&lt;!-- 顶部菜单栏 --&gt;</text>
+  <text x="100" y="715" class="code">&lt;div id="top-menu"&gt;</text>
+  <text x="120" y="730" class="code">&lt;button id="new-game-btn"&gt;创建主菜单&lt;/button&gt;</text>
+  <text x="120" y="745" class="code">&lt;button id="start-btn"&gt;开始&lt;/button&gt;</text>
+  <text x="100" y="760" class="code">&lt;/div&gt;</text>
+  
+  <text x="100" y="775" class="code">&lt;!-- 主游戏区域 --&gt;</text>
+  <text x="100" y="790" class="code">&lt;div id="main-game-area"&gt;</text>
+  <text x="120" y="805" class="code">&lt;div id="opponent-area"&gt;...&lt;/div&gt;</text>
+  <text x="120" y="820" class="code">&lt;div id="game-area"&gt;</text>
+  <text x="140" y="835" class="code">&lt;div id="deck"&gt;...&lt;/div&gt;</text>
+  <text x="140" y="850" class="code">&lt;div id="discard-pile"&gt;...&lt;/div&gt;</text>
+  <text x="120" y="865" class="code">&lt;/div&gt;</text>
+  <text x="120" y="880" class="code">&lt;div id="player-area"&gt;...&lt;/div&gt;</text>
+  <text x="100" y="895" class="code">&lt;/div&gt;</text>
+  
+  <text x="100" y="910" class="code">&lt;div id="hand-area"&gt;...&lt;/div&gt;</text>
+  <text x="80" y="925" class="code">&lt;/div&gt;</text>
+  
+  <!-- CSS样式建议 -->
+  <rect x="50" y="890" width="1100" height="280" class="container" rx="5"/>
+  <text x="600" y="910" text-anchor="middle" class="subtitle">CSS样式建议</text>
+  
+  <rect x="70" y="930" width="1060" height="230" class="highlight" rx="3"/>
+  <text x="80" y="950" class="code">#game-container {</text>
+  <text x="100" y="965" class="code">  display: grid;</text>
+  <text x="100" y="980" class="code">  grid-template-areas:</text>
+  <text x="100" y="995" class="code">    "menu menu menu"</text>
+  <text x="100" y="1010" class="code">    "info opponent controls"</text>
+  <text x="100" y="1025" class="code">    "info game-area controls"</text>
+  <text x="100" y="1040" class="code">    "info player controls"</text>
+  <text x="100" y="1055" class="code">    "hand hand hand";</text>
+  <text x="100" y="1070" class="code">  grid-template-columns: 150px 1fr 150px;</text>
+  <text x="100" y="1085" class="code">  grid-template-rows: auto auto 1fr auto auto;</text>
+  <text x="100" y="1100" class="code">  gap: 10px;</text>
+  <text x="100" y="1115" class="code">  height: 100vh;</text>
+  <text x="100" y="1130" class="code">  padding: 10px;</text>
+  <text x="100" y="1145" class="code">  background-color: #fffde7;</text>
+  <text x="80" y="1160" class="code">}</text>
+  
+  <!-- 实现建议 -->
+  <text x="600" y="1180" text-anchor="middle" class="subtitle" fill="#4caf50">实现建议</text>
+  <text x="100" y="1200" class="text">• 使用CSS Grid布局实现整体结构，确保响应式设计</text>
+  <text x="100" y="1220" class="text">• 为每个区域创建独立的组件，便于维护和更新</text>
+  <text x="100" y="1240" class="text">• 使用统一的颜色主题和风格，提升视觉一致性</text>
+  <text x="100" y="1260" class="text">• 添加适当的过渡动画，提升用户体验</text>
+</svg>

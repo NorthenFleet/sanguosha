@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; fill: #333; }
+      .subtitle { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; fill: #666; }
+      .text { font-family: Arial, sans-serif; font-size: 12px; fill: #333; }
+      .problem { fill: #ffebee; stroke: #f44336; stroke-width: 2; }
+      .solution { fill: #e8f5e8; stroke: #4caf50; stroke-width: 2; }
+      .current { fill: #fff3e0; stroke: #ff9800; stroke-width: 2; }
+      .arrow { stroke: #666; stroke-width: 2; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#666" />
+    </marker>
+  </defs>
+  
+  <!-- 标题 -->
+  <text x="600" y="30" text-anchor="middle" class="title">三国杀1v1游戏界面布局分析</text>
+  
+  <!-- 当前布局分析 -->
+  <text x="50" y="70" class="subtitle">当前布局问题分析：</text>
+  
+  <!-- 当前布局示意图 -->
+  <rect x="50" y="90" width="500" height="300" class="current" rx="5"/>
+  <text x="300" y="110" text-anchor="middle" class="subtitle">当前布局</text>
+  
+  <!-- 顶部按钮区 -->
+  <rect x="70" y="130" width="80" height="30" fill="#d4a574" rx="3"/>
+  <text x="110" y="150" text-anchor="middle" class="text">创建主菜单</text>
+  <rect x="160" y="130" width="60" height="30" fill="#4caf50" rx="3"/>
+  <text x="190" y="150" text-anchor="middle" class="text">开始</text>
+  
+  <!-- 玩家区域 -->
+  <rect x="70" y="180" width="200" height="80" fill="#f5f5dc" stroke="#8b4513" rx="3"/>
+  <text x="170" y="200" text-anchor="middle" class="text">玩家区域</text>
+  <rect x="90" y="210" width="60" height="40" fill="#8b4513" rx="3"/>
+  <text x="120" y="235" text-anchor="middle" class="text" fill="white">陆逊</text>
+  <rect x="160" y="210" width="60" height="40" fill="#999" rx="3"/>
+  <text x="190" y="235" text-anchor="middle" class="text">开始游戏</text>
+  
+  <!-- 对手区域 -->
+  <rect x="300" y="130" width="230" height="60" fill="#e3f2fd" stroke="#2196f3" rx="3"/>
+  <text x="415" y="150" text-anchor="middle" class="text">对手区域</text>
+  <text x="415" y="170" text-anchor="middle" class="text">真人对手 等待连接...</text>
+  
+  <!-- 手牌区域 -->
+  <rect x="70" y="280" width="200" height="80" fill="#fff8e1" stroke="#ff9800" rx="3"/>
+  <text x="170" y="300" text-anchor="middle" class="text">手牌区域</text>
+  <rect x="90" y="310" width="30" height="40" fill="#fff" stroke="#ccc" rx="2"/>
+  <rect x="130" y="310" width="30" height="40" fill="#fff" stroke="#ccc" rx="2"/>
+  <rect x="170" y="310" width="30" height="40" fill="#fff" stroke="#ccc" rx="2"/>
+  <rect x="210" y="310" width="30" height="40" fill="#fff" stroke="#ccc" rx="2"/>
+  
+  <!-- 游戏日志 -->
+  <rect x="300" y="210" width="230" height="150" fill="#f3e5f5" stroke="#9c27b0" rx="3"/>
+  <text x="415" y="230" text-anchor="middle" class="text">游戏日志</text>
+  <text x="310" y="250" class="text">游戏开始 #1</text>
+  <text x="310" y="270" class="text">游戏开始 #2</text>
+  <text x="310" y="290" class="text">...</text>
+  
+  <!-- 问题标注 -->
+  <circle cx="580" cy="160" r="15" class="problem"/>
+  <text x="580" y="165" text-anchor="middle" class="text" fill="white">1</text>
+  
+  <circle cx="580" cy="220" r="15" class="problem"/>
+  <text x="580" y="225" text-anchor="middle" class="text" fill="white">2</text>
+  
+  <circle cx="580" cy="320" r="15" class="problem"/>
+  <text x="580" y="325" text-anchor="middle" class="text" fill="white">3</text>
+  
+  <!-- 问题列表 -->
+  <text x="650" y="70" class="subtitle">主要问题：</text>
+  
+  <rect x="650" y="90" width="500" height="300" class="problem" rx="5"/>
+  
+  <text x="670" y="120" class="text">❶ 布局不对称 - 玩家和对手区域大小、位置不协调</text>
+  <text x="670" y="140" class="text">   • 对手区域太小，信息显示不完整</text>
+  <text x="670" y="160" class="text">   • 玩家区域占用过多空间</text>
+  
+  <text x="670" y="190" class="text">❷ 信息层次混乱 - 重要信息不突出</text>
+  <text x="670" y="210" class="text">   • 游戏状态信息分散</text>
+  <text x="670" y="230" class="text">   • 操作按钮位置不合理</text>
+  
+  <text x="670" y="260" class="text">❸ 空间利用不充分 - 大量空白区域</text>
+  <text x="670" y="280" class="text">   • 中央区域空置</text>
+  <text x="670" y="300" class="text">   • 手牌区域可以更紧凑</text>
+  
+  <text x="670" y="330" class="text">❹ 缺少游戏核心元素</text>
+  <text x="670" y="350" class="text">   • 没有牌堆、弃牌堆显示</text>
+  <text x="670" y="370" class="text">   • 缺少回合指示器</text>
+  
+  <!-- 改进建议 -->
+  <text x="50" y="450" class="subtitle">改进建议 - 新布局设计：</text>
+  
+  <rect x="50" y="470" width="1100" height="280" class="solution" rx="5"/>
+  <text x="600" y="490" text-anchor="middle" class="subtitle">推荐的新布局</text>
+  
+  <!-- 新布局示意图 -->
+  <!-- 对手区域 (顶部) -->
+  <rect x="400" y="510" width="400" height="80" fill="#ffcdd2" stroke="#f44336" rx="3"/>
+  <text x="600" y="530" text-anchor="middle" class="text">对手区域 (顶部居中)</text>
+  <rect x="420" y="540" width="60" height="40" fill="#f44336" rx="3"/>
+  <text x="450" y="565" text-anchor="middle" class="text" fill="white">对手</text>
+  <rect x="490" y="545" width="20" height="30" fill="#fff" stroke="#ccc" rx="2"/>
+  <rect x="520" y="545" width="20" height="30" fill="#fff" stroke="#ccc" rx="2"/>
+  <text x="580" y="565" text-anchor="middle" class="text">HP: 4/4</text>
+  
+  <!-- 中央游戏区域 -->
+  <rect x="300" y="600" width="600" height="80" fill="#e1f5fe" stroke="#03a9f4" rx="3"/>
+  <text x="600" y="620" text-anchor="middle" class="text">中央游戏区域</text>
+  <rect x="320" y="630" width="60" height="40" fill="#2196f3" rx="3"/>
+  <text x="350" y="655" text-anchor="middle" class="text" fill="white">牌堆</text>
+  <rect x="400" y="630" width="60" height="40" fill="#ff9800" rx="3"/>
+  <text x="430" y="655" text-anchor="middle" class="text" fill="white">弃牌堆</text>
+  <rect x="480" y="630" width="100" height="40" fill="#4caf50" rx="3"/>
+  <text x="530" y="655" text-anchor="middle" class="text" fill="white">当前回合: 玩家</text>
+  
+  <!-- 玩家区域 (底部) -->
+  <rect x="200" y="690" width="800" height="50" fill="#c8e6c9" stroke="#4caf50" rx="3"/>
+  <text x="600" y="710" text-anchor="middle" class="text">玩家区域 (底部)</text>
+  <rect x="220" y="720" width="60" height="40" fill="#4caf50" rx="3"/>
+  <text x="250" y="745" text-anchor="middle" class="text" fill="white">玩家</text>
+  
+  <!-- 手牌 -->
+  <rect x="350" y="720" width="25" height="35" fill="#fff" stroke="#333" rx="2"/>
+  <rect x="380" y="720" width="25" height="35" fill="#fff" stroke="#333" rx="2"/>
+  <rect x="410" y="720" width="25" height="35" fill="#fff" stroke="#333" rx="2"/>
+  <rect x="440" y="720" width="25" height="35" fill="#fff" stroke="#333" rx="2"/>
+  
+  <!-- 操作按钮 -->
+  <rect x="500" y="720" width="60" height="20" fill="#ff5722" rx="2"/>
+  <text x="530" y="735" text-anchor="middle" class="text" fill="white">出牌</text>
+  <rect x="570" y="720" width="60" height="20" fill="#9c27b0" rx="2"/>
+  <text x="600" y="735" text-anchor="middle" class="text" fill="white">技能</text>
+  <rect x="640" y="720" width="80" height="20" fill="#607d8b" rx="2"/>
+  <text x="680" y="735" text-anchor="middle" class="text" fill="white">结束回合</text>
+  
+  <!-- 侧边信息区 -->
+  <rect x="70" y="510" width="200" height="230" fill="#fff9c4" stroke="#fbc02d" rx="3"/>
+  <text x="170" y="530" text-anchor="middle" class="text">游戏信息</text>
+  <text x="80" y="550" class="text">• 回合数: 3</text>
+  <text x="80" y="570" class="text">• 牌堆剩余: 45</text>
+  <text x="80" y="590" class="text">• 游戏时间: 05:23</text>
+  <text x="80" y="620" class="text">游戏日志:</text>
+  <text x="80" y="640" class="text">玩家使用了杀</text>
+  <text x="80" y="660" class="text">对手使用了闪</text>
+  <text x="80" y="680" class="text">...</text>
+  
+  <rect x="920" y="510" width="200" height="230" fill="#f3e5f5" stroke="#9c27b0" rx="3"/>
+  <text x="1020" y="530" text-anchor="middle" class="text">快捷操作</text>
+  <rect x="940" y="550" width="160" height="30" fill="#2196f3" rx="3"/>
+  <text x="1020" y="570" text-anchor="middle" class="text" fill="white">新游戏</text>
+  <rect x="940" y="590" width="160" height="30" fill="#ff9800" rx="3"/>
+  <text x="1020" y="610" text-anchor="middle" class="text" fill="white">返回菜单</text>
+  <rect x="940" y="630" width="160" height="30" fill="#4caf50" rx="3"/>
+  <text x="1020" y="650" text-anchor="middle" class="text" fill="white">游戏设置</text>
+  
+  <!-- 优势标注 -->
+  <text x="50" y="780" class="subtitle" fill="#4caf50">新布局优势：</text>
+  <text x="70" y="800" class="text">✓ 对称布局，视觉平衡  ✓ 信息层次清晰  ✓ 空间利用充分  ✓ 操作流程优化</text>
+</svg>

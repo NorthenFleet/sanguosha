@@ -222,15 +222,8 @@ def launch_sanguosha(mode: str = None) -> int:
     return launcher.launch_game(mode)
 
 
-def main():
-    """主函数 - 游戏入口点"""
-    try:
-        exit_code = launch_sanguosha()
-        sys.exit(exit_code)
-    except Exception as e:
-        print(f"游戏启动失败: {e}")
-        sys.exit(1)
-
-
 if __name__ == '__main__':
-    main()
+    print("注意: 此文件不再作为独立入口程序使用")
+    print("请使用项目根目录的 main_launcher.py 启动游戏")
+    print("示例: python main_launcher.py --mode gui")
+    sys.exit(1)

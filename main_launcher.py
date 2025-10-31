@@ -264,6 +264,111 @@ class GameLauncher:
         except Exception as e:
             self.logger.error(f"AI训练启动失败: {e}")
             return 1
+    
+    def launch_web_server(self, host: str = "0.0.0.0", port: int = 8001, reload: bool = True) -> int:
+        """启动Web服务器模式"""
+        self.logger.info(f"启动Web服务器模式 - {host}:{port}")
+        
+        try:
+            # 导入FastAPI相关模块
+            from fastapi import FastAPI
+            from fastapi.staticfiles import StaticFiles
+            from fastapi.middleware.cors import CORSMiddleware
+            from fastapi.responses import JSONResponse
+            import uvicorn
+            
+            # 创建FastAPI应用
+            app = FastAPI(
+                title="三国杀1v1游戏",
+                description="基于Web的三国杀1v1对战游戏",
+                version="1.0.0"
+            )
+            
+            # 配置CORS
+            app.add_middleware(
+                CORSMiddleware,
+                allow_origins=["*"],
+                allow_credentials=True,
+                allow_methods=["*"],
+                allow_headers=["*"],
+            )
+            
+            # 挂载静态文件目录
+            display_path = Path("display")
+            if display_path.exists():
+                app.mount("/display", StaticFiles(directory=str(display_path)), name="display")
+                self.logger.info(f"静态文件已挂载: {display_path}")
+            else:
+                self.logger.warning(f"显示目录未找到: {display_path}")
+            
+            # 基础API路由
+            @app.post("/api/create_game")
+            async def create_game():
+                """创建新游戏"""
+                try:
+                    from app.game_engine import GameEngine
+                    game_id = GameEngine.create_game()
+                    return {"success": True, "game_id": game_id}
+                except Exception as e:
+                    return {"success": False, "error": str(e)}
+
+            @app.get("/api/game/{game_id}/status")
+            async def get_game_status(game_id: str):
+                """获取游戏状态"""
+                try:
+                    from app.game_engine import GameEngine
+                    status = GameEngine.get_game_status(game_id)
+                    return {"success": True, "data": status}
+                except Exception as e:
+                    return {"success": False, "error": str(e)}
+
+            @app.post("/api/game/{game_id}/action")
+            async def execute_action(game_id: str, action: dict):
+                """执行游戏动作"""
+                try:
+                    from app.game_engine import GameEngine
+                    result = GameEngine.execute_action(
+                        game_id, 
+                        action.get("player_id"), 
+                        action.get("action_type"), 
+                        action.get("params", {})
+                    )
+                    return {"success": True, "data": result}
+                except Exception as e:
+                    return {"success": False, "error": str(e)}
+
+            @app.get("/")
+            async def root():
+                """根路径信息"""
+                return {
+                    "message": "三国杀1v1游戏服务器",
+                    "game_url": "/display/index.html",
+                    "api_docs": "/docs",
+                    "status": "running"
+                }
+
+            @app.get("/health")
+            async def health_check():
+                """健康检查"""
+                return {"status": "healthy", "service": "sanguosha-1v1"}
+            
+            # 启动服务器
+            if reload:
+                # 当启用reload时，需要禁用它或者使用不同的启动方式
+                self.logger.warning("Web服务器reload模式已禁用，因为使用了应用实例而非导入字符串")
+                uvicorn.run(app, host=host, port=port, reload=False)
+            else:
+                uvicorn.run(app, host=host, port=port, reload=False)
+            return 0
+            
+        except ImportError as e:
+            self.logger.error(f"Web服务器依赖不可用: {e}")
+            print("错误: 无法导入FastAPI，请安装Web服务器依赖")
+            print("安装命令: pip install fastapi uvicorn")
+            return 1
+        except Exception as e:
+            self.logger.error(f"Web服务器启动失败: {e}")
+            return 1
 
 
 def main():
@@ -271,9 +376,9 @@ def main():
     parser = argparse.ArgumentParser(description="三国杀游戏启动器")
     parser.add_argument(
         '--mode', 
-        choices=['gui', 'console', 'train'], 
+        choices=['gui', 'console', 'train', 'web'], 
         default='gui',
-        help='启动模式: gui(图形界面), console(控制台), train(AI训练)'
+        help='启动模式: gui(图形界面), console(控制台), train(AI训练), web(Web服务器)'
     )
     parser.add_argument(
         '--no-ai', 
@@ -289,6 +394,23 @@ def main():
         '--debug',
         action='store_true',
         help='启用调试模式'
+    )
+    parser.add_argument(
+        '--host',
+        type=str,
+        default='0.0.0.0',
+        help='Web服务器主机地址 (仅web模式)'
+    )
+    parser.add_argument(
+        '--port',
+        type=int,
+        default=8001,
+        help='Web服务器端口 (仅web模式)'
+    )
+    parser.add_argument(
+        '--no-reload',
+        action='store_true',
+        help='禁用Web服务器自动重载 (仅web模式)'
     )
     
     args = parser.parse_args()
@@ -307,6 +429,12 @@ def main():
         return launcher.launch_console_mode(enable_ai=not args.no_ai)
     elif args.mode == 'train':
         return launcher.launch_ai_training(args.config)
+    elif args.mode == 'web':
+        return launcher.launch_web_server(
+            host=args.host, 
+            port=args.port, 
+            reload=not args.no_reload
+        )
     else:
         print(f"未知模式: {args.mode}")
         return 1

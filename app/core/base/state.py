@@ -6,19 +6,25 @@ except ImportError:
     from pydantic import BaseModel
     ConfigDict = None
     _HAS_CONFIGDICT = False
-from typing import Dict, List, Any
-from ...models.player import Player
-from ...models.card import Card
+from typing import Dict, List, Any, TYPE_CHECKING
+
+# 使用TYPE_CHECKING避免运行时导入问题
+if TYPE_CHECKING:
+    from ...models.player import Player
+    from ...models.card import Card
+else:
+    # 运行时使用Any类型，避免验证问题
+    Player = Any
+    Card = Any
+
 from .enums import Phase
 
 
 class GameState(BaseModel):
-    # pydantic v2 使用 model_config / ConfigDict；pydantic v1 使用内部 Config 类
-    if _HAS_CONFIGDICT:
-        model_config = ConfigDict(arbitrary_types_allowed=True)
-    else:
-        class Config:
-            arbitrary_types_allowed = True
+    # pydantic v1 配置
+    class Config:
+        arbitrary_types_allowed = True
+        validate_assignment = True
 
     players: Dict[str, Player]
     turn_order: List[str]

@@ -202,23 +202,55 @@ Client / CLI / Bot
 
 ## 启动程序与AI训练
 
-### 游戏本体启动（PyQt）
-- 前置：`pip install PyQt5`
-- 命令：`python main_launcher.py --mode gui`
-- 说明：
-  - 启动图形界面，支持加载默认智能体（PPO）。
-  - 若存在 `models/experiments/best_model.pth`，将自动加载作为演示对战智能体。
-  - 可通过 `--no-ai` 禁用智能体，用于纯人类对战或界面演示：`python main_launcher.py --mode gui --no-ai`。
-  - 控制台模式（无GUI）：`python main_launcher.py --mode console`，适合快速测试与调试。
+### 统一启动器 - main_launcher.py
+本项目现在使用单一的统一启动器 `main_launcher.py`，支持所有运行模式：
 
-### 统一启动器 CLI
-- `python main_launcher.py --mode gui|console|train [--no-ai] [--config <path>] [--debug]`
-  - `--mode gui`：启动 PyQt 图形界面。
-  - `--mode console`：启动控制台模式。
-  - `--mode train`：启动 AI 训练流程（调用 AI 主训练脚本）。
-  - `--no-ai`：禁用智能体加载。
-  - `--config`：指定 AI 配置文件（如 `ai/config/default_config.json`）。
-  - `--debug`：开启详细日志输出。
+#### 基本用法
+```bash
+python main_launcher.py --mode <模式> [选项]
+```
+
+#### 支持的模式
+- **GUI模式** (默认): `python main_launcher.py --mode gui`
+  - 启动PyQt5图形界面
+  - 支持AI玩家对战
+  - 需要安装: `pip install PyQt5`
+
+- **控制台模式**: `python main_launcher.py --mode console`
+  - 命令行文本界面
+  - 适合快速测试和调试
+
+- **Web服务器模式**: `python main_launcher.py --mode web`
+  - 启动Web服务器，提供浏览器游戏界面
+  - 默认地址: http://localhost:8001
+  - 需要安装: `pip install fastapi uvicorn`
+
+- **AI训练模式**: `python main_launcher.py --mode train`
+  - 启动AI训练流程
+  - 需要AI模块可用
+
+#### 常用选项
+- `--no-ai`: 禁用AI玩家系统
+- `--config <path>`: 指定AI配置文件路径
+- `--debug`: 启用详细日志输出
+- `--host <地址>`: Web服务器主机地址 (仅web模式，默认0.0.0.0)
+- `--port <端口>`: Web服务器端口 (仅web模式，默认8001)
+- `--no-reload`: 禁用Web服务器自动重载 (仅web模式)
+
+#### 使用示例
+```bash
+# 基本用法
+python main_launcher.py --mode <模式>
+
+# 支持的模式
+python main_launcher.py --mode gui      # GUI界面
+python main_launcher.py --mode console  # 控制台模式  
+python main_launcher.py --mode web      # Web服务器
+python main_launcher.py --mode train    # AI训练
+
+# 快速启动（使用start.py）
+python start.py                         # 默认GUI模式
+python start.py web                     # Web模式
 
 ### AI训练启动（通用脚本）
 - 通用训练脚本：`python ai/scripts/train_rl.py --algorithm <ppo|dqn|a3c> [参数]`
