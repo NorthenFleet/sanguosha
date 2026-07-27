@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三国杀神经网络可视化 - AlphaStar风格多分支网络</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="top-bar">
+        <div class="brand">
+            <span class="brand-icon">🎮</span>
+            <span class="brand-text">三国杀神经网络可视化</span>
+        </div>
+        <div class="controls">
+            <button id="btn-reset">🔄 新对局</button>
+            <button id="btn-step">▶️ AI出一步</button>
+            <button id="btn-auto">⏩ 自动模式</button>
+            <span id="status-indicator" class="status-indicator"></span>
+        </div>
+    </header>
+
+    <main class="layout">
+        <!-- 左侧: 网络架构图 -->
+        <section class="panel architecture-panel">
+            <h2 class="panel-title">🧠 网络架构 (AlphaStar 风格)</h2>
+            <div id="architecture-diagram" class="arch-diagram">
+                <!-- 动态生成的节点和连线 -->
+            </div>
+        </section>
+
+        <!-- 右侧上: 输入/状态显示 -->
+        <section class="panel state-panel">
+            <h2 class="panel-title">📋 当前游戏状态 (网络输入)</h2>
+            <div id="state-display" class="state-container">
+                <div class="loading">等待加载状态数据...</div>
+            </div>
+        </section>
+
+        <!-- 右侧下: 动作概率/价值输出 -->
+        <section class="panel output-panel">
+            <h2 class="panel-title">🎯 网络输出 (策略 & 价值)</h2>
+            <div class="value-display">
+                <div class="value-card">
+                    <div class="value-label">状态价值 (Value)</div>
+                    <div id="value-number" class="value-number">--</div>
+                </div>
+                <div class="value-card">
+                    <div class="value-label">已走步数</div>
+                    <div id="step-number" class="value-number">0</div>
+                </div>
+            </div>
+            <h3 class="subtitle">Top 动作概率分布</h3>
+            <div id="action-prob-chart" class="prob-chart"></div>
+            <h3 class="subtitle">� 手牌</h3>
+            <div id="hand-cards" class="hand-cards-container"></div>
+        </section>
+
+        <!-- 底部: 激活热力图 -->
+        <section class="panel activation-panel">
+            <h2 class="panel-title">🔥 分支激活值</h2>
+            <div id="activations-container" class="activations-container">
+                <div class="loading">请先获取推理数据...</div>
+            </div>
+        </section>
+
+        <!-- 网络库: data_lake 网络资产的读取/编辑/应用 -->
+        <section class="panel network-library-panel">
+            <h2 class="panel-title">📚 网络库 (data_lake/network_library)
+                <button id="btn-network-refresh" class="btn-sm">刷新</button>
+                <button id="btn-network-new" class="btn-sm">+ 新建</button>
+            </h2>
+            <div id="network-list" class="network-list">
+                <div class="loading">加载网络资产...</div>
+            </div>
+        </section>
+
+        <!-- 训练控制面板: 加载网络 & 启动无头训练 & 实时监控 -->
+        <section class="panel training-panel">
+            <h2 class="panel-title">🎮 训练控制 (PPO 无头模式)
+                <span id="training-status" class="badge badge-idle">空闲</span>
+            </h2>
+
+            <!-- 训练状态 & 进度 -->
+            <div class="training-progress">
+                <div class="progress-meta">
+                    <span id="training-step-info">0 / 0 步</span>
+                    <span id="training-progress-pct">0.0%</span>
+                    <span id="training-elapsed">0.0s</span>
+                    <span id="training-sps">0 step/s</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+                <div class="training-metrics">
+                    <div class="metric"><span class="metric-label">Loss</span><span id="m-loss" class="metric-val">0.000</span></div>
+                    <div class="metric"><span class="metric-label">Reward</span><span id="m-reward" class="metric-val">+0.00</span></div>
+                    <div class="metric"><span class="metric-label">Avg100</span><span id="m-avg" class="metric-val">0.00</span></div>
+                    <div class="metric"><span class="metric-label">Episodes</span><span id="m-ep" class="metric-val">0</span></div>
+                    <div class="metric"><span class="metric-label">Entropy</span><span id="m-ent" class="metric-val">0.00</span></div>
+                    <div class="metric"><span class="metric-label">Best</span><span id="m-best" class="metric-val metric-green">--</span></div>
+                </div>
+            </div>
+
+            <!-- 训练配置表单 -->
+            <div class="training-config">
+                <h3 class="config-title">⚙ 训练配置</h3>
+                <div class="form-row form-row-compact">
+                    <label>选择网络 (data_lake)
+                        <select id="cfg-network">
+                            <option value="sanguosha_alphastar_actor_critic">sanguosha_alphastar_actor_critic</option>
+                        </select>
+                    </label>
+                    <label>总步数
+                        <input id="cfg-steps" type="number" value="2000" min="100" max="1000000">
+                    </label>
+                    <label>学习率 (lr)
+                        <input id="cfg-lr" type="number" value="0.0003" step="0.00001" min="1e-7" max="0.1">
+                    </label>
+                    <label>折扣因子 (γ)
+                        <input id="cfg-gamma" type="number" value="0.99" step="0.01" min="0.5" max="0.999">
+                    </label>
+                </div>
+                <div class="form-row form-row-compact">
+                    <label>熵系数
+                        <input id="cfg-entropy" type="number" value="0.01" step="0.001" min="0" max="1">
+                    </label>
+                    <label>价值系数
+                        <input id="cfg-value" type="number" value="0.5" step="0.1" min="0" max="2">
+                    </label>
+                    <label>Batch Size
+                        <input id="cfg-batch" type="number" value="128" step="16" min="16" max="1024">
+                    </label>
+                    <label>保存间隔 (步)
+                        <input id="cfg-save" type="number" value="200" step="50" min="50" max="5000">
+                    </label>
+                    <label>日志间隔 (步)
+                        <input id="cfg-log" type="number" value="20" step="5" min="5" max="200">
+                    </label>
+                </div>
+
+                <div class="training-actions">
+                    <button id="btn-training-start" class="btn btn-primary">▶ 开始训练</button>
+                    <button id="btn-training-stop" class="btn btn-danger" disabled>■ 停止</button>
+                    <button id="btn-training-refresh" class="btn btn-sm">刷新状态</button>
+                    <button id="btn-training-apply" class="btn btn-sm" disabled>✓ 应用到可视化</button>
+                </div>
+            </div>
+
+            <!-- 训练曲线 -->
+            <div class="training-charts">
+                <h3 class="config-title">📈 训练曲线</h3>
+                <div class="chart-grid">
+                    <div class="chart-card">
+                        <div class="chart-title">Loss (PPO total)</div>
+                        <canvas id="chart-loss" width="500" height="140"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">Avg Reward (EMA)</div>
+                        <canvas id="chart-reward" width="500" height="140"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">Actor Loss</div>
+                        <canvas id="chart-actor" width="500" height="140"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">Critic Loss</div>
+                        <canvas id="chart-critic" width="500" height="140"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 训练日志 -->
+            <div class="training-logs">
+                <h3 class="config-title">📜 训练日志 (最近 50 条)</h3>
+                <pre id="training-log" class="log-output">等待训练启动...</pre>
+            </div>
+        </section>
+    </main>
+
+    <!-- 网络详情/编辑 模态框 -->
+    <div id="network-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="network-modal-title">网络资产</h3>
+                <button id="btn-modal-close" class="btn-close">✕</button>
+            </div>
+            <div id="network-modal-body" class="modal-body">
+                <div class="network-editor">
+                    <div class="form-row">
+                        <label>id
+                            <input id="net-f-id" type="text" placeholder="例如：my_custom_network">
+                        </label>
+                        <label>name
+                            <input id="net-f-name" type="text" placeholder="中文显示名">
+                        </label>
+                        <label>version
+                            <input id="net-f-version" type="text" placeholder="1.0.0">
+                        </label>
+                        <label>domain
+                            <input id="net-f-domain" type="text" placeholder="sanguosha">
+                        </label>
+                        <label>algorithm
+                            <input id="net-f-algorithm" type="text" placeholder="ppo">
+                        </label>
+                        <label>status
+                            <select id="net-f-status">
+                                <option value="active">active</option>
+                                <option value="draft">draft</option>
+                                <option value="deprecated">deprecated</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="form-row">
+                        <label>description
+                            <textarea id="net-f-description" rows="2" placeholder="简要说明网络结构、用途..."></textarea>
+                        </label>
+                    </div>
+                    <h4 class="section-title">超参数 (hyperparameters)</h4>
+                    <div class="form-row hp-grid">
+                        <label>num_actions <input id="hp-num-actions" type="number" value="100"></label>
+                        <label>state_dim <input id="hp-state-dim" type="number" value="48"></label>
+                        <label>history_len <input id="hp-history-len" type="number" value="10"></label>
+                        <label>hidden_dim <input id="hp-hidden-dim" type="number" value="256"></label>
+                        <label>card_type_vocab <input id="hp-card-type-vocab" type="number" value="30"></label>
+                        <label>suit_vocab <input id="hp-suit-vocab" type="number" value="6"></label>
+                        <label>rank_vocab <input id="hp-rank-vocab" type="number" value="15"></label>
+                        <label>card_emb_dim <input id="hp-card-emb-dim" type="number" value="32"></label>
+                        <label>num_branches <input id="hp-num-branches" type="number" value="4"></label>
+                        <label>branch_hidden <input id="hp-branch-hidden" type="number" value="64"></label>
+                    </div>
+                    <h4 class="section-title">网络结构图 (JSON)</h4>
+                    <textarea id="net-f-graph" rows="12" placeholder='{"nodes": [...], "edges": [...]}'></textarea>
+                    <h4 class="section-title">输入签名 (input_signature) — JSON</h4>
+                    <textarea id="net-f-input" rows="6" placeholder='{"player1_scalar": {"shape":[6], "dtype":"float32", "description":"..."}, ...}'></textarea>
+                    <h4 class="section-title">输出签名 (output_signature) — JSON</h4>
+                    <textarea id="net-f-output" rows="6" placeholder='{"action_probs": {"shape":[100], "dtype":"float32", ...}, ...}'></textarea>
+                    <h4 class="section-title">可视化配置 (visualization_config) — JSON</h4>
+                    <textarea id="net-f-vis" rows="4" placeholder='{"layout": "layered", ...}'></textarea>
+                    <h4 class="section-title">训练兼容性 (training_compatibility) — JSON</h4>
+                    <textarea id="net-f-train" rows="4" placeholder='{"algorithm": "ppo", "trainer_class": "SanguoshaTrainer", ...}'></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-network-apply" class="btn-primary">✓ 应用为活动模型</button>
+                <button id="btn-network-save" class="btn-secondary">💾 保存到 data_lake</button>
+                <button id="btn-network-delete" class="btn-danger">🗑 删除</button>
+                <button id="btn-network-close" class="btn-secondary">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-info">
+            <span>端口: <strong>5130</strong></span>
+            <span>|</span>
+            <span>架构: <strong>SanguoshaActorCritic</strong></span>
+            <span>|</span>
+            <span>总参数: <strong id="param-count">--</strong></span>
+        </div>
+        <div class="footer-info">
+            <span>接口: <a href="/docs">FastAPI /docs</a></span>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

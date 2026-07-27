@@ -8,7 +8,6 @@
 import unittest
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.adjudication.nested_adjudication_stack import (
     NestedAdjudicationStack, AdjudicationProcess, TriggerType, 
@@ -447,11 +446,3 @@ def run_nested_adjudication_demo():
     print("\n=== 演示完成 ===")
 
 
-if __name__ == '__main__':
-    # 运行演示
-    run_nested_adjudication_demo()
-    
-    print("\n" + "="*50 + "\n")
-    
-    # 运行单元测试
-    unittest.main(verbosity=2)

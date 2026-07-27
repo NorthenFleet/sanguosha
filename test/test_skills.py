@@ -7,7 +7,6 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.models.character import CharacterFactory, Kingdom
 from app.models.player import Player
@@ -169,7 +168,12 @@ def test_guanxing_skill():
     print(f"观星前牌堆剩余: {len(game.deck.cards)}")
     
     # 测试技能触发
-    if guanxing.can_trigger(game, zhugeliang_player):
+    if guanxing.can_trigger(
+        game,
+        zhugeliang_player,
+        "phase_change",
+        phase="judgment",
+    ):
         result = guanxing.execute(game, zhugeliang_player)
         print(f"观星技能执行结果: {result}")
         print(f"观星后牌堆剩余: {len(game.deck.cards)}")
@@ -256,7 +260,7 @@ def test_yingzi_skill():
     print(f"英姿前周瑜手牌数: {len(zhouyu_player.hand_cards)}")
     
     # 测试技能触发
-    if yingzi.can_trigger(game, zhouyu_player):
+    if yingzi.can_trigger(game, zhouyu_player, "phase_change", phase="draw"):
         result = yingzi.execute(game, zhouyu_player)
         print(f"英姿技能执行结果: {result}")
         print(f"英姿后周瑜手牌数: {len(zhouyu_player.hand_cards)}")
@@ -318,6 +322,3 @@ def main():
         print(f"测试过程中出现错误: {e}")
         import traceback
         traceback.print_exc()
-
-if __name__ == "__main__":
-    main()

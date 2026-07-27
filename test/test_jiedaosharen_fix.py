@@ -5,7 +5,6 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.core.events.event_system import EventManager
 from app.core.base.game import Game
@@ -144,6 +143,3 @@ def test_jiedaosharen_no_sha():
     else:
         print("✗ 借刀杀人（获得武器）效果有问题")
 
-if __name__ == "__main__":
-    test_jiedaosharen()
-    test_jiedaosharen_no_sha()

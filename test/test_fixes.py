@@ -4,7 +4,6 @@
 """
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
 
 from app.core.events.event_system import EventManager
 from app.core.base.game import Game
@@ -24,6 +23,7 @@ def test_sha_damage():
     
     # 创建游戏实例
     game = Game(event_manager)
+    game.current_phase = "test"
     
     # 创建角色和玩家
     character1 = Character("张飞", Kingdom.SHU, 4, ["咆哮"])
@@ -68,6 +68,7 @@ def test_wuzhongshengyou():
     
     # 创建游戏实例
     game = Game(event_manager)
+    game.current_phase = "test"
     
     # 创建角色和玩家
     character1 = Character("张飞", Kingdom.SHU, 4, ["咆哮"])
@@ -113,6 +114,7 @@ def test_guohechaiqiao():
     
     # 创建游戏实例
     game = Game(event_manager)
+    game.current_phase = "test"
     
     # 创建角色和玩家
     character1 = Character("张飞", Kingdom.SHU, 4, ["咆哮"])
@@ -147,8 +149,3 @@ def test_guohechaiqiao():
         print("✓ 过河拆桥效果正常")
     else:
         print("✗ 过河拆桥效果有问题")
-
-if __name__ == "__main__":
-    test_sha_damage()
-    test_wuzhongshengyou()
-    test_guohechaiqiao()

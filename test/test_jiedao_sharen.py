@@ -5,7 +5,6 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.core.base.game import Game
 from app.core.events.event_system import EventManager
@@ -193,17 +192,3 @@ def test_jiedao_with_wuxie():
     print(f"玩家3({player3.character.name})手牌: {[card.name for card in player3.hand_cards]}")
     print(f"弃牌堆: {[card.name for card in game.discard_pile]}")
 
-if __name__ == "__main__":
-    print("开始测试借刀杀人...")
-    
-    # 运行所有测试
-    test_jiedao_with_sha()
-    test_jiedao_without_sha()
-    test_jiedao_with_wuxie()
-    
-    print("\n=== 测试完成 ===")
-    print("借刀杀人测试结果：")
-    print("1. 目标有杀的情况 - 已实现")
-    print("2. 目标没有杀的情况（获得武器）- 已实现")
-    print("3. 无懈可击响应机制 - 已实现")
-    print("4. 武器装备检查 - 已实现")

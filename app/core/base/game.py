@@ -38,7 +38,7 @@ class Game:
     def initialize_deck(self):
         """初始化牌堆"""
         # 重新初始化牌堆
-        self.deck = Deck("app/data/cards.json")
+        self.deck = Deck()
         if not self.deck.cards:
             print("错误: 卡牌数据加载失败，请检查 cards.json 文件内容。")
             return

@@ -4,7 +4,6 @@
 """
 
 import sys
-sys.path.append('.')
 
 from app.models.player import Player
 from app.models.character import Character
@@ -64,7 +63,4 @@ print(f"\n装备安装测试: {'✅ 成功' if success else '❌ 失败'}")
 
 def test_equipment_installation():
     """测试装备安装功能"""
-    return success
-
-if __name__ == "__main__":
-    test_equipment_installation()
+    assert success

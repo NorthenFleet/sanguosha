@@ -6,7 +6,6 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.models.player import Player
 from app.models.character import Character, Kingdom
@@ -137,13 +136,18 @@ def test_weapon_effects():
     print()
 
 
-def test_defense_equipment_effects():
+def test_defense_equipment_effects(monkeypatch):
     """测试防御装备效果"""
     print("=== 测试防御装备效果 ===")
     
     players = create_test_players()
     attacker = players[0]
     defender = players[1]
+    monkeypatch.setattr(
+        defender,
+        "ask_defense_equipment_choice",
+        lambda *_args, **_kwargs: False,
+    )
     
     # 测试八卦阵
     print("1. 测试八卦阵效果:")
@@ -288,6 +292,3 @@ def main():
     
     print("所有测试完成！")
 
-
-if __name__ == "__main__":
-    main()

@@ -5,7 +5,6 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.models.player import Player
 from app.models.character import Character
 from app.models.card import Card, CardType
@@ -80,10 +79,7 @@ def test_equipment_system():
     mock_game = MockGame()
     
     print(f"使用杀前检查攻击范围...")
-    can_use = sha_action.apply_effect(mock_game, player1)
+    can_use = sha_action.apply_effect(mock_game, player1, player2)
     print(f"能否使用杀: {can_use}")
     
     print("\n=== 装备系统测试完成 ===")
-
-if __name__ == "__main__":
-    test_equipment_system()

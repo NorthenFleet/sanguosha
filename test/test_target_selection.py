@@ -6,7 +6,6 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.core.base.game import Game
 from app.models.player import Player
@@ -81,7 +80,7 @@ def setup_guohe_test_scenario(game, player1, player2, player3, player4):
     armor = Card(name="八卦阵", category="equipment", subtype="armor", suit="梅花", rank=2)
     player4.equipped.append(armor)
     player4.armor = armor
-    player4.hand_cards = [Card(name="无懈可击", category="trick", suit="梅花", rank=11)]
+    player4.hand_cards = [Card(name="桃", category="basic", suit="红桃", rank=11)]
     
     print("=== 过河拆桥测试场景设置完成 ===")
     print(f"玩家1({player1.character.name})手牌: {[card.name for card in player1.hand_cards]}")
@@ -106,7 +105,7 @@ def setup_shunshou_test_scenario(game, player1, player2, player3, player4):
     weapon = Card(name="丈八蛇矛", category="equipment", subtype="weapon", suit="黑桃", rank=12)
     player3.equipped.append(weapon)
     player3.weapon = weapon
-    player3.hand_cards = [Card(name="无懈可击", category="trick", suit="梅花", rank=11)]
+    player3.hand_cards = [Card(name="桃", category="basic", suit="红桃", rank=11)]
     
     print("=== 顺手牵羊测试场景设置完成 ===")
     print(f"玩家1({player1.character.name})手牌: {[card.name for card in player1.hand_cards]}")
@@ -125,7 +124,7 @@ def setup_juedou_test_scenario(game, player1, player2, player3, player4):
     player2.hand_cards = [Card(name="杀", category="basic", suit="黑桃", rank=7), 
                           Card(name="闪", category="basic", suit="红桃", rank=8)]
     player3.hand_cards = [Card(name="桃", category="basic", suit="红桃", rank=9)]
-    player4.hand_cards = [Card(name="无懈可击", category="trick", suit="梅花", rank=11)]
+    player4.hand_cards = [Card(name="桃", category="basic", suit="红桃", rank=11)]
     
     print("=== 决斗测试场景设置完成 ===")
     print(f"玩家1({player1.character.name})手牌: {[card.name for card in player1.hand_cards]}")
@@ -152,7 +151,7 @@ def test_jiedao_target_selection():
     result = jiedao_action.apply_effect(game, player1)
     
     print(f"借刀杀人结果: {'成功' if result else '失败'}")
-    return result
+    assert result
 
 
 def test_guohe_target_selection():
@@ -173,7 +172,7 @@ def test_guohe_target_selection():
     result = guohe_action.apply_effect(game, player1)
     
     print(f"过河拆桥结果: {'成功' if result else '失败'}")
-    return result
+    assert result
 
 
 def test_shunshou_target_selection():
@@ -194,7 +193,7 @@ def test_shunshou_target_selection():
     result = shunshou_action.apply_effect(game, player1)
     
     print(f"顺手牵羊结果: {'成功' if result else '失败'}")
-    return result
+    assert result
 
 
 def test_juedou_target_selection():
@@ -209,13 +208,14 @@ def test_juedou_target_selection():
     
     # 创建决斗动作
     juedou_action = JueDouAction()
+    initial_hp = player2.character.hp
     
     # 执行决斗
     print(f"\n{player1.character.name} 使用决斗")
     result = juedou_action.apply_effect(game, player1)
     
     print(f"决斗结果: {'成功' if result else '失败'}")
-    return result
+    assert player2.character.hp == initial_hp - 1
 
 
 def main():
@@ -245,8 +245,3 @@ def main():
     print(f"\n总体结果: {'所有测试通过' if all_passed else '部分测试失败'}")
     
     return all_passed
-
-
-if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)

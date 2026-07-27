@@ -7,7 +7,6 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.models.character import CharacterFactory, Kingdom
 from app.models.player import Player
@@ -108,7 +107,12 @@ def test_zhouyu_yingzi():
     
     # 测试1: 英姿技能触发条件
     print("\n测试1: 英姿技能触发条件")
-    can_trigger = yingzi.can_trigger(game, zhouyu_player)
+    can_trigger = yingzi.can_trigger(
+        game,
+        zhouyu_player,
+        "phase_change",
+        phase="draw",
+    )
     print(f"英姿技能可以触发: {can_trigger}")
     
     if can_trigger:
@@ -120,7 +124,12 @@ def test_zhouyu_yingzi():
     # 测试2: 多次触发英姿
     print("\n测试2: 多次触发英姿")
     for i in range(3):
-        if yingzi.can_trigger(game, zhouyu_player):
+        if yingzi.can_trigger(
+            game,
+            zhouyu_player,
+            "phase_change",
+            phase="draw",
+        ):
             print(f"第{i+1}次英姿")
             yingzi.execute(game, zhouyu_player)
             print(f"手牌数: {len(zhouyu_player.hand_cards)}, 牌堆剩余: {len(game.deck)}")
@@ -313,6 +322,3 @@ def main():
         print(f"测试过程中出现错误: {e}")
         import traceback
         traceback.print_exc()
-
-if __name__ == "__main__":
-    main()

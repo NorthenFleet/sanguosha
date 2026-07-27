@@ -58,7 +58,7 @@ def main_cli():
     game.start_game()
 
     # 初始化牌堆
-    deck = Deck("app/data/cards.json")
+    deck = Deck()
     if not deck.cards:
         print("错误: 卡牌数据加载失败，请检查 cards.json 文件内容。")
         return

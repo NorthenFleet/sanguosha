@@ -5,7 +5,6 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.base.game import Game
 from app.models.card import Card
@@ -70,12 +69,5 @@ def test_jiedao_weapon_to_hand():
     weapon_in_hand = any(c.name == "青龙偃月刀" for c in player1.hand_cards)
     weapon_removed_from_p2 = len(player2.equipped) == 0 and player2.weapon is None
     
-    if weapon_in_hand and weapon_removed_from_p2:
-        print("✓ 测试通过：武器正确转移到玩家1的手牌中")
-        return True
-    else:
-        print("✗ 测试失败：武器没有正确转移到手牌")
-        return False
-
-if __name__ == "__main__":
-    test_jiedao_weapon_to_hand()
+    assert weapon_in_hand and weapon_removed_from_p2, "武器没有正确转移到手牌"
+    print("✓ 测试通过：武器正确转移到玩家1的手牌中")

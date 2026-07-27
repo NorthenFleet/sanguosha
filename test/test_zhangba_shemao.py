@@ -7,7 +7,6 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.core.base.game import Game
 from app.models.player import Player
@@ -22,6 +21,9 @@ def create_test_game():
     class MockEventManager:
         def emit(self, event, **kwargs):
             pass
+
+        def trigger(self, event, payload):
+            pass
     
     game = Game(MockEventManager())
     
@@ -34,6 +36,7 @@ def create_test_game():
     
     game.players = [player1, player2]
     game.current_player_index = 0
+    game.current_phase = "test"
     
     return game, player1, player2
 
@@ -113,7 +116,11 @@ def test_zhangba_select_cards():
     zhangba_action = ZhangBaSheMaoAction()
     
     # 在测试模式下，应该自动选择前两张牌
-    selected_cards = zhangba_action.select_cards_for_sha(game, player1)
+    selected_cards = zhangba_action.select_cards_for_sha(
+        game,
+        player1,
+        test_mode=True,
+    )
     
     assert len(selected_cards) == 2, "应该选择两张手牌"
     assert selected_cards[0] == card1, "第一张牌应该是桃"
@@ -173,6 +180,3 @@ def main():
         return False
     
     return True
-
-if __name__ == "__main__":
-    main()

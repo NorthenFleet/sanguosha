@@ -358,7 +358,9 @@ def test_basic_model():
     print(f"  修正结果: {result.modification_results}")
     print(f"  计算输出: {result.calculation_outputs}")
     
-    return result
+    assert result.judgment_results
+    assert result.modification_results
+    assert result.calculation_outputs
 
 
 def test_step_priorities():
@@ -440,6 +442,3 @@ def main():
         import traceback
         traceback.print_exc()
 
-
-if __name__ == "__main__":
-    main()

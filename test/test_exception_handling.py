@@ -6,7 +6,6 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.core.base.game import Game
 from app.models.character import Character
@@ -69,5 +68,3 @@ def test_exception_handling():
     print("\n=== 异常处理测试完成 ===")
     print("所有输入异常处理机制已经修复并测试完成")
 
-if __name__ == "__main__":
-    test_exception_handling()

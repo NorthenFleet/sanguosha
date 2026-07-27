@@ -9,7 +9,6 @@ import sys
 import os
 
 # 添加项目根目录到路径
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.models.card import Card, CardType
 
@@ -28,16 +27,12 @@ def test_card_loading():
         for i, card_data in enumerate(cards_data):
             required_fields = ['name', 'type', 'suit', 'rank', 'category']
             for field in required_fields:
-                if field not in card_data:
-                    print(f"✗ 卡牌 {i+1} 缺少必需字段: {field}")
-                    return False
+                assert field in card_data, f"卡牌 {i+1} 缺少必需字段: {field}"
         
         print("✓ 所有卡牌数据格式正确")
-        return True
         
     except Exception as e:
-        print(f"✗ 卡牌加载失败: {e}")
-        return False
+        raise AssertionError(f"卡牌加载失败: {e}") from e
 
 def test_card_creation():
     """测试卡牌对象创建"""
@@ -56,11 +51,8 @@ def test_card_creation():
         equipment_card = Card("丈八蛇矛", CardType.EQUIP, "黑桃", 12)
         print(f"✓ 装备牌创建成功: {equipment_card.name} {equipment_card.suit}{equipment_card.rank}")
         
-        return True
-        
     except Exception as e:
-        print(f"✗ 卡牌对象创建失败: {e}")
-        return False
+        raise AssertionError(f"卡牌对象创建失败: {e}") from e
 
 def test_card_types():
     """测试卡牌类型分类"""
@@ -83,16 +75,11 @@ def test_card_types():
         
         # 验证总数
         total = basic_count + trick_count + equipment_count
-        if total == 104:
-            print(f"✓ 总卡牌数量正确: {total} 张")
-            return True
-        else:
-            print(f"✗ 总卡牌数量错误: {total} 张，应为104张")
-            return False
+        assert total == 104, f"总卡牌数量错误: {total} 张，应为104张"
+        print(f"✓ 总卡牌数量正确: {total} 张")
             
     except Exception as e:
-        print(f"✗ 卡牌类型分类测试失败: {e}")
-        return False
+        raise AssertionError(f"卡牌类型分类测试失败: {e}") from e
 
 def test_specific_cards():
     """测试特定卡牌的存在性"""
@@ -113,14 +100,10 @@ def test_specific_cards():
                 count = card_names.count(card_name)
                 print(f"✓ {card_name}: {count} 张")
             else:
-                print(f"✗ 缺少关键卡牌: {card_name}")
-                return False
-        
-        return True
+                raise AssertionError(f"缺少关键卡牌: {card_name}")
         
     except Exception as e:
-        print(f"✗ 特定卡牌测试失败: {e}")
-        return False
+        raise AssertionError(f"特定卡牌测试失败: {e}") from e
 
 def test_card_suits_and_ranks():
     """测试卡牌花色和点数"""
@@ -137,18 +120,14 @@ def test_card_suits_and_ranks():
         suits = [c['suit'] for c in cards_data]
         
         for suit in suits:
-            if suit not in valid_suits:
-                print(f"✗ 无效花色: {suit}")
-                return False
+            assert suit in valid_suits, f"无效花色: {suit}"
         
         print("✓ 所有花色有效")
         
         # 验证点数
         ranks = [c['rank'] for c in cards_data]
         for rank in ranks:
-            if not (1 <= rank <= 13):
-                print(f"✗ 无效点数: {rank}")
-                return False
+            assert 1 <= rank <= 13, f"无效点数: {rank}"
         
         print("✓ 所有点数有效 (1-13)")
         
@@ -161,11 +140,8 @@ def test_card_suits_and_ranks():
         for suit, count in suit_counts.items():
             print(f"  {suit}: {count} 张")
         
-        return True
-        
     except Exception as e:
-        print(f"✗ 花色点数测试失败: {e}")
-        return False
+        raise AssertionError(f"花色点数测试失败: {e}") from e
 
 def main():
     """主测试函数"""
@@ -198,7 +174,3 @@ def main():
     else:
         print("✗ 部分测试失败，需要进一步修正。")
         return False
-
-if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)

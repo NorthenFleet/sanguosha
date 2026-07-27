@@ -7,7 +7,7 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from types import SimpleNamespace
 
 # 直接导入基础模块，避免循环导入
 from app.core.adjudication.base_adjudication_model import (
@@ -18,15 +18,14 @@ from app.core.adjudication.integrated_adjudication_system import (
     IntegratedAdjudicationSystem, initialize_adjudication_system,
     execute_adjudication, get_system_status
 )
-from app.models.player import Player
 from app.models.card import Card
 
 
 def create_test_context():
     """创建测试上下文"""
     # 创建测试玩家
-    source_player = Player("张三", "魏", "曹操")
-    target_player = Player("李四", "蜀", "刘备")
+    source_player = SimpleNamespace(name="张三")
+    target_player = SimpleNamespace(name="李四")
     
     # 创建测试卡牌
     sha_card = Card("杀", "基本", "红桃", 7)
@@ -102,7 +101,9 @@ def test_basic_adjudication_model():
     print(f"  修正结果: {result.modification_results}")
     print(f"  计算结果: {result.calculation_outputs}")
     
-    return result
+    assert result.judgment_results
+    assert result.modification_results
+    assert result.calculation_outputs
 
 
 def test_integrated_system():
@@ -245,7 +246,3 @@ def main():
         print(f"测试过程中发生异常: {e}")
         import traceback
         traceback.print_exc()
-
-
-if __name__ == "__main__":
-    main()

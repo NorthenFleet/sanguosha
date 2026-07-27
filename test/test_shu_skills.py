@@ -7,7 +7,6 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.models.character import CharacterFactory, Kingdom
 from app.models.player import Player
@@ -235,7 +234,12 @@ def test_zhugeliang_guanxing():
     
     # 测试1: 观星技能触发条件
     print("\n测试1: 观星技能触发条件")
-    can_trigger = guanxing.can_trigger(game, zhugeliang_player)
+    can_trigger = guanxing.can_trigger(
+        game,
+        zhugeliang_player,
+        "phase_change",
+        phase="judgment",
+    )
     print(f"观星技能可以触发: {can_trigger}")
     
     if can_trigger:
@@ -246,7 +250,12 @@ def test_zhugeliang_guanxing():
     # 测试2: 多次使用观星
     print("\n测试2: 多次使用观星")
     for i in range(3):
-        if guanxing.can_trigger(game, zhugeliang_player):
+        if guanxing.can_trigger(
+            game,
+            zhugeliang_player,
+            "phase_change",
+            phase="judgment",
+        ):
             print(f"第{i+1}次观星")
             guanxing.execute(game, zhugeliang_player)
             print(f"牌堆剩余: {len(game.deck)}")
@@ -328,6 +337,3 @@ def main():
         print(f"测试过程中出现错误: {e}")
         import traceback
         traceback.print_exc()
-
-if __name__ == "__main__":
-    main()

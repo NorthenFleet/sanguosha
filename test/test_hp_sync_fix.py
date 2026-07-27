@@ -4,7 +4,6 @@
 """
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app.core.events.event_system import EventManager
 from app.core.base.game import Game
@@ -79,5 +78,3 @@ def test_hp_sync():
     
     print("\n血量同步测试完成")
 
-if __name__ == "__main__":
-    test_hp_sync()

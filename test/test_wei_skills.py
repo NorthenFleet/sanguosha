@@ -7,7 +7,6 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.models.character import CharacterFactory, Kingdom
 from app.models.player import Player
@@ -248,5 +247,3 @@ def main():
         import traceback
         traceback.print_exc()
 
-if __name__ == "__main__":
-    main()

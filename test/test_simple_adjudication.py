@@ -7,7 +7,6 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # 直接导入需要的类，避免通过__init__.py
 from app.core.adjudication.base_adjudication_model import (
@@ -48,12 +47,12 @@ def test_basic_model():
     
     # 定义判断函数
     def check_has_card(context):
-        player_name = context['source_player'].name
+        player_name = context['source_player'].character.name
         print(f"  判断: {player_name} 是否有杀卡牌")
         return True
     
     def check_target_valid(context):
-        target_name = context['target_player'].name
+        target_name = context['target_player'].character.name
         print(f"  判断: 目标 {target_name} 是否有效")
         return True
     
@@ -114,7 +113,9 @@ def test_basic_model():
     print(f"  计算结果: {result.calculation_outputs}")
     print(f"  元数据: {result.metadata}")
     
-    return result
+    assert result.judgment_results
+    assert result.modification_results
+    assert result.calculation_outputs
 
 
 def test_step_priorities():
@@ -195,7 +196,3 @@ def main():
         print(f"测试过程中发生异常: {e}")
         import traceback
         traceback.print_exc()
-
-
-if __name__ == "__main__":
-    main()

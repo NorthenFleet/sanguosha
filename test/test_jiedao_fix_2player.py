@@ -5,7 +5,6 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.models.player import Player
 from app.models.character import Character, Kingdom
@@ -77,12 +76,8 @@ def test_jiedao_2player_with_sha():
     print(f"借刀杀人执行结果: {result}")
     
     # 检查结果
-    if len(player2.hand_cards) == 0:  # 杀被使用了
-        print("✓ 测试通过：玩家2使用了杀攻击玩家1")
-        return True
-    else:
-        print("✗ 测试失败：玩家2没有使用杀")
-        return False
+    assert len(player2.hand_cards) == 0, "玩家2没有使用杀"
+    print("✓ 测试通过：玩家2使用了杀攻击玩家1")
 
 def test_jiedao_2player_no_sha():
     """测试2人游戏中借刀杀人 - 目标没有杀的情况"""
@@ -134,25 +129,7 @@ def test_jiedao_2player_no_sha():
     print(f"玩家1装备: {[c.name for c in player1.equipped]}")
     print(f"借刀杀人执行结果: {result}")
     
-    # 检查结果
-    if len(player2.equipped) == 0 and len(player1.equipped) == 1:  # 武器转移了
-        print("✓ 测试通过：武器转移给了玩家1")
-        return True
-    else:
-        print("✗ 测试失败：武器没有正确转移")
-        return False
-
-if __name__ == "__main__":
-    print("开始测试修复后的借刀杀人逻辑（2人游戏）")
-    
-    test1_result = test_jiedao_2player_with_sha()
-    test2_result = test_jiedao_2player_no_sha()
-    
-    print(f"\n测试结果总结:")
-    print(f"有杀情况测试: {'通过' if test1_result else '失败'}")
-    print(f"无杀情况测试: {'通过' if test2_result else '失败'}")
-    
-    if test1_result and test2_result:
-        print("✓ 所有测试通过！修复成功。")
-    else:
-        print("✗ 部分测试失败，需要进一步修复。")
+    # 检查结果：武器应进入使用者手牌，而不是自动装备。
+    assert not player2.equipped and player2.weapon is None
+    assert any(card.name == "丈八蛇矛" for card in player1.hand_cards), "武器没有转移到手牌"
+    print("✓ 测试通过：武器转移到玩家1手牌")

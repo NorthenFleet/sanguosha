@@ -5,7 +5,6 @@
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.core.base.game import Game
 from app.core.events.event_system import EventManager
@@ -195,17 +194,3 @@ def test_multiple_wuxie_responses():
     print(f"玩家4({player4.character.name})手牌: {[card.name for card in player4.hand_cards]}")
     print(f"弃牌堆: {[card.name for card in game.discard_pile]}")
 
-if __name__ == "__main__":
-    print("开始测试锦囊牌系统...")
-    
-    # 运行所有测试
-    test_trick_card_with_wuxie()
-    test_guohe_effect()
-    test_multiple_wuxie_responses()
-    
-    print("\n=== 测试完成 ===")
-    print("锦囊牌系统测试结果：")
-    print("1. 无懈可击响应机制 - 已实现")
-    print("2. 过河拆桥效果 - 已实现")
-    print("3. 多玩家响应顺序 - 已实现")
-    print("4. 卡牌区域管理 - 已实现")

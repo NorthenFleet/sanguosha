@@ -1,13 +1,14 @@
 import json
 import random
+from pathlib import Path
 from typing import List, Dict, Optional, Any
 from .card import Card
 
 class EnhancedDeck:
     """增强的牌堆管理系统"""
     
-    def __init__(self, cards_file: str = "app/data/cards.json"):
-        self.cards_file = cards_file
+    def __init__(self, cards_file: str | None = None):
+        self.cards_file = cards_file or str(Path(__file__).resolve().parents[1] / "data" / "cards.json")
         self.draw_pile: List[Card] = []  # 摸牌堆
         self.discard_pile: List[Card] = []  # 弃牌堆
         self.removed_cards: List[Card] = []  # 移出游戏的卡牌

@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.append('.')
 
 from app.models.player import Player
 from app.models.character import Character, Kingdom
@@ -67,7 +66,6 @@ def test_shunshou_with_hand_cards():
     assert len(defender.hand_cards) == 1, "防御者应该剩余1张牌"
     
     print("✓ 手牌测试通过\n")
-    return True
 
 def test_shunshou_with_equipment():
     """测试顺手牵羊获得装备牌"""
@@ -104,7 +102,6 @@ def test_shunshou_with_equipment():
     assert len(defender.equipped) == 0, "防御者装备应该被拿走"
     
     print("✓ 装备牌测试通过\n")
-    return True
 
 def test_shunshou_with_judgment():
     """测试顺手牵羊获得判定牌"""
@@ -141,7 +138,6 @@ def test_shunshou_with_judgment():
     assert len(defender.judgment_area) == 0, "防御者判定区应该被拿走"
     
     print("✓ 判定牌测试通过\n")
-    return True
 
 def test_shunshou_no_cards():
     """测试顺手牵羊对没有牌的目标"""
@@ -176,7 +172,6 @@ def test_shunshou_no_cards():
     assert len(attacker.hand_cards) == 1, "攻击者手牌数量不变（没有获得牌）"
     
     print("✓ 无牌目标测试通过\n")
-    return True
 
 def main():
     print("=== 顺手牵羊自动化测试 ===")
@@ -196,6 +191,3 @@ def main():
         return False
     
     return True
-
-if __name__ == "__main__":
-    main()

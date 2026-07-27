@@ -6,7 +6,6 @@
 
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), 'app'))
 
 from app.core.base.game import Game
 from app.models.player import Player
@@ -56,12 +55,8 @@ def test_wuxiekeji_not_playable():
     
     print(f"可使用的卡牌: {[c.name for c in playable_cards]}")
     
-    if len(playable_cards) == 0 and len(player1.hand_cards) == 1:
-        print("✓ 测试通过：无懈可击不能在出牌阶段主动使用")
-        return True
-    else:
-        print("✗ 测试失败：无懈可击仍然可以在出牌阶段使用")
-        return False
+    assert len(playable_cards) == 0 and len(player1.hand_cards) == 1, "无懈可击仍然可以在出牌阶段使用"
+    print("✓ 测试通过：无懈可击不能在出牌阶段主动使用")
 
 def test_jiedao_sharen_logic():
     """测试借刀杀人的逻辑"""
@@ -130,12 +125,8 @@ def test_jiedao_sharen_logic():
     print(f"借刀杀人执行结果: {result}")
     
     # 检查结果
-    if len(player2.hand_cards) == 0:  # 杀被使用了
-        print("✓ 测试通过：玩家2使用了杀")
-        return True
-    else:
-        print("✗ 测试失败：玩家2没有使用杀")
-        return False
+    assert len(player2.hand_cards) == 0, "玩家2没有使用杀"
+    print("✓ 测试通过：玩家2使用了杀")
 
 def test_jiedao_sharen_no_sha():
     """测试借刀杀人时目标没有杀的情况"""
@@ -194,13 +185,10 @@ def test_jiedao_sharen_no_sha():
     print(f"玩家1装备: {[c.name for c in player1.equipped]}")
     print(f"借刀杀人执行结果: {result}")
     
-    # 检查结果：武器应该转移给玩家1
-    if player1.weapon and player1.weapon.name == "青龙偃月刀":
-        print("✓ 测试通过：武器转移给了玩家1")
-        return True
-    else:
-        print("✗ 测试失败：武器没有正确转移")
-        return False
+    # 检查结果：武器应作为手牌交给使用者，而不是自动装备。
+    assert any(card.name == "青龙偃月刀" for card in player1.hand_cards), "武器没有转移到手牌"
+    assert player2.weapon is None and not player2.equipped
+    print("✓ 测试通过：武器转移到玩家1手牌")
 
 def main():
     """运行所有测试"""
@@ -229,6 +217,3 @@ def main():
         print("✓ 所有测试通过！修复成功。")
     else:
         print("✗ 部分测试失败，需要进一步修复。")
-
-if __name__ == "__main__":
-    main()

@@ -5,7 +5,6 @@
 """
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
 
 from app.models.player import Player
 from app.models.character import Character, Kingdom
@@ -186,5 +185,3 @@ def run_all_tests():
         import traceback
         traceback.print_exc()
 
-if __name__ == "__main__":
-    run_all_tests()
